@@ -176,8 +176,7 @@ class Controller:
             self.__serial.write([Controller.REQUEST_READ_VAR_INT16, varid, checksum])
             response = self.__serial.read(4)  # we expect a response code, two variable values and a checksum
             if verify_checksum(response):
-                return response[1] << 8 + response[
-                    2]  # we merge the 2 values assuming MSB first (Figure 4-2 in RS232 datasheet)
+                return response[1] << 8 + response[2]  # we merge the 2 values assuming MSB first (Figure 4-2 in RS232 datasheet)
             else:
                 return -1
         else:
@@ -188,6 +187,9 @@ class Controller:
     # Returns real flow in sccm using the formula from the datasheet
     def get_real_flow(self):
         self.get_percentage_flow()  # this updates the flowReadout, so we avoid duplicating code
+        # save the readout to the buffers
+        self.__samples.append(self.__maxFlow * self.__flowReadout)
+        self.__sampleTimestamps.append(int(datetime.now().timestamp()*1000))
         return self.__maxFlow * self.__flowReadout
 
     # Return a percentage of the flow value, in reference to the maximum flow value
@@ -216,7 +218,7 @@ class Controller:
         now = datetime.now()
         filename = now.strftime(f"%Y-%m-%d_%H-%M-%S_controller{self.__controllerNumber}.csv")
         file = open(filename, 'w')
-        file.write("Measurement, Unix timestamp (in milliseconds)")
+        file.write(f"Gas density:{self.__gasDensity},Gas ID:{self.__gasId},Max flow:{self.__maxFlow}\nMeasurement, Unix timestamp (in milliseconds)\n")
         for i in range(0, self.__sampleBufferSize - 1):
             file.write(f'{self.__samples[i]},{self.__sampleTimestamps[i]}\n')
         file.close()
