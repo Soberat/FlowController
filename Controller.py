@@ -97,12 +97,12 @@ class Controller:
         self.__deviceInterface = ""
 
         # PySerial connection
-        self.__serial = serial.Serial(port='COM3',
-                                      baudrate=57600,
+        self.__serial = serial.Serial(baudrate=57600,
                                       parity=serial.PARITY_ODD,
                                       stopbits=serial.STOPBITS_ONE,
                                       bytesize=serial.EIGHTBITS,
                                       timeout=1)
+        self.__serial.port = 'COM3'
 
     # function that opens the serial port communication and configures anything else that's required
     # TODO: should set the setpoint source and initial setpoint, get and set COM/USB parameters, possibly more
@@ -175,7 +175,7 @@ class Controller:
             self.__serial.write([Controller.REQUEST_READ_VAR_INT16, varid, checksum])
             response = self.__serial.read(4)  # we expect a response code, two variable values and a checksum
             if verify_checksum(response):
-                return response[1] << 8 + response[2]
+                return response[1] << 8 + response[2]  # we merge the 2 values assuming MSB first (Figure 4-2 in RS232 datasheet)
             else:
                 return -1
         else:
