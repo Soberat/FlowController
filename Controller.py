@@ -1,6 +1,7 @@
 import numpy as np
 import serial
 from numpy_ringbuffer import RingBuffer
+from datetime import datetime
 
 
 # TODO: threading, as we want 4 parallel controller tabs to be constantly up-to-date with their respective info
@@ -175,7 +176,8 @@ class Controller:
             self.__serial.write([Controller.REQUEST_READ_VAR_INT16, varid, checksum])
             response = self.__serial.read(4)  # we expect a response code, two variable values and a checksum
             if verify_checksum(response):
-                return response[1] << 8 + response[2]  # we merge the 2 values assuming MSB first (Figure 4-2 in RS232 datasheet)
+                return response[1] << 8 + response[
+                    2]  # we merge the 2 values assuming MSB first (Figure 4-2 in RS232 datasheet)
             else:
                 return -1
         else:
@@ -207,4 +209,14 @@ class Controller:
 
         readout = self.__read_var(Controller.VAR_ADC_TEMP)
         self.__temperatureReadout = readout[0] << 8 + readout[1]
-        return 100*((self.__temperatureReadout/65535) + 1./6)
+        return 100 * ((self.__temperatureReadout / 65535) + 1. / 6)
+
+    # Save samples to a csv file, named after the current time and controller number it is coming from
+    def save_readouts(self):
+        now = datetime.now()
+        filename = now.strftime(f"%Y-%m-%d_%H-%M-%S_controller{self.__controllerNumber}.csv")
+        file = open(filename, 'w')
+        file.write("Measurement, Unix timestamp (in milliseconds)")
+        for i in range(0, self.__sampleBufferSize - 1):
+            file.write(f'{self.__samples[i]},{self.__sampleTimestamps[i]}\n')
+        file.close()
