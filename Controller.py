@@ -11,6 +11,15 @@ from numpy_ringbuffer import RingBuffer
 # TODO: Timed measurements
 # Class representing a single Brooks 4850 Mass Flow Controller,
 # Handling communication according to the datasheets
+
+def verify_checksum(data):
+    if np.sum(data[0:len(data) - 1]) % 256 == data[-1]:
+        return True
+    else:
+        print(f"Error while verifying checksum: {data}")
+        return False
+
+
 class Controller:
     # Request codes constants
     REQUEST_SEND_ONE_DATA = 0x31
@@ -66,6 +75,13 @@ class Controller:
         self.__sampleBufferSize = sampleBufferSize
         self.__samples = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.uint16)
         self.__sampleTimestamps = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.uint32)
+
+        # Physical device measurements
+        self.__temperatureReadout = 0
+        self.__flowReadout = 0
+        self.__maxFlow = 0
+        self.__gasId = 0
+        self.__gasDensity = 0
 
         # COM port parameters
         self.__deviceId = ""
@@ -135,7 +151,9 @@ class Controller:
                     value=varid))
 
     # Reads a value/values from the given variable ID
-    # Returns a list of length 1 or 2 depending on the requested
+    # Returns an integer with the requested value or -1 when the checksum was invalid
+    # Since VAR_OFFSET_VAL is of type int16 there is a possibility that offset of -1 might be interpreted as a wrong checksum,
+    # But that probability is very low.
     def __read_var(self, varid):
         assert self.__serial.is_open
 
@@ -144,12 +162,18 @@ class Controller:
             checksum = (Controller.REQUEST_READ_VAR_CHAR + varid) % 256
             self.__serial.write([Controller.REQUEST_READ_VAR_CHAR, varid, checksum])
             response = self.__serial.read(3)  # we expect a response code, variable value and a checksum
-            return list(response[1:2])
+            if verify_checksum(response):
+                return response[1]
+            else:
+                return -1
         elif varid == Controller.VAR_SN or varid == Controller.VAR_SW_VERSION or varid == Controller.VAR_OFFSET_VAL or varid == Controller.VAR_ADC_TEMP or varid == Controller.VAR_SETPOINT:
             checksum = (Controller.REQUEST_READ_VAR_INT16 + varid) % 256
             self.__serial.write([Controller.REQUEST_READ_VAR_INT16, varid, checksum])
             response = self.__serial.read(4)  # we expect a response code, two variable values and a checksum
-            return list(response[1:3])
+            if verify_checksum(response):
+                return response[1] << 8 + response[2]
+            else:
+                return -1
         else:
             raise ValueError(
                 "Unknown variable code was passed to __read_var (might be Output Select, which is not currently supported) (ID: {value})".format(
@@ -157,8 +181,26 @@ class Controller:
 
     # Returns real flow in sccm using the formula from the datasheet
     def get_real_flow(self):
-        raise NotImplementedError
+        self.get_percentage_flow()  # this updates the flowReadout, so we avoid duplicating code
+        return self.__maxFlow * self.__flowReadout
+
+    # Return a percentage of the flow value, in reference to the maximum flow value
+    def get_percentage_flow(self):
+        assert self.__serial.is_open
+
+        self.__serial.write([Controller.REQUEST_SEND_ONE_DATA,
+                             Controller.REQUEST_SEND_ONE_DATA])  # this request takes no parameters, therefore the request ID is also the checksum
+        response = self.__serial.read(3)
+        if verify_checksum(response):
+            self.__flowReadout = response[1] / 10000.0
+        else:
+            self.__flowReadout = -1.0
+        return self.__flowReadout
 
     # Returns the LM50 sensor temperature in Celsius degrees using the formula from the datasheet
     def get_temperature(self):
-        raise NotImplementedError
+        assert self.__serial.is_open
+
+        readout = self.__read_var(Controller.VAR_ADC_TEMP)
+        self.__temperatureReadout = readout[0] << 8 + readout[1]
+        return 100*((self.__temperatureReadout/65535) + 1./6)
