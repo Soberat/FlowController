@@ -3,7 +3,6 @@ import serial
 from numpy_ringbuffer import RingBuffer
 
 
-# TODO: Parameters for the constructor
 # TODO: threading, as we want 4 parallel controller tabs to be constantly up-to-date with their respective info
 # TODO: Saving measurements
 # TODO: Setting preconfiguring parameters (head type, gas type)
@@ -61,11 +60,12 @@ class Controller:
     CONST_SETPOINT_VOLTAGE = 1
     CONST_SETPOINT_CURRENT = 2
 
-    def __init__(self):
+    def __init__(self, controllerNumber, sampleBufferSize=64):
         # Internal parameters
-        self.__controllerNumber = 1
-        self.__sampleBufferSize = 64
-        self.__samples = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.int16)
+        self.__controllerNumber = controllerNumber
+        self.__sampleBufferSize = sampleBufferSize
+        self.__samples = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.uint16)
+        self.__sampleTimestamps = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.uint32)
 
         # COM port parameters
         self.__deviceId = ""
