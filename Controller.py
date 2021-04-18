@@ -142,9 +142,13 @@ class Controller:
             # The checksum is sum of all message bytes including request byte, modulo 256
             checksum = (Controller.REQUEST_WRITE_VAR_CHAR + varid + val1 + val2) % 256
             self.__serial.write([Controller.REQUEST_WRITE_VAR_CHAR, varid, val1, val2, checksum])
+            response = self.__serial.read(2)  # we expect a request code and a checksum
+            return verify_checksum(response)
         elif varid == Controller.VAR_OFFSET or varid == Controller.VAR_GAS_TYPE or varid == Controller.VAR_OVERRIDE or varid == Controller.VAR_SETPOINT_SOURCE:
             checksum = (Controller.REQUEST_WRITE_VAR_CHAR + varid + val1) % 256
             self.__serial.write([Controller.REQUEST_WRITE_VAR_CHAR, varid, val1, checksum])
+            response = self.__serial.read(2)  # we expect a request code and a checksum
+            return verify_checksum(response)
         else:
             raise ValueError(
                 "Unknown variable code was passed to __write_var (might be Output Select, which is not currently supported) (ID: {value})".format(
