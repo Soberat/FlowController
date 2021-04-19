@@ -106,7 +106,8 @@ class Controller:
         self.__serial.port = 'COM3'
 
     # function that opens the serial port communication and configures anything else that's required
-    # TODO: should set the setpoint source and initial setpoint, get and set COM/USB parameters, get gas parameters, possibly more
+    # TODO: should set the setpoint source and initial setpoint, get and set COM/USB parameters,
+    #  get gas parameters, possibly more
     def open(self):
         if not self.__serial.is_open:
             self.__serial.open()
@@ -152,13 +153,14 @@ class Controller:
             return verify_checksum(response)
         else:
             raise ValueError(
-                "Unknown variable code was passed to __write_var (might be Output Select, which is not currently supported) (ID: {value})".format(
+                "Unknown variable code was passed to __write_var (might be Output Select, which is not currently "
+                "supported) (ID: {value})".format(
                     value=varid))
 
     # Reads a value/values from the given variable ID
     # Returns an integer with the requested value or -1 when the checksum was invalid
-    # Since VAR_OFFSET_VAL is of type int16 there is a possibility that offset of -1 might be interpreted as a wrong checksum,
-    # But that probability is very low.
+    # Since VAR_OFFSET_VAL is of type int16 there is a possibility that offset of -1
+    # might be interpreted as a wrong checksum, but that probability is very low.
     def __read_var(self, varid):
         assert self.__serial.is_open
 
@@ -176,12 +178,14 @@ class Controller:
             self.__serial.write([Controller.REQUEST_READ_VAR_INT16, varid, checksum])
             response = self.__serial.read(4)  # we expect a response code, two variable values and a checksum
             if verify_checksum(response):
-                return response[1] << 8 + response[2]  # we merge the 2 values assuming MSB first (Figure 4-2 in RS232 datasheet)
+                # we merge the 2 values assuming MSB first (Figure 4-2 in RS232 datasheet)
+                return response[1] << 8 + response[2]
             else:
                 return -1
         else:
             raise ValueError(
-                "Unknown variable code was passed to __read_var (might be Output Select, which is not currently supported) (ID: {value})".format(
+                "Unknown variable code was passed to __read_var (might be Output Select, which is not currently "
+                "supported) (ID: {value})".format(
                     value=varid))
 
     # Returns real flow in sccm using the formula from the datasheet
@@ -189,15 +193,15 @@ class Controller:
         self.get_percentage_flow()  # this updates the flowReadout, so we avoid duplicating code
         # save the readout to the buffers
         self.__samples.append(self.__maxFlow * self.__flowReadout)
-        self.__sampleTimestamps.append(int(datetime.now().timestamp()*1000))
+        self.__sampleTimestamps.append(int(datetime.now().timestamp() * 1000))
         return self.__maxFlow * self.__flowReadout
 
     # Return a percentage of the flow value, in reference to the maximum flow value
     def get_percentage_flow(self):
         assert self.__serial.is_open
-
+        # this request takes no parameters, therefore the request ID is also the checksum
         self.__serial.write([Controller.REQUEST_SEND_ONE_DATA,
-                             Controller.REQUEST_SEND_ONE_DATA])  # this request takes no parameters, therefore the request ID is also the checksum
+                             Controller.REQUEST_SEND_ONE_DATA])
         response = self.__serial.read(3)
         if verify_checksum(response):
             self.__flowReadout = response[1] / 10000.0
@@ -209,8 +213,7 @@ class Controller:
     def get_temperature(self):
         assert self.__serial.is_open
 
-        readout = self.__read_var(Controller.VAR_ADC_TEMP)
-        self.__temperatureReadout = readout[0] << 8 + readout[1]
+        self.__temperatureReadout = self.__read_var(Controller.VAR_ADC_TEMP)
         return 100 * ((self.__temperatureReadout / 65535) + 1. / 6)
 
     # Save samples to a csv file, named after the current time and controller number it is coming from
@@ -218,7 +221,8 @@ class Controller:
         now = datetime.now()
         filename = now.strftime(f"%Y-%m-%d_%H-%M-%S_controller{self.__controllerNumber}.csv")
         file = open(filename, 'w')
-        file.write(f"Gas density:{self.__gasDensity},Gas ID:{self.__gasId},Max flow:{self.__maxFlow}\nMeasurement, Unix timestamp (in milliseconds)\n")
+        file.write(
+            f"Gas density:{self.__gasDensity},Gas ID:{self.__gasId},Max flow:{self.__maxFlow}\nMeasurement, Unix timestamp (in milliseconds)\n")
         for i in range(0, self.__sampleBufferSize - 1):
             file.write(f'{self.__samples[i]},{self.__sampleTimestamps[i]}\n')
         file.close()
@@ -231,3 +235,25 @@ class Controller:
             print("Wrong valve override state selected")
             return False
 
+    # function to change the amount of stored samples without losing previously gathered samples
+    def change_buffer_size(self, value):
+        assert value >= 8
+
+        if value > self.__sampleBufferSize:
+            newBuf = RingBuffer(capacity=value, dtype=np.int16)
+            newTimestampBuf = RingBuffer(capacity=value, dtype=np.int32)
+
+            newBuf.extend(self.__samples)
+            newTimestampBuf.extend(self.__sampleTimestamps)
+
+            self.__samples = newBuf
+            self.__sampleTimestamps = newTimestampBuf
+        elif value < self.__sampleBufferSize:
+            newBuf = RingBuffer(capacity=value, dtype=np.int16)
+            newTimestampBuf = RingBuffer(capacity=value, dtype=np.int32)
+
+            newBuf.extend(self.__samples[:-value])
+            newTimestampBuf.extend(self.__sampleTimestamps[:-value])
+
+            self.__samples = newBuf
+            self.__sampleTimestamps = newTimestampBuf
