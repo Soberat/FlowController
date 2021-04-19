@@ -106,7 +106,7 @@ class Controller:
         self.__serial.port = 'COM3'
 
     # function that opens the serial port communication and configures anything else that's required
-    # TODO: should set the setpoint source and initial setpoint, get and set COM/USB parameters, possibly more
+    # TODO: should set the setpoint source and initial setpoint, get and set COM/USB parameters, get gas parameters, possibly more
     def open(self):
         if not self.__serial.is_open:
             self.__serial.open()
@@ -222,3 +222,12 @@ class Controller:
         for i in range(0, self.__sampleBufferSize - 1):
             file.write(f'{self.__samples[i]},{self.__sampleTimestamps[i]}\n')
         file.close()
+
+    # Set the valve override mode either to open, closed or normal (setpoint controlled)
+    def set_valve_override(self, state):
+        if state == self.CONST_VALVE_OPEN or state == self.CONST_VALVE_CLOSED or state == self.CONST_VALVE_NORMAL:
+            return self.__write_var(self.REQUEST_WRITE_VAR_CHAR, self.VAR_OVERRIDE, state)
+        else:
+            print("Wrong valve override state selected")
+            return False
+
