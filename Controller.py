@@ -141,8 +141,8 @@ class Controller:
         # Setpoint is the only 16bit writeable variable, others are 8bit
         if varid == Controller.VAR_SETPOINT:
             # The checksum is sum of all message bytes including request byte, modulo 256
-            checksum = (Controller.REQUEST_WRITE_VAR_CHAR + varid + val1 + val2) % 256
-            self.__serial.write([Controller.REQUEST_WRITE_VAR_CHAR, varid, val1, val2, checksum])
+            checksum = (Controller.REQUEST_WRITE_VAR_INT16 + varid + val1 + val2) % 256
+            self.__serial.write([Controller.REQUEST_WRITE_VAR_INT16, varid, val1, val2, checksum])
             response = self.__serial.read(2)  # we expect a request code and a checksum
             return verify_checksum(response)
         elif varid == Controller.VAR_OFFSET or varid == Controller.VAR_GAS_TYPE or varid == Controller.VAR_OVERRIDE or varid == Controller.VAR_SETPOINT_SOURCE:
