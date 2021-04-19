@@ -75,7 +75,7 @@ class Controller:
         self.__controllerNumber = controllerNumber
         self.__sampleBufferSize = sampleBufferSize
         self.__samples = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.uint16)
-        self.__sampleTimestamps = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.uint32)
+        self.__sampleTimestamps = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.uint64)
 
         # Physical device measurements
         self.__temperatureReadout = 0
@@ -193,7 +193,7 @@ class Controller:
         self.get_percentage_flow()  # this updates the flowReadout, so we avoid duplicating code
         # save the readout to the buffers
         self.__samples.append(self.__maxFlow * self.__flowReadout)
-        self.__sampleTimestamps.append(int(datetime.now().timestamp() * 1000))
+        self.__sampleTimestamps.append(np.uint64(datetime.now().timestamp() * 1000))
         return self.__maxFlow * self.__flowReadout
 
     # Return a percentage of the flow value, in reference to the maximum flow value
@@ -241,7 +241,7 @@ class Controller:
 
         if value > self.__sampleBufferSize:
             newBuf = RingBuffer(capacity=value, dtype=np.int16)
-            newTimestampBuf = RingBuffer(capacity=value, dtype=np.int32)
+            newTimestampBuf = RingBuffer(capacity=value, dtype=np.uint64)
 
             newBuf.extend(self.__samples)
             newTimestampBuf.extend(self.__sampleTimestamps)
@@ -250,7 +250,7 @@ class Controller:
             self.__sampleTimestamps = newTimestampBuf
         elif value < self.__sampleBufferSize:
             newBuf = RingBuffer(capacity=value, dtype=np.int16)
-            newTimestampBuf = RingBuffer(capacity=value, dtype=np.int32)
+            newTimestampBuf = RingBuffer(capacity=value, dtype=np.uint64)
 
             newBuf.extend(self.__samples[:-value])
             newTimestampBuf.extend(self.__sampleTimestamps[:-value])
