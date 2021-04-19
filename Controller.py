@@ -219,7 +219,7 @@ class Controller:
     # Save samples to a csv file, named after the current time and controller number it is coming from
     def save_readouts(self):
         now = datetime.now()
-        filename = now.strftime(f"%Y-%m-%d_%H-%M-%S_controller{self.__controllerNumber}.csv")
+        filename = now.strftime(f"controller{self.__controllerNumber}_%Y-%m-%d_%H-%M-%S.csv")
         file = open(filename, 'w')
         file.write(
             f"Gas density:{self.__gasDensity},Gas ID:{self.__gasId},Max flow:{self.__maxFlow}\nMeasurement, Unix timestamp (in milliseconds)\n")
