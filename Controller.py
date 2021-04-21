@@ -14,10 +14,13 @@ from datetime import datetime
 
 
 class Controller:
-    
-    def __init__(self, controllerNumber, sampleBufferSize=64):
+    def __init__(self, channel, serialConnection, sampleBufferSize=64):
+        # Addressing parameters
+        self.__channel = channel
+        self.__inputPort = 2 * channel - 1
+        self.__outputPort = 2 * channel
+
         # Internal parameters
-        self.__controllerNumber = controllerNumber
         self.__sampleBufferSize = sampleBufferSize
         self.__samples = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.uint16)
         self.__sampleTimestamps = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.uint64)
@@ -43,43 +46,12 @@ class Controller:
         self.__deviceInterface = ""
 
         # PySerial connection
-        self.__serial = serial.Serial(baudrate=57600,
-                                      parity=serial.PARITY_ODD,
-                                      stopbits=serial.STOPBITS_ONE,
-                                      bytesize=serial.EIGHTBITS,
-                                      timeout=1)
-        self.__serial.port = 'COM3'
-
-    # function that opens the serial port communication and configures anything else that's required
-    # TODO: should set the setpoint source and initial setpoint, get and set COM/USB parameters,
-    #  get gas parameters, possibly more
-    def open(self):
-        if not self.__serial.is_open:
-            self.__serial.open()
-        else:
-            print("Tried to open port {cNum} when it was opened".format(cNum=self.__controllerNumber))
-        return self.__serial.is_open
-
-    # TODO: Should reverse what open() did - set the setpoint control to voltage, possibly more
-    def close(self):
-        if self.__serial.is_open:
-            self.__serial.close()
-        else:
-            print("Tried to close port {cNum} when it was closed".format(cNum=self.__controllerNumber))
-        return self.__serial.is_open
-
-    # We assume the 'port' argument is taken from ListPortInfo.name.
-    # This should preserve compatibility between operating systems
-    # Even though the function checks if the serial port is already open,
-    # the GUI should also prevent the users form changing the port while it's open.
-    def change_port(self, port):
-        if not self.__serial.is_open:
-            self.__serial.port = port
+        self.__serial = serialConnection
 
     # Save samples to a csv file, named after the current time and controller number it is coming from
     def save_readouts(self):
         now = datetime.now()
-        filename = now.strftime(f"controller{self.__controllerNumber}_%Y-%m-%d_%H-%M-%S.csv")
+        filename = now.strftime(f"controller{self.__channel}_%Y-%m-%d_%H-%M-%S.csv")
         file = open(filename, 'w')
         file.write(f"Gas density:{self.__gasDensity},Gas ID:{self.__gasId},Max flow:{self.__maxFlow}\n")
         file.write("Measurement, Unix timestamp (in milliseconds)\n")
