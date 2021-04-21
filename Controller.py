@@ -97,30 +97,6 @@ class Controller:
                                       timeout=1)
         self.__serial.port = 'COM3'
 
-    # function that reads a given amount of bytes (8 bit frames), handles transmission errors,
-    # verifies the checksum and returns the read data (if no errors occurred)
-    def __get_response(self, frames):
-        response = self.__serial.read(frames)
-
-        # If the request code indicates an error, we just notify the user and don't do anything
-        if response[0] == self.REQUEST_ERROR:
-            print(f"Controller returned an error code: {response[1]}")
-            return None
-
-        # Verify checksum by taking the sum of all relevant bytes modulo 256, and checking it against sent checksum
-        # (last byte of the response) and returning the relevant data (None is returned if errors occurred)
-        if np.sum(response[0:len(response) - 1]) % 256 == response[-1]:
-            values = response[1:len(response) - 1]
-            if len(values) == 1:
-                return values[0]
-            elif len(values) == 2:
-                return values[0] << 8 + values[1]  # 16 bit value, MSB first
-            else:
-                return values  # if for some reason the response is longer than 2 bytes return the whole list
-        else:
-            print(f"Error while verifying checksum: {response}")
-            return None
-
     # function that opens the serial port communication and configures anything else that's required
     # TODO: should set the setpoint source and initial setpoint, get and set COM/USB parameters,
     #  get gas parameters, possibly more
@@ -147,83 +123,6 @@ class Controller:
         if not self.__serial.is_open:
             self.__serial.port = port
 
-    # Tries to write given value(s) to the given variable ID
-    # val2 is ignored if the given variable ID requires 1 byte
-    # This returns if writing was successful according to __get_response to maintain the function signature
-    def __write_var(self, varid, val1, val2=0):
-        assert self.__serial.is_open
-        # All writeable variables are of type uint
-        assert val1 >= 0
-        assert val2 >= 0
-
-        # Setpoint is the only 16bit writeable variable, others are 8bit
-        if varid == Controller.VAR_SETPOINT:
-            # The checksum is sum of all message bytes including request byte, modulo 256
-            checksum = (Controller.REQUEST_WRITE_VAR_INT16 + varid + val1 + val2) % 256
-            self.__serial.write([Controller.REQUEST_WRITE_VAR_INT16, varid, val1, val2, checksum])
-            response = self.__get_response(2)  # we expect a request code and a checksum
-            return response is not None
-        elif varid == Controller.VAR_OFFSET or varid == Controller.VAR_GAS_TYPE or varid == Controller.VAR_OVERRIDE or varid == Controller.VAR_SETPOINT_SOURCE:
-            checksum = (Controller.REQUEST_WRITE_VAR_CHAR + varid + val1) % 256
-            self.__serial.write([Controller.REQUEST_WRITE_VAR_CHAR, varid, val1, checksum])
-            response = self.__get_response(2)  # we expect a request code and a checksum
-            return response is not None
-        else:
-            raise ValueError(
-                "Unknown variable code was passed to __write_var (might be Output Select, which is not currently "
-                "supported) (ID: {value})".format(
-                    value=varid))
-
-    # Reads a value/values from the given variable ID
-    # Returns an integer with the requested value or None when an error occurred
-    # Since VAR_OFFSET_VAL is of type int16 there is a possibility that offset of -1
-    # might be interpreted as a wrong checksum, but that probability is very low.
-    def __read_var(self, varid):
-        assert self.__serial.is_open
-
-        # 8bit variables
-        if varid == Controller.VAR_OFFSET or varid == Controller.VAR_CALIB_GAS or varid == Controller.VAR_GAS_TYPE or varid == Controller.VAR_OVERRIDE or varid == Controller.VAR_SETPOINT_SOURCE or varid == Controller.VAR_VALVE_STATE:
-            checksum = (Controller.REQUEST_READ_VAR_CHAR + varid) % 256
-            self.__serial.write([Controller.REQUEST_READ_VAR_CHAR, varid, checksum])
-            return self.__get_response(3) # we expect a request code, a value and a checksum
-        elif varid == Controller.VAR_SN or varid == Controller.VAR_SW_VERSION or varid == Controller.VAR_OFFSET_VAL or varid == Controller.VAR_ADC_TEMP or varid == Controller.VAR_SETPOINT:
-            checksum = (Controller.REQUEST_READ_VAR_INT16 + varid) % 256
-            self.__serial.write([Controller.REQUEST_READ_VAR_INT16, varid, checksum])
-            return self.__get_response(4)  # request code, two 8 bit values and a checksum
-        else:
-            raise ValueError(
-                "Unknown variable code was passed to __read_var (might be Output Select, which is not currently "
-                "supported) (ID: {value})".format(
-                    value=varid))
-
-    # Returns real flow in sccm using the formula from the datasheet
-    def get_real_flow(self):
-        self.get_percentage_flow()  # this updates the flowReadout, so we avoid duplicating code
-        # save the readout to the buffers
-        self.__samples.append(self.__maxFlow * self.__flowReadout)
-        self.__sampleTimestamps.append(np.uint64(datetime.now().timestamp() * 1000))
-        return self.__maxFlow * self.__flowReadout
-
-    # Return a percentage of the flow value, in reference to the maximum flow value
-    def get_percentage_flow(self):
-        assert self.__serial.is_open
-        # this request takes no parameters, therefore the request ID is also the checksum
-        self.__serial.write([Controller.REQUEST_SEND_ONE_DATA,
-                             Controller.REQUEST_SEND_ONE_DATA])
-        response = self.__get_response(3)
-        if response is not None:
-            self.__flowReadout = response[1] / 10000.0
-        else:
-            self.__flowReadout = -1.0
-        return self.__flowReadout
-
-    # Returns the LM50 sensor temperature in Celsius degrees using the formula from the datasheet
-    def get_temperature(self):
-        assert self.__serial.is_open
-
-        self.__temperatureReadout = self.__read_var(Controller.VAR_ADC_TEMP)
-        return 100 * ((self.__temperatureReadout / 65535) + 1. / 6)
-
     # Save samples to a csv file, named after the current time and controller number it is coming from
     def save_readouts(self):
         now = datetime.now()
@@ -234,14 +133,6 @@ class Controller:
         for i in range(0, self.__sampleBufferSize - 1):
             file.write(f'{self.__samples[i]},{self.__sampleTimestamps[i]}\n')
         file.close()
-
-    # Set the valve override mode either to open, closed or normal (setpoint controlled)
-    def set_valve_override(self, state):
-        if state == self.CONST_VALVE_OPEN or state == self.CONST_VALVE_CLOSED or state == self.CONST_VALVE_NORMAL:
-            return self.__write_var(self.REQUEST_WRITE_VAR_CHAR, self.VAR_OVERRIDE, state)
-        else:
-            print("Wrong valve override state selected")
-            return False
 
     # function to change the amount of stored samples without losing previously gathered samples
     def change_buffer_size(self, value):
