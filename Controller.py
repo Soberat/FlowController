@@ -14,54 +14,7 @@ from datetime import datetime
 
 
 class Controller:
-    # Request codes constants
-    REQUEST_SEND_ONE_DATA = 0x31
-    REQUEST_SEND_N_DATA = 0x32
-    REQUEST_SEND_CONTINUOUS = 0x33
-    REQUEST_STOP = 0x34
-    REQUEST_READ_SERIAL_MFC = 0x68
-    REQUEST_READ_GASINFO = 0x72
-
-    REQUEST_READ_VAR_INT16 = 0x61
-    REQUEST_WRITE_VAR_INT16 = 0x62
-    REQUEST_READ_VAR_CHAR = 0x63
-    REQUEST_WRITE_VAR_CHAR = 0x64
-
-    # Error codes constants
-    REQUEST_ERROR = 0x45
-    ERROR_SEND_TIMEOUT = 0x01
-    ERROR_SENSOR_BUSY = 0x02
-    ERROR_CHECKSUM_ERROR = 0x03
-    ERROR_OVERRUN_ERROR = 0x04
-    ERROR_FRAME_ERROR = 0x08
-    ERROR_PARITY_ERROR = 0x10
-    ERROR_START_ERROR = 0x20
-    ERROR_INVALID_REQ = 0x40
-    ERROR_UNKNOWN_VARID = 0xC0
-
-    # Device variable codes (or IDs as called in the datasheet)
-    VAR_SN = 0
-    VAR_SW_VERSION = 1
-    VAR_OFFSET = 3
-    VAR_OFFSET_VAL = 4
-    VAR_CALIB_GAS = 5
-    VAR_GAS_TYPE = 6
-    VAR_ADC_TEMP = 15
-    VAR_SETPOINT = 20
-    VAR_OVERRIDE = 30
-    VAR_SETPOINT_SOURCE = 31
-    VAR_VALVE_STATE = 33
-    VAR_OUT_SELECT = 100
-
-    # Other constants
-    CONST_VALVE_OPEN = 2
-    CONST_VALVE_CLOSED = 1
-    CONST_VALVE_NORMAL = 0
-
-    CONST_SETPOINT_SERIAL = 0
-    CONST_SETPOINT_VOLTAGE = 1
-    CONST_SETPOINT_CURRENT = 2
-
+    
     def __init__(self, controllerNumber, sampleBufferSize=64):
         # Internal parameters
         self.__controllerNumber = controllerNumber
