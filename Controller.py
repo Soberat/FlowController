@@ -14,6 +14,26 @@ from datetime import datetime
 
 
 class Controller:
+
+    # Process value codes
+    PARAM_PV_MEASURE_UNITS = 0x04
+    PARAM_PV_TIME_BASE = 0x0A
+    PARAM_PV_DECIMAL_POINT = 0x03
+    PARAM_PV_GAS_FACTOR = 0x1B
+    PARAM_PV_LOG_TYPE = 0x1C
+    PARAM_PV_SIGNAL_TYPE = 0x00
+    PARAM_PV_FULL_SCALE = 0x09
+
+    # Setpoint value codes
+    PARAM_SP_SIGNAL_TYPE = 0x00
+    PARAM_SP_FULL_SCALE = 0x09
+    PARAM_SP_FUNCTION = 0x02
+    PARAM_SP_RATE = 0x01
+    PARAM_SP_VOR = 0x1D
+    PARAM_SP_BATCH = 0x2C
+    PARAM_SP_BLEND = 0x2D
+    PARAM_SP_SOURCE = 0x2E
+
     def __init__(self, channel, serialConnection, sampleBufferSize=64):
         # Addressing parameters
         self.__channel = channel
