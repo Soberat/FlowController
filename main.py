@@ -4,13 +4,25 @@ from serial.tools.list_ports import comports
 # This code is to be reused by the GUI later on
 
 # communication parameters from datasheet
-serialCon = serial.Serial(baudrate=19200,
+serialCon = serial.Serial(baudrate=9600,
                           parity=serial.PARITY_NONE,
                           stopbits=serial.STOPBITS_ONE,
                           bytesize=serial.EIGHTBITS)
 # setting the COM port after the constructor prevents automatic attempts at connecting
 serialCon.port = 'COM3'
 
+# COM port parameters
+__deviceId = ""
+__deviceName = ""
+
+# USB device info - unknown if needed
+__deviceVid = 0
+__devicePid = 0
+__deviceSN = ""
+__deviceLoc = ""
+__deviceManufacturer = ""
+__deviceModel = ""
+__deviceInterface = ""
 
 # function that opens the serial port communication and configures anything else that's required
 # TODO: should set the setpoint source and initial setpoint, get and set COM/USB parameters,

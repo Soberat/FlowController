@@ -25,8 +25,6 @@ class Controller:
     PARAM_PV_FULL_SCALE = 0x09
 
     # Setpoint value codes
-    PARAM_SP_SIGNAL_TYPE = 0x00
-    PARAM_SP_FULL_SCALE = 0x09
     PARAM_SP_FUNCTION = 0x02
     PARAM_SP_RATE = 0x01
     PARAM_SP_VOR = 0x1D
