@@ -32,6 +32,9 @@ class Controller:
     PARAM_SP_BLEND = 0x2D
     PARAM_SP_SOURCE = 0x2E
 
+    # Response codes - not very well documented, so the meaning is assumed
+    RESPONSE_OK = '4'
+
     def __init__(self, channel, serialConnection, sampleBufferSize=64):
         # Addressing parameters
         self.__channel = channel
@@ -50,21 +53,25 @@ class Controller:
         self.__gasId = 0
         self.__gasDensity = 0
 
-        # COM port parameters
-        self.__deviceId = ""
-        self.__deviceName = ""
-
-        # USB device info - unknown if needed
-        self.__deviceVid = 0
-        self.__devicePid = 0
-        self.__deviceSN = ""
-        self.__deviceLoc = ""
-        self.__deviceManufacturer = ""
-        self.__deviceModel = ""
-        self.__deviceInterface = ""
-
         # PySerial connection
-        self.__serial = serialConnection
+        self.__serial: serial.Serial = serialConnection
+
+    def read_value(self, param):
+        if param == Controller.PARAM_SP_FUNCTION or param == Controller.PARAM_SP_RATE or param == Controller.PARAM_SP_VOR or param == Controller.PARAM_SP_BATCH or param == Controller.PARAM_SP_BLEND or param == Controller.PARAM_SP_SOURCE:
+            # Create and send ascii encoded command via serial, wait for response
+            command = f'AZ.{self.__outputPort}P{param}?\r'
+            self.__serial.write(command.encode('ascii'))
+
+            response = self.__serial.read(self.__serial.in_waiting).decode('ascii').split(sep=',')
+            return response[2] == Controller.RESPONSE_OK
+        elif param == Controller.PARAM_PV_MEASURE_UNITS or param == Controller.PARAM_PV_TIME_BASE or param == Controller.PARAM_PV_DECIMAL_POINT or param == Controller.PARAM_PV_GAS_FACTOR or param == Controller.PARAM_PV_LOG_TYPE or param == Controller.PARAM_PV_SIGNAL_TYPE or param == Controller.PARAM_PV_FULL_SCALE:
+            command = f'AZ.{self.__inputPort}P{param}?\r'
+            self.__serial.write(command.encode('ascii'))
+
+            response = self.__serial.read(self.__serial.in_waiting).decode('ascii').split(sep=',')
+            return response[2] == Controller.RESPONSE_OK
+        else:
+            return False
 
     # Save samples to a csv file, named after the current time and controller number it is coming from
     def save_readouts(self):
