@@ -12,6 +12,7 @@ from datetime import datetime
 # TODO: checksum verification
 # TODO: An initial configuration function (SP, SP func, SP Source, getting config parameters (full scale, gas type etc))
 # TODO: Implement positive/negative acknowledgements
+# TODO: Implement support for multiple instances (network-supporting commands)
 # Class representing a single Brooks 4850 Mass Flow Controller,
 # Handling communication according to the datasheets
 
@@ -27,6 +28,8 @@ class Controller:
     PARAM_PV_FULL_SCALE = 0x09
 
     # Setpoint value codes
+    PARAM_SP_SIGNAL_TYPE = 0x00
+    PARAM_SP_FULL_SCALE = 0x09
     PARAM_SP_FUNCTION = 0x02
     PARAM_SP_RATE = 0x01
     PARAM_SP_VOR = 0x1D
