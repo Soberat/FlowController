@@ -5,14 +5,13 @@ from datetime import datetime
 
 
 # TODO: threading, as we want 4 parallel controller tabs to be constantly up-to-date with their respective info
-# TODO: Saving measurements
-# TODO: Setting preconfiguring parameters (head type, gas type)
+# TODO: Setting preconfiguring parameters
 # TODO: Timed dosing functions
 # TODO: public functions to be used by the GUI
 # TODO: checksum verification
-# TODO: An initial configuration function (SP, SP func, SP Source, getting config parameters (full scale, gas type etc))
-# TODO: Implement positive/negative acknowledgements
+# TODO: An initial configuration function (SP/Func/Source/Scale/Sigtype)
 # TODO: Implement support for multiple instances (network-supporting commands)
+# TODO: A function to turn a process on/off
 # Class representing a single Brooks 4850 Mass Flow Controller,
 # Handling communication according to the datasheets
 
