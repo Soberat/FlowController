@@ -197,7 +197,7 @@ class Controller:
             response = self.__serial.read(self.__serial.in_waiting).decode('ascii').split(sep=',')
             if response[2] == Controller.TYPE_RESPONSE:
                 return response[4]
-        elif param == Controller.PARAM_PV_MEASURE_UNITS or param == Controller.PARAM_PV_TIME_BASE or param == Controller.PARAM_PV_DECIMAL_POINT or param == Controller.PARAM_PV_GAS_FACTOR or param == Controller.PARAM_PV_LOG_TYPE or (param == Controller.PARAM_PV_SIGNAL_TYPE or param == Controller.PARAM_PV_FULL_SCALE and target == Controller.TARGET_PV):
+        elif param == Controller.PARAM_PV_MEASURE_UNITS or param == Controller.PARAM_PV_TIME_BASE or param == Controller.PARAM_PV_DECIMAL_POINT or param == Controller.PARAM_PV_GAS_FACTOR or (param == Controller.PARAM_PV_SIGNAL_TYPE or param == Controller.PARAM_PV_FULL_SCALE and target == Controller.TARGET_PV):
             command = f'AZ.{self.__inputPort}P{param}={value}\r'
             self.__serial.write(command.encode('ascii'))
 
