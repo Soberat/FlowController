@@ -63,15 +63,17 @@ class Controller:
             self.__serial.write(command.encode('ascii'))
 
             response = self.__serial.read(self.__serial.in_waiting).decode('ascii').split(sep=',')
-            return response[2] == Controller.RESPONSE_OK
+            if response[2] == Controller.RESPONSE_OK:
+                return response[4]
         elif param == Controller.PARAM_PV_MEASURE_UNITS or param == Controller.PARAM_PV_TIME_BASE or param == Controller.PARAM_PV_DECIMAL_POINT or param == Controller.PARAM_PV_GAS_FACTOR or param == Controller.PARAM_PV_LOG_TYPE or param == Controller.PARAM_PV_SIGNAL_TYPE or param == Controller.PARAM_PV_FULL_SCALE:
             command = f'AZ.{self.__inputPort}P{param}?\r'
             self.__serial.write(command.encode('ascii'))
 
             response = self.__serial.read(self.__serial.in_waiting).decode('ascii').split(sep=',')
-            return response[2] == Controller.RESPONSE_OK
+            if response[2] == Controller.RESPONSE_OK:
+                return response[4]
         else:
-            return False
+            return None
 
     # Save samples to a csv file, named after the current time and controller number it is coming from
     def save_readouts(self):
