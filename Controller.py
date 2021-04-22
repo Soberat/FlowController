@@ -10,6 +10,7 @@ from datetime import datetime
 # TODO: Timed dosing functions
 # TODO: public functions to be used by the GUI
 # TODO: checksum verification
+# TODO: An initial configuration function (SP, SP func, SP Source, getting config parameters (full scale, gas type etc))
 # TODO: Implement positive/negative acknowledgements
 # Class representing a single Brooks 4850 Mass Flow Controller,
 # Handling communication according to the datasheets
@@ -131,8 +132,9 @@ class Controller:
         "day": 4
     }
 
-    # Response codes - not very well documented, so the meaning is assumed
-    RESPONSE_OK = '4'
+    # Polled Message types - datasheet (C-4-5-2 Message Format)
+    TYPE_RESPONSE = '4'
+    TYPE_BATCH_CONTROL_STATUS = '5'
 
     def __init__(self, channel, serialConnection, sampleBufferSize=64):
         # Addressing parameters
@@ -142,7 +144,7 @@ class Controller:
 
         # Internal parameters
         self.__sampleBufferSize = sampleBufferSize
-        self.__samples = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.uint16)
+        self.__samples = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.float16)
         self.__sampleTimestamps = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.uint64)
 
         # Physical device measurements
@@ -162,14 +164,14 @@ class Controller:
             self.__serial.write(command.encode('ascii'))
 
             response = self.__serial.read(self.__serial.in_waiting).decode('ascii').split(sep=',')
-            if response[2] == Controller.RESPONSE_OK:
+            if response[2] == Controller.TYPE_RESPONSE:
                 return response[4]
         elif param == Controller.PARAM_PV_MEASURE_UNITS or param == Controller.PARAM_PV_TIME_BASE or param == Controller.PARAM_PV_DECIMAL_POINT or param == Controller.PARAM_PV_GAS_FACTOR or param == Controller.PARAM_PV_LOG_TYPE or param == Controller.PARAM_PV_SIGNAL_TYPE or param == Controller.PARAM_PV_FULL_SCALE:
             command = f'AZ.{self.__inputPort}P{param}?\r'
             self.__serial.write(command.encode('ascii'))
 
             response = self.__serial.read(self.__serial.in_waiting).decode('ascii').split(sep=',')
-            if response[2] == Controller.RESPONSE_OK:
+            if response[2] == Controller.TYPE_RESPONSE:
                 return response[4]
         else:
             return None
@@ -184,19 +186,30 @@ class Controller:
             self.__serial.write(command.encode('ascii'))
 
             response = self.__serial.read(self.__serial.in_waiting).decode('ascii').split(sep=',')
-            if response[2] == Controller.RESPONSE_OK:
+            if response[2] == Controller.TYPE_RESPONSE:
                 return response[4]
         elif param == Controller.PARAM_PV_MEASURE_UNITS or param == Controller.PARAM_PV_TIME_BASE or param == Controller.PARAM_PV_DECIMAL_POINT or param == Controller.PARAM_PV_GAS_FACTOR or param == Controller.PARAM_PV_LOG_TYPE or param == Controller.PARAM_PV_SIGNAL_TYPE or param == Controller.PARAM_PV_FULL_SCALE:
             command = f'AZ.{self.__inputPort}P{param}={value}\r'
             self.__serial.write(command.encode('ascii'))
 
             response = self.__serial.read(self.__serial.in_waiting).decode('ascii').split(sep=',')
-            if response[2] == Controller.RESPONSE_OK:
+            if response[2] == Controller.TYPE_RESPONSE:
                 return response[4]
         else:
             return None
 
-    # Sets the maximum possible rate in reference to control signal
+    # Function that generates a 'gather measurements' command and adds the new data to __samples
+    def get_measure(self):
+        command = f'AZ.{self.__inputPort}K\r'
+        self.__serial.write(command.encode('ascii'))
+
+        response = self.__serial.read(self.__serial.in_waiting).decode('ascii').split(sep=',')
+
+        if response[2] == Controller.TYPE_RESPONSE:
+            self.__samples.append(np.float16(response[3]))
+            self.__sampleTimestamps.append(datetime.now())
+
+    # From manual: "scale factor by which interpolated channel units are multiplied"
     def set_gas_factor(self, value):
         assert (-999.999 <= value <= 999.999)  # Possible setpoint values according to the datasheet (section C-5-4)
         value = int(value * 1000)  # value is written to serial as XXXXXX without the decimal
@@ -236,6 +249,7 @@ class Controller:
         value = int(value * 1000)  # value is written to serial as XXXXXX without the decimal
         return self.__write_value(Controller.PARAM_SP_BLEND, value)
 
+    # Set the setpoint source
     def set_source(self, source):
         assert(source == Controller.SP_SOURCE_SERIAL or source == Controller.SP_SOURCE_KEYPAD)
         return self.__write_value(Controller.PARAM_SP_SOURCE, source)
