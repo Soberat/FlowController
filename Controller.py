@@ -238,11 +238,17 @@ class Controller:
         assert(function == Controller.SP_FUNC_RATE or function == Controller.SP_FUNC_BATCH or function == Controller.SP_FUNC_BLEND)
         return self.__write_value(Controller.PARAM_SP_FUNCTION, function)
 
-    # Sets the maximum possible rate in reference to control signal
-    def set_full_scale(self, value):
+    # DS: "Analog interpolator representing the eng. units of the greater measured signal"
+    def set_pv_full_scale(self, value):
         assert (-999.999 <= value <= 999.999)  # Possible setpoint values according to the datasheet (section C-5-4)
         value = int(value * 1000)  # value is written to serial as XXXXXX without the decimal
-        return self.__write_value(Controller.PARAM_PV_FULL_SCALE, value)
+        return self.__write_value(Controller.PARAM_PV_FULL_SCALE, value, target=Controller.TARGET_PV)
+
+    # DS: "Analog de-interpolator representing the eng. units of the greatest measured signal"
+    def set_sp_full_scale(self, value):
+        assert (-999.999 <= value <= 999.999)  # Possible setpoint values according to the datasheet (section C-5-4)
+        value = int(value * 1000)  # value is written to serial as XXXXXX without the decimal
+        return self.__write_value(Controller.PARAM_SP_FULL_SCALE, value, target=Controller.TARGET_SP)
 
     # Public function to control manual valve override option
     def set_valve_override(self, state):
