@@ -153,7 +153,8 @@ class Controller:
 
         # Internal parameters
         self.__sampleBufferSize = sampleBufferSize
-        self.__samples = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.float16)
+        self.__samplesPV = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.float16)
+        self.__samplesTotalizer = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.float16)
         self.__sampleTimestamps = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.uint64)
 
         # Physical device measurements
@@ -215,7 +216,8 @@ class Controller:
         response = self.__serial.read(self.__serial.in_waiting).decode('ascii').split(sep=',')
 
         if response[2] == Controller.TYPE_RESPONSE:
-            self.__samples.append(np.float16(response[3]))
+            self.__samplesPV.append(np.float16(response[5]))
+            self.__samplesTotalizer.append(np.float16(response[4]))
             self.__sampleTimestamps.append(datetime.now())
 
     # From manual: "scale factor by which interpolated channel units are multiplied"
