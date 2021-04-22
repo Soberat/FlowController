@@ -209,7 +209,7 @@ class Controller:
             return None
 
     # Function that generates a 'gather measurements' command and adds the new data to __samples
-    def get_measure(self):
+    def get_measurements(self):
         command = f'AZ.{self.__inputPort}K\r'
         self.__serial.write(command.encode('ascii'))
 
