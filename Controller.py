@@ -286,9 +286,9 @@ class Controller:
         filename = now.strftime(f"controller{self.__channel}_%Y-%m-%d_%H-%M-%S.csv")
         file = open(filename, 'w')
         file.write(f"Gas density:{self.__gasDensity},Gas ID:{self.__gasId},Max flow:{self.__maxFlow}\n")
-        file.write("Measurement, Unix timestamp (in milliseconds)\n")
+        file.write("Measurement [Rate], Measurement [Total], Unix timestamp (in milliseconds)\n")
         for i in range(0, self.__sampleBufferSize - 1):
-            file.write(f'{self.__samples[i]},{self.__sampleTimestamps[i]}\n')
+            file.write(f'{self.__samplesPV[i]},{self.__samplesTotalizer[i]},{self.__sampleTimestamps[i]}\n')
         file.close()
 
     # function to change the amount of stored samples without losing previously gathered samples
@@ -296,20 +296,26 @@ class Controller:
         assert value >= 8
 
         if value > self.__sampleBufferSize:
-            newBuf = RingBuffer(capacity=value, dtype=np.int16)
+            newBufPV = RingBuffer(capacity=value, dtype=np.int16)
+            newBufTotal = RingBuffer(capacity=value, dtype=np.int16)
             newTimestampBuf = RingBuffer(capacity=value, dtype=np.uint64)
 
-            newBuf.extend(self.__samples)
+            newBufPV.extend(self.__samplesPV)
+            newBufTotal.extend(self.__samplesTotalizer)
             newTimestampBuf.extend(self.__sampleTimestamps)
 
-            self.__samples = newBuf
+            self.__samplesPV = newBufPV
+            self.__samplesTotalizer = newBufTotal
             self.__sampleTimestamps = newTimestampBuf
         elif value < self.__sampleBufferSize:
-            newBuf = RingBuffer(capacity=value, dtype=np.int16)
+            newBufPV = RingBuffer(capacity=value, dtype=np.int16)
+            newBufTotal = RingBuffer(capacity=value, dtype=np.int16)
             newTimestampBuf = RingBuffer(capacity=value, dtype=np.uint64)
 
-            newBuf.extend(self.__samples[:-value])
+            newBufPV.extend(self.__samplesPV[:-value])
+            newBufTotal.extend(self.__samplesTotalizer[:-value])
             newTimestampBuf.extend(self.__sampleTimestamps[:-value])
 
-            self.__samples = newBuf
+            self.__samplesPV = newBufPV
+            self.__samplesTotalizer = newBufTotal
             self.__sampleTimestamps = newTimestampBuf
