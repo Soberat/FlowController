@@ -9,6 +9,7 @@ from datetime import datetime
 # TODO: Setting preconfiguring parameters (head type, gas type)
 # TODO: Timed dosing functions
 # TODO: public functions to be used by the GUI
+# TODO: checksum verification
 # Class representing a single Brooks 4850 Mass Flow Controller,
 # Handling communication according to the datasheets
 
@@ -67,6 +68,27 @@ class Controller:
                 return response[4]
         elif param == Controller.PARAM_PV_MEASURE_UNITS or param == Controller.PARAM_PV_TIME_BASE or param == Controller.PARAM_PV_DECIMAL_POINT or param == Controller.PARAM_PV_GAS_FACTOR or param == Controller.PARAM_PV_LOG_TYPE or param == Controller.PARAM_PV_SIGNAL_TYPE or param == Controller.PARAM_PV_FULL_SCALE:
             command = f'AZ.{self.__inputPort}P{param}?\r'
+            self.__serial.write(command.encode('ascii'))
+
+            response = self.__serial.read(self.__serial.in_waiting).decode('ascii').split(sep=',')
+            if response[2] == Controller.RESPONSE_OK:
+                return response[4]
+        else:
+            return None
+
+    # This is an internal write functions to be used by the public functions
+    # Returns whatever was written to the variable, None if some error occurred
+    def __write_value(self, param, value):
+        if param == Controller.PARAM_SP_FUNCTION or param == Controller.PARAM_SP_RATE or param == Controller.PARAM_SP_VOR or param == Controller.PARAM_SP_BATCH or param == Controller.PARAM_SP_BLEND or param == Controller.PARAM_SP_SOURCE:
+            # Create and send ascii encoded command via serial, wait for response
+            command = f'AZ.{self.__outputPort}P{param}={value}\r'
+            self.__serial.write(command.encode('ascii'))
+
+            response = self.__serial.read(self.__serial.in_waiting).decode('ascii').split(sep=',')
+            if response[2] == Controller.RESPONSE_OK:
+                return response[4]
+        elif param == Controller.PARAM_PV_MEASURE_UNITS or param == Controller.PARAM_PV_TIME_BASE or param == Controller.PARAM_PV_DECIMAL_POINT or param == Controller.PARAM_PV_GAS_FACTOR or param == Controller.PARAM_PV_LOG_TYPE or param == Controller.PARAM_PV_SIGNAL_TYPE or param == Controller.PARAM_PV_FULL_SCALE:
+            command = f'AZ.{self.__inputPort}P{param}={value}\r'
             self.__serial.write(command.encode('ascii'))
 
             response = self.__serial.read(self.__serial.in_waiting).decode('ascii').split(sep=',')
