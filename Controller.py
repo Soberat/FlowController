@@ -57,7 +57,7 @@ class Controller:
         # PySerial connection
         self.__serial: serial.Serial = serialConnection
 
-    def read_value(self, param):
+    def __read_value(self, param):
         if param == Controller.PARAM_SP_FUNCTION or param == Controller.PARAM_SP_RATE or param == Controller.PARAM_SP_VOR or param == Controller.PARAM_SP_BATCH or param == Controller.PARAM_SP_BLEND or param == Controller.PARAM_SP_SOURCE:
             # Create and send ascii encoded command via serial, wait for response
             command = f'AZ.{self.__outputPort}P{param}?\r'
