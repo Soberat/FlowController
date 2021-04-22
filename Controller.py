@@ -56,7 +56,6 @@ class Controller:
     TARGET_PV = 0x1F
     TARGET_SP = 0x2F
 
-
     # Input port types
     # type : internal code dictionary
     INPUT_PORT_TYPES = {
@@ -249,6 +248,16 @@ class Controller:
         assert (-999.999 <= value <= 999.999)  # Possible setpoint values according to the datasheet (section C-5-4)
         value = int(value * 1000)  # value is written to serial as XXXXXX without the decimal
         return self.__write_value(Controller.PARAM_SP_FULL_SCALE, value, target=Controller.TARGET_SP)
+
+    # Set the input signal type
+    def set_pv_signal_type(self, sigtype):
+        assert(self.INPUT_PORT_TYPES.keys().__contains__(sigtype))
+        return self.__write_value(Controller.PARAM_PV_SIGNAL_TYPE, Controller.INPUT_PORT_TYPES[sigtype], target=Controller.TARGET_PV)
+
+    # Set the output signal type
+    def set_sp_signal_type(self, sigtype):
+        assert(self.OUTPUT_PORT_TYPES.keys().__contains__(sigtype))
+        return self.__write_value(Controller.PARAM_SP_SIGNAL_TYPE, Controller.OUTPUT_PORT_TYPES[sigtype], target=Controller.TARGET_SP)
 
     # Public function to control manual valve override option
     def set_valve_override(self, state):
