@@ -22,7 +22,7 @@ class Controller:
     PARAM_PV_TIME_BASE = 0x0A
     PARAM_PV_DECIMAL_POINT = 0x03
     PARAM_PV_GAS_FACTOR = 0x1B
-    PARAM_PV_LOG_TYPE = 0x1C
+    PARAM_PV_LOG_TYPE = 0x1C  # Unused according to the 10.2017 datasheet (page 3-10)
     PARAM_PV_SIGNAL_TYPE = 0x00
     PARAM_PV_FULL_SCALE = 0x09
 
@@ -166,7 +166,7 @@ class Controller:
             response = self.__serial.read(self.__serial.in_waiting).decode('ascii').split(sep=',')
             if response[2] == Controller.TYPE_RESPONSE:
                 return response[4]
-        elif param == Controller.PARAM_PV_MEASURE_UNITS or param == Controller.PARAM_PV_TIME_BASE or param == Controller.PARAM_PV_DECIMAL_POINT or param == Controller.PARAM_PV_GAS_FACTOR or param == Controller.PARAM_PV_LOG_TYPE or param == Controller.PARAM_PV_SIGNAL_TYPE or param == Controller.PARAM_PV_FULL_SCALE:
+        elif param == Controller.PARAM_PV_MEASURE_UNITS or param == Controller.PARAM_PV_TIME_BASE or param == Controller.PARAM_PV_DECIMAL_POINT or param == Controller.PARAM_PV_GAS_FACTOR or param == Controller.PARAM_PV_SIGNAL_TYPE or param == Controller.PARAM_PV_FULL_SCALE:
             command = f'AZ.{self.__inputPort}P{param}?\r'
             self.__serial.write(command.encode('ascii'))
 
