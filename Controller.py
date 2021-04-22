@@ -51,6 +51,12 @@ class Controller:
     SP_SOURCE_KEYPAD = 0
     SP_SOURCE_SERIAL = 1
 
+    # "Targets", required for reading full_scale and signal_type values, that share codes between SP and PV
+    # Values chosen arbitrarily
+    TARGET_PV = 0x1F
+    TARGET_SP = 0x2F
+
+
     # Input port types
     # type : internal code dictionary
     INPUT_PORT_TYPES = {
@@ -160,8 +166,8 @@ class Controller:
         # PySerial connection
         self.__serial: serial.Serial = serialConnection
 
-    def __read_value(self, param):
-        if param == Controller.PARAM_SP_FUNCTION or param == Controller.PARAM_SP_RATE or param == Controller.PARAM_SP_VOR or param == Controller.PARAM_SP_BATCH or param == Controller.PARAM_SP_BLEND or param == Controller.PARAM_SP_SOURCE:
+    def __read_value(self, param, target=None):
+        if param == Controller.PARAM_SP_FUNCTION or param == Controller.PARAM_SP_RATE or param == Controller.PARAM_SP_VOR or param == Controller.PARAM_SP_BATCH or param == Controller.PARAM_SP_BLEND or param == Controller.PARAM_SP_SOURCE or (param == Controller.PARAM_SP_FULL_SCALE or param == Controller.PARAM_SP_SIGNAL_TYPE and target == Controller.TARGET_SP):
             # Create and send ascii encoded command via serial, wait for response
             command = f'AZ.{self.__outputPort}P{param}?\r'
             self.__serial.write(command.encode('ascii'))
@@ -169,7 +175,7 @@ class Controller:
             response = self.__serial.read(self.__serial.in_waiting).decode('ascii').split(sep=',')
             if response[2] == Controller.TYPE_RESPONSE:
                 return response[4]
-        elif param == Controller.PARAM_PV_MEASURE_UNITS or param == Controller.PARAM_PV_TIME_BASE or param == Controller.PARAM_PV_DECIMAL_POINT or param == Controller.PARAM_PV_GAS_FACTOR or param == Controller.PARAM_PV_SIGNAL_TYPE or param == Controller.PARAM_PV_FULL_SCALE:
+        elif param == Controller.PARAM_PV_MEASURE_UNITS or param == Controller.PARAM_PV_TIME_BASE or param == Controller.PARAM_PV_DECIMAL_POINT or param == Controller.PARAM_PV_GAS_FACTOR or (param == Controller.PARAM_PV_SIGNAL_TYPE or param == Controller.PARAM_PV_FULL_SCALE and target == Controller.TARGET_PV):
             command = f'AZ.{self.__inputPort}P{param}?\r'
             self.__serial.write(command.encode('ascii'))
 
