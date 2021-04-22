@@ -12,6 +12,7 @@ from datetime import datetime
 # TODO: checksum verification
 # TODO: An initial configuration function (SP, SP func, SP Source, getting config parameters (full scale, gas type etc))
 # TODO: Implement positive/negative acknowledgements
+# TODO: Implement support for multiple instances (network-supporting commands)
 # Class representing a single Brooks 4850 Mass Flow Controller,
 # Handling communication according to the datasheets
 
@@ -27,6 +28,8 @@ class Controller:
     PARAM_PV_FULL_SCALE = 0x09
 
     # Setpoint value codes
+    PARAM_SP_SIGNAL_TYPE = 0x00
+    PARAM_SP_FULL_SCALE = 0x09
     PARAM_SP_FUNCTION = 0x02
     PARAM_SP_RATE = 0x01
     PARAM_SP_VOR = 0x1D
@@ -47,6 +50,11 @@ class Controller:
     # Setpoint sources
     SP_SOURCE_KEYPAD = 0
     SP_SOURCE_SERIAL = 1
+
+    # "Targets", required for reading full_scale and signal_type values, that share codes between SP and PV
+    # Values chosen arbitrarily
+    TARGET_PV = 0x1F
+    TARGET_SP = 0x2F
 
     # Input port types
     # type : internal code dictionary
@@ -144,7 +152,8 @@ class Controller:
 
         # Internal parameters
         self.__sampleBufferSize = sampleBufferSize
-        self.__samples = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.float16)
+        self.__samplesPV = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.float16)
+        self.__samplesTotalizer = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.float16)
         self.__sampleTimestamps = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.uint64)
 
         # Physical device measurements
@@ -157,8 +166,8 @@ class Controller:
         # PySerial connection
         self.__serial: serial.Serial = serialConnection
 
-    def __read_value(self, param):
-        if param == Controller.PARAM_SP_FUNCTION or param == Controller.PARAM_SP_RATE or param == Controller.PARAM_SP_VOR or param == Controller.PARAM_SP_BATCH or param == Controller.PARAM_SP_BLEND or param == Controller.PARAM_SP_SOURCE:
+    def __read_value(self, param, target=None):
+        if param == Controller.PARAM_SP_FUNCTION or param == Controller.PARAM_SP_RATE or param == Controller.PARAM_SP_VOR or param == Controller.PARAM_SP_BATCH or param == Controller.PARAM_SP_BLEND or param == Controller.PARAM_SP_SOURCE or (param == Controller.PARAM_SP_FULL_SCALE or param == Controller.PARAM_SP_SIGNAL_TYPE and target == Controller.TARGET_SP):
             # Create and send ascii encoded command via serial, wait for response
             command = f'AZ.{self.__outputPort}P{param}?\r'
             self.__serial.write(command.encode('ascii'))
@@ -166,7 +175,7 @@ class Controller:
             response = self.__serial.read(self.__serial.in_waiting).decode('ascii').split(sep=',')
             if response[2] == Controller.TYPE_RESPONSE:
                 return response[4]
-        elif param == Controller.PARAM_PV_MEASURE_UNITS or param == Controller.PARAM_PV_TIME_BASE or param == Controller.PARAM_PV_DECIMAL_POINT or param == Controller.PARAM_PV_GAS_FACTOR or param == Controller.PARAM_PV_SIGNAL_TYPE or param == Controller.PARAM_PV_FULL_SCALE:
+        elif param == Controller.PARAM_PV_MEASURE_UNITS or param == Controller.PARAM_PV_TIME_BASE or param == Controller.PARAM_PV_DECIMAL_POINT or param == Controller.PARAM_PV_GAS_FACTOR or (param == Controller.PARAM_PV_SIGNAL_TYPE or param == Controller.PARAM_PV_FULL_SCALE and target == Controller.TARGET_PV):
             command = f'AZ.{self.__inputPort}P{param}?\r'
             self.__serial.write(command.encode('ascii'))
 
@@ -178,9 +187,9 @@ class Controller:
 
     # This is an internal write functions to be used by the public functions
     # Returns whatever was written to the variable, None if some error occurred
-    def __write_value(self, param, value):
+    def __write_value(self, param, value, target=None):
         # The only difference for writing is the input or output port, which are addressed differently
-        if param == Controller.PARAM_SP_FUNCTION or param == Controller.PARAM_SP_RATE or param == Controller.PARAM_SP_VOR or param == Controller.PARAM_SP_BATCH or param == Controller.PARAM_SP_BLEND or param == Controller.PARAM_SP_SOURCE:
+        if param == Controller.PARAM_SP_FUNCTION or param == Controller.PARAM_SP_RATE or param == Controller.PARAM_SP_VOR or param == Controller.PARAM_SP_BATCH or param == Controller.PARAM_SP_BLEND or param == Controller.PARAM_SP_SOURCE or (param == Controller.PARAM_SP_FULL_SCALE or param == Controller.PARAM_SP_SIGNAL_TYPE and target == Controller.TARGET_SP):
             # Create and send ascii encoded command via serial, wait for response
             command = f'AZ.{self.__outputPort}P{param}={value}\r'
             self.__serial.write(command.encode('ascii'))
@@ -188,7 +197,7 @@ class Controller:
             response = self.__serial.read(self.__serial.in_waiting).decode('ascii').split(sep=',')
             if response[2] == Controller.TYPE_RESPONSE:
                 return response[4]
-        elif param == Controller.PARAM_PV_MEASURE_UNITS or param == Controller.PARAM_PV_TIME_BASE or param == Controller.PARAM_PV_DECIMAL_POINT or param == Controller.PARAM_PV_GAS_FACTOR or param == Controller.PARAM_PV_LOG_TYPE or param == Controller.PARAM_PV_SIGNAL_TYPE or param == Controller.PARAM_PV_FULL_SCALE:
+        elif param == Controller.PARAM_PV_MEASURE_UNITS or param == Controller.PARAM_PV_TIME_BASE or param == Controller.PARAM_PV_DECIMAL_POINT or param == Controller.PARAM_PV_GAS_FACTOR or (param == Controller.PARAM_PV_SIGNAL_TYPE or param == Controller.PARAM_PV_FULL_SCALE and target == Controller.TARGET_PV):
             command = f'AZ.{self.__inputPort}P{param}={value}\r'
             self.__serial.write(command.encode('ascii'))
 
@@ -199,14 +208,15 @@ class Controller:
             return None
 
     # Function that generates a 'gather measurements' command and adds the new data to __samples
-    def get_measure(self):
+    def get_measurements(self):
         command = f'AZ.{self.__inputPort}K\r'
         self.__serial.write(command.encode('ascii'))
 
         response = self.__serial.read(self.__serial.in_waiting).decode('ascii').split(sep=',')
 
         if response[2] == Controller.TYPE_RESPONSE:
-            self.__samples.append(np.float16(response[3]))
+            self.__samplesPV.append(np.float16(response[5]))
+            self.__samplesTotalizer.append(np.float16(response[4]))
             self.__sampleTimestamps.append(datetime.now())
 
     # From manual: "scale factor by which interpolated channel units are multiplied"
@@ -227,11 +237,27 @@ class Controller:
         assert(function == Controller.SP_FUNC_RATE or function == Controller.SP_FUNC_BATCH or function == Controller.SP_FUNC_BLEND)
         return self.__write_value(Controller.PARAM_SP_FUNCTION, function)
 
-    # Sets the maximum possible rate in reference to control signal
-    def set_full_scale(self, value):
+    # DS: "Analog interpolator representing the eng. units of the greater measured signal"
+    def set_pv_full_scale(self, value):
         assert (-999.999 <= value <= 999.999)  # Possible setpoint values according to the datasheet (section C-5-4)
         value = int(value * 1000)  # value is written to serial as XXXXXX without the decimal
-        return self.__write_value(Controller.PARAM_PV_FULL_SCALE, value)
+        return self.__write_value(Controller.PARAM_PV_FULL_SCALE, value, target=Controller.TARGET_PV)
+
+    # DS: "Analog de-interpolator representing the eng. units of the greatest measured signal"
+    def set_sp_full_scale(self, value):
+        assert (-999.999 <= value <= 999.999)  # Possible setpoint values according to the datasheet (section C-5-4)
+        value = int(value * 1000)  # value is written to serial as XXXXXX without the decimal
+        return self.__write_value(Controller.PARAM_SP_FULL_SCALE, value, target=Controller.TARGET_SP)
+
+    # Set the input signal type
+    def set_pv_signal_type(self, sigtype):
+        assert(self.INPUT_PORT_TYPES.keys().__contains__(sigtype))
+        return self.__write_value(Controller.PARAM_PV_SIGNAL_TYPE, Controller.INPUT_PORT_TYPES[sigtype], target=Controller.TARGET_PV)
+
+    # Set the output signal type
+    def set_sp_signal_type(self, sigtype):
+        assert(self.OUTPUT_PORT_TYPES.keys().__contains__(sigtype))
+        return self.__write_value(Controller.PARAM_SP_SIGNAL_TYPE, Controller.OUTPUT_PORT_TYPES[sigtype], target=Controller.TARGET_SP)
 
     # Public function to control manual valve override option
     def set_valve_override(self, state):
@@ -260,9 +286,9 @@ class Controller:
         filename = now.strftime(f"controller{self.__channel}_%Y-%m-%d_%H-%M-%S.csv")
         file = open(filename, 'w')
         file.write(f"Gas density:{self.__gasDensity},Gas ID:{self.__gasId},Max flow:{self.__maxFlow}\n")
-        file.write("Measurement, Unix timestamp (in milliseconds)\n")
+        file.write("Measurement [Rate], Measurement [Total], Unix timestamp (in milliseconds)\n")
         for i in range(0, self.__sampleBufferSize - 1):
-            file.write(f'{self.__samples[i]},{self.__sampleTimestamps[i]}\n')
+            file.write(f'{self.__samplesPV[i]},{self.__samplesTotalizer[i]},{self.__sampleTimestamps[i]}\n')
         file.close()
 
     # function to change the amount of stored samples without losing previously gathered samples
@@ -270,20 +296,26 @@ class Controller:
         assert value >= 8
 
         if value > self.__sampleBufferSize:
-            newBuf = RingBuffer(capacity=value, dtype=np.int16)
+            newBufPV = RingBuffer(capacity=value, dtype=np.int16)
+            newBufTotal = RingBuffer(capacity=value, dtype=np.int16)
             newTimestampBuf = RingBuffer(capacity=value, dtype=np.uint64)
 
-            newBuf.extend(self.__samples)
+            newBufPV.extend(self.__samplesPV)
+            newBufTotal.extend(self.__samplesTotalizer)
             newTimestampBuf.extend(self.__sampleTimestamps)
 
-            self.__samples = newBuf
+            self.__samplesPV = newBufPV
+            self.__samplesTotalizer = newBufTotal
             self.__sampleTimestamps = newTimestampBuf
         elif value < self.__sampleBufferSize:
-            newBuf = RingBuffer(capacity=value, dtype=np.int16)
+            newBufPV = RingBuffer(capacity=value, dtype=np.int16)
+            newBufTotal = RingBuffer(capacity=value, dtype=np.int16)
             newTimestampBuf = RingBuffer(capacity=value, dtype=np.uint64)
 
-            newBuf.extend(self.__samples[:-value])
+            newBufPV.extend(self.__samplesPV[:-value])
+            newBufTotal.extend(self.__samplesTotalizer[:-value])
             newTimestampBuf.extend(self.__sampleTimestamps[:-value])
 
-            self.__samples = newBuf
+            self.__samplesPV = newBufPV
+            self.__samplesTotalizer = newBufTotal
             self.__sampleTimestamps = newTimestampBuf
