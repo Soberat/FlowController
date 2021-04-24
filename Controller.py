@@ -9,6 +9,7 @@ from datetime import datetime
 # TODO: A function to turn a process on/off
 # Class representing a single Brooks 4850 Mass Flow Controller,
 # Handling communication according to the datasheets
+from Sensor import Sensor
 
 
 class Controller:
@@ -160,6 +161,10 @@ class Controller:
 
         # PySerial connection
         self.__serial: serial.Serial = serialConnection
+
+        # Optional sensor objects
+        self.sensor1 = Sensor()
+        self.sensor2 = Sensor()
 
     def __read_value(self, param, target=None):
         if param == Controller.PARAM_SP_FUNCTION or param == Controller.PARAM_SP_RATE or param == Controller.PARAM_SP_VOR or param == Controller.PARAM_SP_BATCH or param == Controller.PARAM_SP_BLEND or param == Controller.PARAM_SP_SOURCE or (param == Controller.PARAM_SP_FULL_SCALE or param == Controller.PARAM_SP_SIGNAL_TYPE and target == Controller.TARGET_SP):
