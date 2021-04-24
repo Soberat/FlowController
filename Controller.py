@@ -4,13 +4,8 @@ from numpy_ringbuffer import RingBuffer
 from datetime import datetime
 
 
-# TODO: threading, as we want 4 parallel controller tabs to be constantly up-to-date with their respective info
-# TODO: Setting preconfiguring parameters
-# TODO: Timed dosing functions
 # TODO: public functions to be used by the GUI
-# TODO: checksum verification
 # TODO: An initial configuration function (SP/Func/Source/Scale/Sigtype)
-# TODO: Implement support for multiple instances (network-supporting commands)
 # TODO: A function to turn a process on/off
 # Class representing a single Brooks 4850 Mass Flow Controller,
 # Handling communication according to the datasheets
@@ -143,11 +138,12 @@ class Controller:
     TYPE_RESPONSE = '4'
     TYPE_BATCH_CONTROL_STATUS = '5'
 
-    def __init__(self, channel, serialConnection, sampleBufferSize=64):
+    def __init__(self, channel, serialConnection, deviceAddress=None, sampleBufferSize=64):
         # Addressing parameters
         self.__channel = channel
         self.__inputPort = 2 * channel - 1
         self.__outputPort = 2 * channel
+        self.__address: str = deviceAddress  # this is a string because it needs to be zero-padded to be 5 chars long
 
         # Internal parameters
         self.__sampleBufferSize = sampleBufferSize
@@ -168,14 +164,20 @@ class Controller:
     def __read_value(self, param, target=None):
         if param == Controller.PARAM_SP_FUNCTION or param == Controller.PARAM_SP_RATE or param == Controller.PARAM_SP_VOR or param == Controller.PARAM_SP_BATCH or param == Controller.PARAM_SP_BLEND or param == Controller.PARAM_SP_SOURCE or (param == Controller.PARAM_SP_FULL_SCALE or param == Controller.PARAM_SP_SIGNAL_TYPE and target == Controller.TARGET_SP):
             # Create and send ascii encoded command via serial, wait for response
-            command = f'AZ.{self.__outputPort}P{param}?\r'
+            if self.__address is None:
+                command = f'AZ.{self.__outputPort}P{param}?\r'
+            else:
+                command = f'AZ{self.__address}.{self.__outputPort}P{param}?\r'
             self.__serial.write(command.encode('ascii'))
 
             response = self.__serial.read(self.__serial.in_waiting).decode('ascii').split(sep=',')
             if response[2] == Controller.TYPE_RESPONSE:
                 return response[4]
         elif param == Controller.PARAM_PV_MEASURE_UNITS or param == Controller.PARAM_PV_TIME_BASE or param == Controller.PARAM_PV_DECIMAL_POINT or param == Controller.PARAM_PV_GAS_FACTOR or (param == Controller.PARAM_PV_SIGNAL_TYPE or param == Controller.PARAM_PV_FULL_SCALE and target == Controller.TARGET_PV):
-            command = f'AZ.{self.__inputPort}P{param}?\r'
+            if self.__address is None:
+                command = f'AZ.{self.__inputPort}P{param}?\r'
+            else:
+                command = f'AZ{self.__address}.{self.__inputPort}P{param}?\r'
             self.__serial.write(command.encode('ascii'))
 
             response = self.__serial.read(self.__serial.in_waiting).decode('ascii').split(sep=',')
@@ -190,14 +192,20 @@ class Controller:
         # The only difference for writing is the input or output port, which are addressed differently
         if param == Controller.PARAM_SP_FUNCTION or param == Controller.PARAM_SP_RATE or param == Controller.PARAM_SP_VOR or param == Controller.PARAM_SP_BATCH or param == Controller.PARAM_SP_BLEND or param == Controller.PARAM_SP_SOURCE or (param == Controller.PARAM_SP_FULL_SCALE or param == Controller.PARAM_SP_SIGNAL_TYPE and target == Controller.TARGET_SP):
             # Create and send ascii encoded command via serial, wait for response
-            command = f'AZ.{self.__outputPort}P{param}={value}\r'
+            if self.__address is None:
+                command = f'AZ.{self.__outputPort}P{param}={value}\r'
+            else:
+                command = f'AZ{self.__address}.{self.__outputPort}P{param}={value}\r'
             self.__serial.write(command.encode('ascii'))
 
             response = self.__serial.read(self.__serial.in_waiting).decode('ascii').split(sep=',')
             if response[2] == Controller.TYPE_RESPONSE:
                 return response[4]
         elif param == Controller.PARAM_PV_MEASURE_UNITS or param == Controller.PARAM_PV_TIME_BASE or param == Controller.PARAM_PV_DECIMAL_POINT or param == Controller.PARAM_PV_GAS_FACTOR or (param == Controller.PARAM_PV_SIGNAL_TYPE or param == Controller.PARAM_PV_FULL_SCALE and target == Controller.TARGET_PV):
-            command = f'AZ.{self.__inputPort}P{param}={value}\r'
+            if self.__address is None:
+                command = f'AZ.{self.__inputPort}P{param}={value}\r'
+            else:
+                command = f'AZ{self.__address}.{self.__outputPort}P{param}={value}\r'
             self.__serial.write(command.encode('ascii'))
 
             response = self.__serial.read(self.__serial.in_waiting).decode('ascii').split(sep=',')
