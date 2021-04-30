@@ -14,20 +14,33 @@ class AR6X2(minimalmodbus.Instrument):
         * address (int): slave address in the range 1 to 247
 
     """
+    PARAM_OUTPUT_OFF = 0
+    PARAM_OUTPUT_HEATING = 2
 
     def __init__(self, port, address):
         # A serial connection. The default values match the AR6x2 datasheet
         # However, the AR6x2 unit should have the baudrate set to 19200
         minimalmodbus.Instrument.__init__(self, port, address)
+        self.__rangeLow = 0.0
+        self.__rangeHigh = 100.0
 
     def turn_off(self):
-        raise NotImplementedError
+        self.write_register(0x2D, AR6X2.PARAM_OUTPUT_OFF, 1)
 
     def turn_on(self):
-        raise NotImplementedError
+        self.write_register(0x2D, AR6X2.PARAM_OUTPUT_HEATING, 1)
 
     def set_temperature(self, temperature):
-        raise NotImplementedError
+        assert self.__rangeLow <= temperature <= self.__rangeHigh
+        self.write_register(0x14, temperature, 1)
+
+    # Set the operation temperature range
+    # If Low1 is bigger than High1 then "we get an inverse curve"
+    # Manual page 13, note (2)
+    def set_range(self, lowHi):
+        assert lowHi is tuple
+        self.write_register(0x14, lowHi[0], 1)
+        self.write_register(0x14, lowHi[1], 1)
 
     # register 0, 1 decimal (thermocouple resolution 0.1 deg C)
     def read_temperature(self):
