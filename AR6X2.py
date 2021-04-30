@@ -17,6 +17,9 @@ class AR6X2(minimalmodbus.Instrument):
     PARAM_OUTPUT_OFF = 0
     PARAM_OUTPUT_HEATING = 2
 
+    PARAM_RAMPING_OFF = 0
+    PARAM_RAMPING_AUTO = 2
+
     def __init__(self, port, address):
         # A serial connection. The default values match the AR6x2 datasheet
         # However, the AR6x2 unit should have the baudrate set to 19200
@@ -40,29 +43,23 @@ class AR6X2(minimalmodbus.Instrument):
     def set_range(self, lowHi):
         assert lowHi is tuple
         self.write_register(0x14, lowHi[0], 1)
-        self.write_register(0x14, lowHi[1], 1)
+        self.write_register(0x15, lowHi[1], 1)
 
     # register 0, 1 decimal (thermocouple resolution 0.1 deg C)
     def read_temperature(self):
         return self.read_register(0x00, 1)
 
-    # Set the 4-step ramping process according to the datasheet
+    # Set the parameters of 2 stage ramping
+    # To hold set1 indefinitely we set th1 to 0
     # Page 18, section 12.7
-    # gradient 1 to 300
-    # set 1/2 -1999 to 18000
-    # t_hold 1/2  0 to 3600
-    # hysteresis 1/2 0 to 9999
-    def set_ramping_parameters(self, gradient, set1, th1, h1, set2, th2, h2):
+    def set_ramping_parameters(self, gradient, set1):
         self.write_register(0x2D, gradient, 1)
-        self.write_register(0x1A, set1, 1)
-        self.write_register(0x2E, th1, 1)
-        self.write_register(0x1B, h1, 1)
-        self.write_register(0x1E, set2, 1)
-        self.write_register(0x2F, th2, 1)
-        self.write_register(0x1F, h2, 1)
+        self.set_temperature(set1)
+        self.write_register(0x2E, 0, 1)
 
+    # Setting the ramping mode to auto will start the process immediately
     def ramping_on(self):
-        raise NotImplementedError
+        self.write_register(0x2C, AR6X2.PARAM_RAMPING_AUTO, 1)
 
     def ramping_off(self):
-        raise NotImplementedError
+        self.write_register(0x2C, AR6X2.PARAM_RAMPING_OFF, 1)
