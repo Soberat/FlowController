@@ -6,6 +6,7 @@ from datetime import datetime
 # TODO: public functions to be used by the GUI
 # TODO: An initial configuration function (SP/Func/Source/Scale/Sigtype)
 # TODO: A function to turn a process on/off
+# TODO: Changing some parameters should wipe the buffers
 # Class representing a single Brooks 4850 Mass Flow Controller,
 # Handling communication according to the datasheets
 from Sensor import Sensor
@@ -161,6 +162,9 @@ class Controller:
         self.__flowReadout = 0
         self.__gas = 0
         self.__gasFactor = 0
+        self.__measure_units = 'scc'
+        self.__time_base = 'min'
+        self.__decimal_point = 'xxx'
 
         # PySerial connection
         self.__serial: serial.Serial = serialConnection
@@ -238,6 +242,31 @@ class Controller:
             self.samplesTotalizer.append(np.float16(response[4]))
             self.sampleTimestamps.append(datetime.now())
 
+    #
+    def set_decimal_point(self, point):
+        assert point in Controller.DECIMAL_POINTS.keys()
+        value = Controller.DECIMAL_POINTS.get(point)
+        response = self.__write_value(Controller.PARAM_PV_DECIMAL_POINT, value)
+        if response is not None:
+            self.__decimal_point = point
+        return response
+
+    def set_measurement_units(self, units):
+        assert units in Controller.MEASUREMENT_UNITS.keys()
+        value = Controller.MEASUREMENT_UNITS.get(units)
+        response = self.__write_value(Controller.PARAM_PV_MEASURE_UNITS, value)
+        if response is not None:
+            self.__measure_units = units
+        return response
+
+    def set_time_base(self, base):
+        assert base in Controller.RATE_TIME_BASE.keys()
+        value = Controller.RATE_TIME_BASE.get(base)
+        response = self.__write_value(Controller.PARAM_PV_TIME_BASE, value)
+        if response is not None:
+            self.__time_base = base
+        return response
+
     # From manual: "scale factor by which interpolated channel units are multiplied"
     def set_gas_factor(self, gas):
         assert gas in Controller.GAS_TYPES.keys()
@@ -310,7 +339,7 @@ class Controller:
         now = datetime.now()
         filename = now.strftime(f"controller{self.__channel}_%Y-%m-%d_%H-%M-%S.csv")
         file = open(filename, 'w')
-        file.write(f"Gas: {self.__gas}Gas factor:{self.__gasFactor}\n")
+        file.write(f"Gas: {self.__gas}, Gas factor:{self.__gasFactor}, Decimal point:{self.__decimal_point}, Units:{self.__measure_units}/{self.__time_base}\n")
         file.write("Measurement [Rate], Measurement [Total], Unix timestamp (in milliseconds)\n")
         for i in range(0, self.__sampleBufferSize - 1):
             file.write(f'{self.samplesPV[i]},{self.samplesTotalizer[i]},{self.sampleTimestamps[i]}\n')
