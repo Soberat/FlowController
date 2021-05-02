@@ -1,4 +1,5 @@
-from PyQt5.QtCore import Qt
+import pyqtgraph
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import (
     QCheckBox,
     QLineEdit,
@@ -6,21 +7,30 @@ from PyQt5.QtWidgets import (
     QWidget, QHBoxLayout, QGridLayout, QGroupBox, QSlider, QLabel,
 )
 from pyqtgraph import PlotWidget
+import numpy as np
 
 
+# TODO: Left column
+# TODO: Sensor groups
+# TODO: Default values
+# TODO: Handler functions
 class ControllerGUITab(QWidget):
     def __init__(self):
         super().__init__()
-        # Create an outer layout
+        # Create the master layout
         outerLayout = QGridLayout()
-        # Create a form layout for the label and line edit
+        # Create a vertical layout for the left column
         leftColumnLayout = QVBoxLayout()
-        # Add a label and a line edit to the form layout
-        leftColumnLayout.addWidget(QLabel("Test"))
-        # Create a layout for the checkboxes
+        # Add an empty label to set constant width - not permanent solution
+        label = QLabel("")
+        label.setFixedWidth(200)
+        leftColumnLayout.addWidget(label)
+
+        # Create layouts and elements for the right column, including graph and sensor/temperature control/dosing groups
         rightColumnLayout = QGridLayout()
         rightGridLayout = QGridLayout()
         rightInnerGrid = QGridLayout()
+
         # Creation of sensor 1 and sub-elements
         sensor1Group = QGroupBox("Sensor 1")
         sensor1Group.setCheckable(True)
@@ -38,10 +48,12 @@ class ControllerGUITab(QWidget):
         temperatureSlider = QSlider(Qt.Horizontal)
         temperatureSlider.setMinimumWidth(95)
         temperatureSlider.setMaximumWidth(1000)
+        temperatureLabel = QLabel("Value")
         layout.addWidget(QLabel("Temperature"), alignment=Qt.AlignLeft)
         layout.addWidget(temperatureSlider, alignment=Qt.AlignLeft)
+        layout.addWidget(temperatureLabel, alignment=Qt.AlignLeft)
 
-        layout.setStretch(1, 200)
+        layout.setStretch(2, 200)
         tempControllerLayout.addLayout(layout)
 
         layout = QHBoxLayout()
@@ -125,9 +137,13 @@ class ControllerGUITab(QWidget):
         rightInnerGrid.setColumnStretch(0, 100)
         rightInnerGrid.setColumnStretch(1, 100)
 
-        graph = PlotWidget()
+        self.graph = PlotWidget()
+        self.graph.getPlotItem().showGrid(x=True, y=True, alpha=1)
+        self.graph.setBackground((25, 35, 45))
+        self.graph.getPlotItem().setRange(xRange=(0, 1), yRange=(0, 1))
+        self.graph.plot([0, 1, 2, 3], [5, 5, 5, 5])
 
-        rightGridLayout.addWidget(graph, 0, 0)
+        rightGridLayout.addWidget(self.graph, 0, 0)
         rightGridLayout.addLayout(rightInnerGrid, 1, 0)
         # Add some checkboxes to the layout
         rightColumnLayout.addLayout(rightGridLayout, 0, 1)
@@ -137,3 +153,12 @@ class ControllerGUITab(QWidget):
         outerLayout.addLayout(rightColumnLayout, 0, 1)
         # Set the window's main layout
         self.setLayout(outerLayout)
+
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_plot)
+        self.timer.start(1000)
+
+    def update_plot(self):
+        self.graph.clear()
+        self.graph.plot(np.linspace(0, 1, 100), np.random.random(100), pen=pyqtgraph.mkPen((255, 127, 0), width=1.25))
+        # pg.mkPen((0, 127, 255), width=1.25)

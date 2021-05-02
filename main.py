@@ -1,5 +1,8 @@
 import sys
+
+from PyQt5.QtCore import QFile, QTextStream
 from ControllerGUITab import ControllerGUITab
+import qdarkstyle
 
 from PyQt5.QtWidgets import (
     QApplication,
@@ -13,7 +16,7 @@ class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("FlowController by Mirosław Wiącek")
-        self.setMinimumSize(640, 480)
+        self.setMinimumSize(900, 730)
 
         layout = QVBoxLayout()
         self.setLayout(layout)
@@ -28,6 +31,7 @@ class MainWindow(QWidget):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    app.setStyleSheet(qdarkstyle.load_stylesheet())
     window = MainWindow()
     window.show()
     sys.exit(app.exec_())
