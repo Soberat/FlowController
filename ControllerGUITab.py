@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import (
     QCheckBox,
     QLineEdit,
     QVBoxLayout,
-    QWidget, QHBoxLayout, QGridLayout, QGroupBox, QSlider, QLabel,
+    QWidget, QHBoxLayout, QGridLayout, QGroupBox, QSlider, QLabel, QPushButton,
 )
 from pyqtgraph import PlotWidget
 import numpy as np
@@ -34,13 +34,16 @@ class ControllerGUITab(QWidget):
         # Creation of sensor 1 and sub-elements
         sensor1Group = QGroupBox("Sensor 1")
         sensor1Group.setCheckable(True)
+        sensor1Group.setChecked(False)
 
         # Creation of sensor 2 and sub-elements
         sensor2Group = QGroupBox("Sensor 2")
         sensor2Group.setCheckable(True)
+        sensor2Group.setChecked(False)
 
         tempControllerGroup = QGroupBox("Temperature controller")
         tempControllerGroup.setCheckable(True)
+        tempControllerGroup.setChecked(False)
         tempControllerLayout = QVBoxLayout()
 
         layout = QHBoxLayout()
@@ -95,6 +98,7 @@ class ControllerGUITab(QWidget):
 
         dosingGroup = QGroupBox("Dosing control")
         dosingGroup.setCheckable(True)
+        dosingGroup.setChecked(False)
         dosingLayout = QVBoxLayout()
 
         layout = QHBoxLayout()
@@ -122,8 +126,11 @@ class ControllerGUITab(QWidget):
         nextTimeLabel = QLabel("10 seconds until next dose")
         nextDoseLabel = QLabel("Next dose value: 50")
 
+        dosingButton = QPushButton("Start dosing")
+
         dosingLayout.addWidget(nextTimeLabel, alignment=Qt.AlignLeft)
         dosingLayout.addWidget(nextDoseLabel, alignment=Qt.AlignLeft)
+        dosingLayout.addWidget(dosingButton, alignment=Qt.AlignRight)
 
         # finally, assign the layout to the group
         dosingGroup.setLayout(dosingLayout)

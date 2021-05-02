@@ -12,6 +12,7 @@ from PyQt5.QtWidgets import (
 )
 
 
+# TODO: maybe use QMainWindow
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
