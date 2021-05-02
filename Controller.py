@@ -3,12 +3,8 @@ import serial
 from numpy_ringbuffer import RingBuffer
 from datetime import datetime
 
-# TODO: public functions to be used by the GUI
-# TODO: An initial configuration function (SP/Func/Source/Scale/Sigtype)
-# TODO: A function to turn a process on/off
-# TODO: Changing some parameters should wipe the buffers
-# Class representing a single Brooks 4850 Mass Flow Controller,
-# Handling communication according to the datasheets
+# Class representing a single Brooks GF40 Mass Flow Controller,
+# Handling communication via a 0254 controller according to the datasheets
 from Sensor import Sensor
 
 
