@@ -56,17 +56,17 @@ class AR6X2(minimalmodbus.Instrument):
         assert lowHi is tuple
         self.write_register(AR6X2.REGISTER_OUT1_LOW, lowHi[0], 1)
         self.write_register(AR6X2.REGISTER_OUT1_LOW, lowHi[1], 1)
+        # todo: update temperature to be in new range (np.clip())
 
     # register 0, 1 decimal (thermocouple resolution 0.1 deg C)
     def read_temperature(self):
         return self.read_register(AR6X2.REGISTER_TEMP_PROBE, 1)
 
-    # Set the parameters of 2 stage ramping
+    # Set the gradient of 2 stage ramping
     # To hold set1 indefinitely we set th1 to 0
     # Page 18, section 12.7
-    def set_ramping_parameters(self, gradient, set1):
+    def set_gradient(self, gradient):
         self.write_register(AR6X2.REGISTER_RAMP_GRADIENT, gradient, 1)
-        self.set_temperature(set1)
         self.write_register(AR6X2.REGISTER_RAMP_TIMEHOLD, 0, 1)
 
     # Setting the ramping mode to auto will start the process immediately

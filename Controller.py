@@ -159,11 +159,9 @@ class Controller:
         self.__sampleTimestamps = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.uint64)
 
         # Physical device measurements
-        self.__temperatureReadout = 0
         self.__flowReadout = 0
-        self.__maxFlow = 0
-        self.__gasId = 0
-        self.__gasDensity = 0
+        self.__gas = 0
+        self.__gasFactor = 0
 
         # PySerial connection
         self.__serial: serial.Serial = serialConnection
@@ -238,10 +236,15 @@ class Controller:
             self.__sampleTimestamps.append(datetime.now())
 
     # From manual: "scale factor by which interpolated channel units are multiplied"
-    def set_gas_factor(self, value):
-        assert (-999.999 <= value <= 999.999)  # Possible setpoint values according to the datasheet (section C-5-4)
-        value = int(value * 1000)  # value is written to serial as XXXXXX without the decimal
-        return self.__write_value(Controller.PARAM_PV_GAS_FACTOR, value)
+    def set_gas_factor(self, gas):
+        assert gas in Controller.GAS_TYPES.keys()
+        value = int(Controller.GAS_TYPES.get(gas)) * 1000 # value is written to serial as XXXXXX without the decimal
+        response = self.__write_value(Controller.PARAM_PV_GAS_FACTOR, value)
+        if response is not None:
+            self.__gasFactor = response
+            self.__gas = gas
+        return response
+
 
     # Public function to set the head operation point (setpoint)
     def set_setpoint(self, value):
@@ -303,7 +306,7 @@ class Controller:
         now = datetime.now()
         filename = now.strftime(f"controller{self.__channel}_%Y-%m-%d_%H-%M-%S.csv")
         file = open(filename, 'w')
-        file.write(f"Gas density:{self.__gasDensity},Gas ID:{self.__gasId},Max flow:{self.__maxFlow}\n")
+        file.write(f"Gas: {self.__gas}Gas factor:{self.__gasFactor}\n")
         file.write("Measurement [Rate], Measurement [Total], Unix timestamp (in milliseconds)\n")
         for i in range(0, self.__sampleBufferSize - 1):
             file.write(f'{self.__samplesPV[i]},{self.__samplesTotalizer[i]},{self.__sampleTimestamps[i]}\n')
