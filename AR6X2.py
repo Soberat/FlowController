@@ -1,9 +1,6 @@
 import minimalmodbus
+import numpy as np
 
-
-# TODO: Heating on/off
-# TODO: Set temperature
-# TODO: Ramping
 
 class AR6X2(minimalmodbus.Instrument):
     """
@@ -38,6 +35,7 @@ class AR6X2(minimalmodbus.Instrument):
         minimalmodbus.Instrument.__init__(self, port, address)
         self.__rangeLow = 0.0
         self.__rangeHigh = 100.0
+        self.__currentOutTemp = 0.0
 
     def turn_off(self):
         self.write_register(AR6X2.REGISTER_OUT1_STATE, AR6X2.PARAM_OUTPUT_OFF, 1)
@@ -48,6 +46,7 @@ class AR6X2(minimalmodbus.Instrument):
     def set_temperature(self, temperature):
         assert self.__rangeLow <= temperature <= self.__rangeHigh
         self.write_register(AR6X2.REGISTER_OUT1_TEMP, temperature, 1)
+        self.__currentOutTemp = temperature
 
     # Set the operation temperature range
     # If Low1 is bigger than High1 then "we get an inverse curve"
@@ -56,7 +55,8 @@ class AR6X2(minimalmodbus.Instrument):
         assert lowHi is tuple
         self.write_register(AR6X2.REGISTER_OUT1_LOW, lowHi[0], 1)
         self.write_register(AR6X2.REGISTER_OUT1_LOW, lowHi[1], 1)
-        # todo: update temperature to be in new range (np.clip())
+        self.write_register(AR6X2.REGISTER_OUT1_TEMP,
+                            np.clip(self.__currentOutTemp, self.__rangeLow, self.__rangeHigh)[0])
 
     # register 0, 1 decimal (thermocouple resolution 0.1 deg C)
     def read_temperature(self):
