@@ -314,6 +314,20 @@ class Controller:
         file.write("Measurement [Rate], Measurement [Total], Unix timestamp (in milliseconds)\n")
         for i in range(0, self.__sampleBufferSize - 1):
             file.write(f'{self.samplesPV[i]},{self.samplesTotalizer[i]},{self.sampleTimestamps[i]}\n')
+        file.write('\n')
+
+        # if available, append data from sensors
+        if self.sensor1.buffer.count() > 0:
+            file.write(f"Sensor 1 header: {self.sensor1.header}\n")
+            for i in range(0, self.sensor1.buffer.count()):
+                file.write(self.sensor1.buffer[i] + '\n')
+        file.write('\n')
+
+        if self.sensor2.buffer.count() > 0:
+            file.write(f"Sensor 2 header: {self.sensor1.header}\n")
+            for i in range(0, self.sensor2.buffer.count()):
+                file.write(self.sensor2.buffer[i] + '\n')
+
         file.close()
 
     # function to change the amount of stored samples without losing previously gathered samples
