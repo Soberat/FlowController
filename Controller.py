@@ -249,6 +249,7 @@ class Controller:
         response = self.__write_value(Controller.PARAM_PV_DECIMAL_POINT, value)
         if response is not None:
             self.__decimal_point = point
+            self.wipe_buffers()
         return response
 
     def set_measurement_units(self, units):
@@ -257,6 +258,7 @@ class Controller:
         response = self.__write_value(Controller.PARAM_PV_MEASURE_UNITS, value)
         if response is not None:
             self.__measure_units = units
+            self.wipe_buffers()
         return response
 
     def set_time_base(self, base):
@@ -265,6 +267,7 @@ class Controller:
         response = self.__write_value(Controller.PARAM_PV_TIME_BASE, value)
         if response is not None:
             self.__time_base = base
+            self.wipe_buffers()
         return response
 
     # From manual: "scale factor by which interpolated channel units are multiplied"
@@ -275,6 +278,7 @@ class Controller:
         if response is not None:
             self.__gasFactor = response
             self.__gas = gas
+            self.wipe_buffers()
         return response
 
     # Public function to set the head operation point (setpoint)
@@ -353,7 +357,7 @@ class Controller:
         file.write('\n')
 
         if self.sensor2.buffer.count() > 0:
-            file.write(f"Sensor 2 header: {self.sensor1.header}\n")
+            file.write(f"Sensor 2 header: {self.sensor2.header}\n")
             for i in range(0, self.sensor2.buffer.count()):
                 file.write(self.sensor2.buffer[i] + '\n')
 
@@ -387,3 +391,13 @@ class Controller:
             self.samplesPV = newBufPV
             self.samplesTotalizer = newBufTotal
             self.sampleTimestamps = newTimestampBuf
+
+    # Interpretation of saved values depends on the measurement units, time base and decimal point
+    # Since we would have to add those to every single sample it would increase memory usage
+    # and would force the user to manually convert the values in case of a change, we just wipe the buffers
+    # Also, I think that those parameters should be set at the beginning of the process
+    # and they wouldn't be changed mid process.
+    def wipe_buffers(self):
+        self.samplesPV = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.int16)
+        self.samplesTotalizer = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.int16)
+        self.sampleTimestamps = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.uint64)
