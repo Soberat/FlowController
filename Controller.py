@@ -127,6 +127,12 @@ class Controller:
         "g/l": 41
     }
 
+    # Gas factors for GF40 Mass Flow Controller
+    # To be extended later on
+    GAS_TYPES = {
+        "air": 1.018
+    }
+
     # Base time units
     RATE_TIME_BASE = {
         "sec": 1,
