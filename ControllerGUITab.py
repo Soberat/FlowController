@@ -1,6 +1,6 @@
 import pyqtgraph
 from PyQt5.QtCore import Qt, QTimer, QRegExp
-from PyQt5.QtGui import QRegExpValidator
+from PyQt5.QtGui import QRegExpValidator, QIntValidator
 from PyQt5.QtWidgets import (
     QCheckBox,
     QLineEdit,
@@ -211,11 +211,94 @@ class ControllerGUITab(QWidget):
         sensor1Group = QGroupBox("Sensor 1")
         sensor1Group.setCheckable(True)
         sensor1Group.setChecked(False)
+        sensor1Layout = QVBoxLayout()
+
+        layout = QHBoxLayout()
+
+        sensor1SampleIntervalEdit = QLineEdit()
+        sensor1SampleIntervalEdit.setValidator(QIntValidator())
+        sensor1SampleIntervalEdit.setFixedWidth(100)
+        label = QLabel('milliseconds')
+
+        layout.addWidget(QLabel('Sampling interval'))
+        layout.addWidget(sensor1SampleIntervalEdit)
+        layout.addWidget(label)
+        sensor1Layout.addLayout(layout)
+
+        layout = QHBoxLayout()
+
+        sensor1BufferSizeEdit = QLineEdit()
+        sensor1BufferSizeEdit.setValidator(QIntValidator())
+        sensor1BufferSizeEdit.setFixedWidth(100)
+        label = QLabel('samples')
+
+        layout.addWidget(QLabel('Buffer size'))
+        layout.addWidget(sensor1BufferSizeEdit)
+        layout.addWidget(label)
+        sensor1Layout.addLayout(layout)
+        sensor1Group.setLayout(sensor1Layout)
 
         # Creation of sensor 2 and sub-elements
         sensor2Group = QGroupBox("Sensor 2")
         sensor2Group.setCheckable(True)
         sensor2Group.setChecked(False)
+        sensor2Layout = QVBoxLayout()
+
+        layout = QHBoxLayout()
+
+        sensor2SampleIntervalEdit = QLineEdit()
+        sensor2SampleIntervalEdit.setValidator(QIntValidator())
+        sensor2SampleIntervalEdit.setFixedWidth(100)
+        label = QLabel('milliseconds')
+
+        layout.addWidget(QLabel('Sampling interval'))
+        layout.addWidget(sensor2SampleIntervalEdit)
+        layout.addWidget(label)
+        sensor2Layout.addLayout(layout)
+
+        layout = QHBoxLayout()
+
+        sensor2BufferSizeEdit = QLineEdit()
+        sensor2BufferSizeEdit.setValidator(QIntValidator())
+        sensor2BufferSizeEdit.setFixedWidth(100)
+        label = QLabel('samples')
+
+        layout.addWidget(QLabel('Buffer size'))
+        layout.addWidget(sensor2BufferSizeEdit)
+        layout.addWidget(label)
+        sensor2Layout.addLayout(layout)
+        sensor2Group.setLayout(sensor2Layout)
+
+        # Creation of sensor 2 and sub-elements
+        sensor2Group = QGroupBox("Sensor 2")
+        sensor2Group.setCheckable(True)
+        sensor2Group.setChecked(False)
+        sensor2Layout = QVBoxLayout()
+
+        layout = QHBoxLayout()
+
+        sensor2SampleIntervalEdit = QLineEdit()
+        sensor2SampleIntervalEdit.setValidator(QIntValidator())
+        sensor2SampleIntervalEdit.setFixedWidth(100)
+        label = QLabel('milliseconds')
+
+        layout.addWidget(QLabel('Sampling interval'))
+        layout.addWidget(sensor2SampleIntervalEdit)
+        layout.addWidget(label)
+        sensor2Layout.addLayout(layout)
+
+        layout = QHBoxLayout()
+
+        sensor2BufferSizeEdit = QLineEdit()
+        sensor2BufferSizeEdit.setValidator(QIntValidator())
+        sensor2BufferSizeEdit.setFixedWidth(100)
+        label = QLabel('samples')
+
+        layout.addWidget(QLabel('Buffer size'))
+        layout.addWidget(sensor2BufferSizeEdit)
+        layout.addWidget(label)
+        sensor2Layout.addLayout(layout)
+        sensor2Group.setLayout(sensor2Layout)
 
         # TODO: Add address and comport fields
         self.tempControllerGroup = QGroupBox("Temperature controller")
@@ -330,6 +413,7 @@ class ControllerGUITab(QWidget):
         nextTimeLabel = QLabel("10 seconds until next dose")
         nextDoseLabel = QLabel("Next dose value: 50")
 
+        # TODO: lock above elements after starting
         dosingButton = QPushButton("Start dosing")
         dosingButton.setCheckable(True)
 
