@@ -254,7 +254,7 @@ class Controller:
         return response
 
     # From manual: "scale factor by which interpolated channel units are multiplied"
-    def set_gas_factor(self, gas):
+    def set_gas(self, gas):
         assert gas in Controller.GAS_TYPES.keys()
         value = int(Controller.GAS_TYPES.get(gas)) * 1000  # value is written to serial as XXXXXX without the decimal
         response = self.__write_value(Controller.PARAM_PV_GAS_FACTOR, value)

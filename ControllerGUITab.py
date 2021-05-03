@@ -161,30 +161,40 @@ class ControllerGUITab(QWidget):
 
     def update_gas_type(self):
         print("update_gas_type")
+        self.controller.set_gas(self.gasDropdown.currentText())
+        self.wipe_buffers()
 
     def update_pv_full_scale(self):
         print("update_pv_full_scale")
+        self.controller.set_pv_full_scale(float(self.pvFullScaleEdit.text()))
 
     def update_pv_signal_type(self):
         print("update_pv_signal_type")
+        self.controller.set_pv_signal_type(self.pvSigtypeDropdown.currentText())
 
     def update_sp_full_scale(self):
         print("update_sp_full_scale")
+        self.controller.set_sp_full_scale(float(self.spFullScaleEdit.text()))
 
     def update_sp_signal_type(self):
         print("update_sp_signal_type")
+        self.controller.set_sp_signal_type(self.spSigtypeDropdown.currentText())
 
     def update_source(self):
         print("update_source_enable")
+        self.controller.set_source(self.spSourceDropdown.currentText())
 
     def update_decimal_point(self):
         print("update_decimal_point")
+        self.controller.set_decimal_point(self.decimalDropdown.currentText())
 
     def update_measure_units(self):
         print("update_measure_units")
+        self.controller.set_measurement_units(self.measureUnitsDropdown.currentText())
 
     def update_time_base(self):
         print("update_time_base")
+        self.controller.set_time_base(self.timebaseDropdown.currentText())
 
     def update_buffer_size(self):
         self.change_buffer_size(int(self.bufferSizeEdit.text()))
