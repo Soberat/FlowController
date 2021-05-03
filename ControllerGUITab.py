@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import (
 from pyqtgraph import PlotWidget
 import numpy as np
 from Controller import Controller
-from AR6X2ConfigPopup import AR6X2ConfigPopup
+from AR6X2ConfigDialog import AR6X2ConfigDialog
 from AR6X2 import AR6X2
 
 
@@ -49,7 +49,7 @@ class ControllerGUITab(QWidget):
         self.temperatureController = AR6X2(port=values['port'], address=values['address'])
 
     def create_temperature_dialog(self):
-        dg = AR6X2ConfigPopup()
+        dg = AR6X2ConfigDialog()
         dg.accepted.connect(self.connect_temp_controller)
         # if unsuccessful, disable the temperature controller group
         if dg.exec_() == 0:

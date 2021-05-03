@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QDialog, QFormLayout, QPushButton, QLineEdit, QCombo
 from serial.tools.list_ports import comports
 
 
-class AR6X2ConfigPopup(QDialog):
+class AR6X2ConfigDialog(QDialog):
     accepted = pyqtSignal(dict)
 
     # unlock OK only if both fields are set
