@@ -127,7 +127,8 @@ class Controller:
     # Gas factors for GF40 Mass Flow Controller
     # To be extended later on
     GAS_TYPES = {
-        "air": 1.018
+        "Air": 1.018,
+        "Nitrogen": 1.0
     }
 
     # Base time units

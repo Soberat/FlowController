@@ -36,10 +36,44 @@ class ControllerGUITab(QWidget):
         self.sensor1Group = None
         self.sensor2Group = None
 
-        self.intervalEdit = None
+        self.vorNormalButton = None
+        self.vorClosedButton = None
+        self.vorOpenButton = None
+
+        self.gasDropdown = None
+        self.pvFullScaleEdit = None
+        self.pvSigtypeDropdown = None
+        self.spFullScaleEdit = None
+        self.spSigtypeDropdown = None
+        self.spSourceDropdown = None
+        self.decimalDropdown = None
+        self.measureUnitsDropdown = None
+        self.timebaseDropdown = None
+
         self.bufferSizeEdit = None
+        self.intervalEdit = None
         self.setpointEdit = None
+        self.setpointUnitsLabel = None
+
+        self.sensor1SampleIntervalEdit = None
+        self.sensor1BufferSizeEdit = None
+
+        self.sensor2SampleIntervalEdit = None
+        self.sensor2BufferSizeEdit = None
+
+        self.temperatureSlider = None
+        self.temperatureLabel = None
+        self.rangeLowEdit = None
+        self.rangeHighEdit = None
+        self.rampingCheckbox = None
+        self.gradientEdit = None
+        self.tempControlButton = None
+
+        self.dosingTimesEdit = None
+        self.dosingValuesEdit = None
         self.dosingUnitsLabel = None
+        self.dosingTimerLabel = None
+        self.dosingValueLabel = None
 
         # Data buffers
         self.sampleBufferSize = 64
@@ -56,13 +90,6 @@ class ControllerGUITab(QWidget):
         self.graphTimer = QTimer()
         self.graphTimer.timeout.connect(self.update_plot)
         self.graphTimer.start(500)
-
-    def update_buffer_size(self):
-        self.change_buffer_size(int(self.bufferSizeEdit.text()))
-        self.sampleBufferSize = int(self.bufferSizeEdit.text())
-
-    def update_graph_timer(self):
-        self.graphTimer.setInterval(int(self.intervalEdit.text()))
 
     def get_measurement(self):
         # Demo implementation, generating random data
@@ -107,9 +134,99 @@ class ControllerGUITab(QWidget):
 
         file.close()
 
+    # Handler functions for UI elements
+    # TODO: on check, uncheck others
+    def update_vor_normal(self):
+        print("update_vor_normal")
+
+    def update_vor_closed(self):
+        print("update_vor_closed")
+
+    def update_vor_open(self):
+        print("update_vor_open")
+
+    def update_gas_type(self):
+        print("update_gas_type")
+
+    def update_pv_full_scale(self):
+        print("update_pv_full_scale")
+
+    def update_pv_signal_type(self):
+        print("update_pv_signal_type")
+
+    def update_sp_full_scale(self):
+        print("update_sp_full_scale")
+
+    def update_sp_signal_type(self):
+        print("update_sp_signal_type")
+
+    def update_source(self):
+        print("update_source_enable")
+
+    def update_decimal_point(self):
+        print("update_decimal_point")
+
+    def update_measure_units(self):
+        print("update_measure_units")
+
+    def update_time_base(self):
+        print("update_time_base")
+
+    def update_buffer_size(self):
+        self.change_buffer_size(int(self.bufferSizeEdit.text()))
+        self.sampleBufferSize = int(self.bufferSizeEdit.text())
+
+    def update_graph_timer(self):
+        self.graphTimer.setInterval(int(self.intervalEdit.text()))
+
     def update_setpoint(self):
         value = float(self.setpointEdit.text())
         self.controller.set_setpoint(value)
+
+    def update_sensor1_timer(self):
+        print("update_sensor1_timer")
+
+    def update_sensor1_buffer(self):
+        print("update_sensor1_buffer")
+
+    def update_sensor2_timer(self):
+        print("update_sensor2_timer")
+
+    def update_sensor2_buffer(self):
+        print("update_sensor2_buffer")
+
+    def update_temperature(self):
+        print("update_temperature")
+
+    def update_range_low(self):
+        print("update_range_low")
+
+    def update_range_high(self):
+        print("update_range_high")
+
+    def update_ramping_enable(self):
+        print("update_ramping_enable")
+
+    def update_gradient(self):
+        print("update_gradient")
+
+    def update_temp_control_enable(self):
+        print("update_temp_control_enable")
+
+    def update_dosing_times(self):
+        print("update_dosing_time")
+
+    def update_dosing_values(self):
+        print("update_dosing_values")
+
+    def update_dosing_label_timer(self):
+        print("update_dosing_label_timer")
+
+    def update_dosing_label_value(self):
+        print("update_dosing_enable")
+
+    def update_dosing_enable(self):
+        print("update_dosing_enable")
 
     def update_plot(self):
         self.graph.clear()
@@ -171,32 +288,30 @@ class ControllerGUITab(QWidget):
 
         layout = QHBoxLayout()
 
-        # TODO: on check, uncheck others
-        vorNormalButton = QPushButton("Normal")
-        vorNormalButton.setMinimumWidth(50)
-        vorNormalButton.setFixedHeight(75)
-        vorNormalButton.setCheckable(True)
-        vorNormalButton.setChecked(True)
+        self.vorNormalButton = QPushButton("Normal")
+        self.vorNormalButton.setMinimumWidth(50)
+        self.vorNormalButton.setFixedHeight(75)
+        self.vorNormalButton.setCheckable(True)
+        self.vorNormalButton.setChecked(True)
+        self.vorNormalButton.clicked.connect(self.update_vor_normal)
 
-        vorClosedButton = QPushButton("Closed")
-        vorClosedButton.setMinimumWidth(50)
-        vorClosedButton.setFixedHeight(75)
-        vorClosedButton.setCheckable(True)
+        self.vorClosedButton = QPushButton("Closed")
+        self.vorClosedButton.setMinimumWidth(50)
+        self.vorClosedButton.setFixedHeight(75)
+        self.vorClosedButton.setCheckable(True)
+        self.vorClosedButton.clicked.connect(self.update_vor_closed)
 
-        vorOpenButton = QPushButton("Open")
-        vorOpenButton.setMinimumWidth(50)
-        vorOpenButton.setFixedHeight(75)
-        vorOpenButton.setCheckable(True)
+        self.vorOpenButton = QPushButton("Open")
+        self.vorOpenButton.setMinimumWidth(50)
+        self.vorOpenButton.setFixedHeight(75)
+        self.vorOpenButton.setCheckable(True)
+        self.vorOpenButton.clicked.connect(self.update_vor_open)
 
-        vorStatusLabel = QLabel("Current status: Normal")
-
-        layout.addWidget(vorNormalButton)
-        layout.addWidget(vorClosedButton)
-        layout.addWidget(vorOpenButton)
+        layout.addWidget(self.vorNormalButton)
+        layout.addWidget(self.vorClosedButton)
+        layout.addWidget(self.vorOpenButton)
 
         vorLayout.addLayout(layout)
-        vorLayout.addWidget(vorStatusLabel)
-
         vorGroup.setLayout(vorLayout)
         vorGroup.setMaximumWidth(ControllerGUITab.LEFT_COLUMN_MAX_WIDTH)
         leftColumnLayout.addWidget(vorGroup, alignment=Qt.AlignTop)
@@ -205,44 +320,53 @@ class ControllerGUITab(QWidget):
         processGroup = QGroupBox("Process configuration")
         processLayout = QFormLayout()
 
-        gasDropdown = QComboBox()
-        gasDropdown.addItems(Controller.GAS_TYPES.keys())
+        self.gasDropdown = QComboBox()
+        self.gasDropdown.addItems(Controller.GAS_TYPES.keys())
+        self.gasDropdown.currentTextChanged.connect(self.update_gas_type)
 
-        pvFullScaleEdit = QLineEdit()
-        pvFullScaleEdit.setText("100.000")
-        pvFullScaleEdit.setValidator(QRegExpValidator(QRegExp("(-|)[0-9]{1,3}\\.[0-9]{1,3}")))
+        self.pvFullScaleEdit = QLineEdit()
+        self.pvFullScaleEdit.setText("100.000")
+        self.pvFullScaleEdit.setValidator(QRegExpValidator(QRegExp("(-|)[0-9]{1,3}\\.[0-9]{1,3}")))
+        self.pvFullScaleEdit.editingFinished.connect(self.update_pv_full_scale)
 
-        pvSigtypeDropdown = QComboBox()
-        pvSigtypeDropdown.addItems(Controller.INPUT_PORT_TYPES.keys())
+        self.pvSigtypeDropdown = QComboBox()
+        self.pvSigtypeDropdown.addItems(Controller.INPUT_PORT_TYPES.keys())
+        self.pvSigtypeDropdown.currentTextChanged.connect(self.update_pv_signal_type)
 
-        spFullScaleEdit = QLineEdit()
-        spFullScaleEdit.setText("100.000")
-        spFullScaleEdit.setValidator(QRegExpValidator(QRegExp("(-|)[0-9]{1,3}\\.[0-9]{1,3}")))
+        self.spFullScaleEdit = QLineEdit()
+        self.spFullScaleEdit.setText("100.000")
+        self.spFullScaleEdit.setValidator(QRegExpValidator(QRegExp("(-|)[0-9]{1,3}\\.[0-9]{1,3}")))
+        self.spFullScaleEdit.editingFinished.connect(self.update_sp_full_scale)
 
-        spSigtypeDropdown = QComboBox()
-        spSigtypeDropdown.addItems(Controller.OUTPUT_PORT_TYPES.keys())
+        self.spSigtypeDropdown = QComboBox()
+        self.spSigtypeDropdown.addItems(Controller.OUTPUT_PORT_TYPES.keys())
+        self.spSigtypeDropdown.currentTextChanged.connect(self.update_sp_signal_type)
 
-        spSourceDropdown = QComboBox()
-        spSourceDropdown.addItems(Controller.SP_SOURCES.keys())
+        self.spSourceDropdown = QComboBox()
+        self.spSourceDropdown.addItems(Controller.SP_SOURCES.keys())
+        self.spSourceDropdown.currentTextChanged.connect(self.update_source)
 
-        decimalDropdown = QComboBox()
-        decimalDropdown.addItems(Controller.DECIMAL_POINTS.keys())
+        self.decimalDropdown = QComboBox()
+        self.decimalDropdown.addItems(Controller.DECIMAL_POINTS.keys())
+        self.decimalDropdown.currentTextChanged.connect(self.update_decimal_point)
 
-        unitsDropdown = QComboBox()
-        unitsDropdown.addItems(Controller.MEASUREMENT_UNITS.keys())
+        self.measureUnitsDropdown = QComboBox()
+        self.measureUnitsDropdown.addItems(Controller.MEASUREMENT_UNITS.keys())
+        self.measureUnitsDropdown.currentTextChanged.connect(self.update_measure_units)
 
-        timebaseDropdown = QComboBox()
-        timebaseDropdown.addItems(Controller.RATE_TIME_BASE.keys())
+        self.timebaseDropdown = QComboBox()
+        self.timebaseDropdown.addItems(Controller.RATE_TIME_BASE.keys())
+        self.timebaseDropdown.currentTextChanged.connect(self.update_time_base)
 
-        processLayout.addRow(QLabel("Gas"), gasDropdown)
-        processLayout.addRow(QLabel("PV Full Scale"), pvFullScaleEdit)
-        processLayout.addRow(QLabel("PV Signal Type"), pvSigtypeDropdown)
-        processLayout.addRow(QLabel("SP Full Scale"), spFullScaleEdit)
-        processLayout.addRow(QLabel("SP Signal Type"), spSigtypeDropdown)
-        processLayout.addRow(QLabel("Setpoint source"), spSourceDropdown)
-        processLayout.addRow(QLabel("Decimal point"), decimalDropdown)
-        processLayout.addRow(QLabel("Measurement units"), unitsDropdown)
-        processLayout.addRow(QLabel("Time base"), timebaseDropdown)
+        processLayout.addRow(QLabel("Gas"), self.gasDropdown)
+        processLayout.addRow(QLabel("PV Full Scale"), self.pvFullScaleEdit)
+        processLayout.addRow(QLabel("PV Signal Type"), self.pvSigtypeDropdown)
+        processLayout.addRow(QLabel("SP Full Scale"), self.spFullScaleEdit)
+        processLayout.addRow(QLabel("SP Signal Type"), self.spSigtypeDropdown)
+        processLayout.addRow(QLabel("Setpoint source"), self.spSourceDropdown)
+        processLayout.addRow(QLabel("Decimal point"), self.decimalDropdown)
+        processLayout.addRow(QLabel("Measurement units"), self.measureUnitsDropdown)
+        processLayout.addRow(QLabel("Time base"), self.timebaseDropdown)
 
         processGroup.setLayout(processLayout)
         processGroup.setMaximumWidth(ControllerGUITab.LEFT_COLUMN_MAX_WIDTH)
@@ -285,11 +409,11 @@ class ControllerGUITab(QWidget):
         self.setpointEdit.setValidator(QRegExpValidator(QRegExp("[0-9]*.[0-9]*")))
         self.setpointEdit.editingFinished.connect(self.update_setpoint)
 
-        unitsLabel = QLabel("mu/tb")
+        self.setpointUnitsLabel = QLabel("mu/tb")
 
         layout.addWidget(QLabel("Setpoint"))
         layout.addWidget(self.setpointEdit)
-        layout.addWidget(unitsLabel)
+        layout.addWidget(self.setpointUnitsLabel)
 
         runtimeLayout.addLayout(layout)
 
@@ -328,28 +452,30 @@ class ControllerGUITab(QWidget):
 
         layout = QHBoxLayout()
 
-        sensor1SampleIntervalEdit = QLineEdit()
-        sensor1SampleIntervalEdit.setValidator(QIntValidator())
-        sensor1SampleIntervalEdit.setFixedWidth(100)
+        self.sensor1SampleIntervalEdit = QLineEdit()
+        self.sensor1SampleIntervalEdit.setValidator(QIntValidator())
+        self.sensor1SampleIntervalEdit.setFixedWidth(100)
+        self.sensor1SampleIntervalEdit.editingFinished.connect(self.update_sensor1_timer)
 
         label = QLabel('Sampling interval')
         label.setFixedWidth(90)
         layout.addWidget(label)
-        layout.addWidget(sensor1SampleIntervalEdit)
+        layout.addWidget(self.sensor1SampleIntervalEdit)
         layout.addWidget(QLabel('milliseconds'))
         layout.setStretch(2, 10)
         sensor1Layout.addLayout(layout)
 
         layout = QHBoxLayout()
 
-        sensor1BufferSizeEdit = QLineEdit()
-        sensor1BufferSizeEdit.setValidator(QIntValidator())
-        sensor1BufferSizeEdit.setFixedWidth(100)
+        self.sensor1BufferSizeEdit = QLineEdit()
+        self.sensor1BufferSizeEdit.setValidator(QIntValidator())
+        self.sensor1BufferSizeEdit.setFixedWidth(100)
+        self.sensor1BufferSizeEdit.editingFinished.connect(self.update_sensor1_buffer)
 
         label = QLabel('Buffer size')
         label.setFixedWidth(90)
         layout.addWidget(label)
-        layout.addWidget(sensor1BufferSizeEdit)
+        layout.addWidget(self.sensor1BufferSizeEdit)
         layout.addWidget(QLabel('samples'))
         layout.setStretch(2, 10)
         sensor1Layout.addLayout(layout)
@@ -364,34 +490,35 @@ class ControllerGUITab(QWidget):
 
         layout = QHBoxLayout()
 
-        sensor2SampleIntervalEdit = QLineEdit()
-        sensor2SampleIntervalEdit.setValidator(QIntValidator())
-        sensor2SampleIntervalEdit.setFixedWidth(100)
+        self.sensor2SampleIntervalEdit = QLineEdit()
+        self.sensor2SampleIntervalEdit.setValidator(QIntValidator())
+        self.sensor2SampleIntervalEdit.setFixedWidth(100)
+        self.sensor2SampleIntervalEdit.editingFinished.connect(self.update_sensor2_timer)
 
         label = QLabel('Sampling interval')
         label.setFixedWidth(90)
         layout.addWidget(label)
-        layout.addWidget(sensor2SampleIntervalEdit)
+        layout.addWidget(self.sensor2SampleIntervalEdit)
         layout.addWidget(QLabel('milliseconds'))
         layout.setStretch(2, 10)
         sensor2Layout.addLayout(layout)
 
         layout = QHBoxLayout()
 
-        sensor2BufferSizeEdit = QLineEdit()
-        sensor2BufferSizeEdit.setValidator(QIntValidator())
-        sensor2BufferSizeEdit.setFixedWidth(100)
+        self.sensor2BufferSizeEdit = QLineEdit()
+        self.sensor2BufferSizeEdit.setValidator(QIntValidator())
+        self.sensor2BufferSizeEdit.setFixedWidth(100)
+        self.sensor2BufferSizeEdit.editingFinished.connect(self.update_sensor2_buffer)
 
         label = QLabel('Buffer size')
         label.setFixedWidth(90)
         layout.addWidget(label)
-        layout.addWidget(sensor2BufferSizeEdit)
+        layout.addWidget(self.sensor2BufferSizeEdit)
         layout.addWidget(QLabel('samples'))
         layout.setStretch(2, 10)
         sensor2Layout.addLayout(layout)
         self.sensor2Group.setLayout(sensor2Layout)
 
-        # TODO: Add address and comport fields
         self.tempControllerGroup = QGroupBox("Temperature controller")
         self.tempControllerGroup.setCheckable(True)
         self.tempControllerGroup.setChecked(False)
@@ -400,16 +527,17 @@ class ControllerGUITab(QWidget):
 
         layout = QHBoxLayout()
 
-        temperatureSlider = QSlider(Qt.Horizontal)
-        temperatureSlider.setMinimumWidth(95)
-        temperatureSlider.setMaximumWidth(1000)
-        temperatureSlider.setMinimum(-199.9)
-        temperatureSlider.setMaximum(850.0)
-        temperatureSlider.setValue(100)
-        temperatureLabel = QLabel("100")
+        self.temperatureSlider = QSlider(Qt.Horizontal)
+        self.temperatureSlider.setMinimumWidth(95)
+        self.temperatureSlider.setMaximumWidth(1000)
+        self.temperatureSlider.setMinimum(-199.9)
+        self.temperatureSlider.setMaximum(850.0)
+        self.temperatureSlider.setValue(100)
+        self.temperatureSlider.sliderMoved.connect(self.update_temperature)
+        self.temperatureLabel = QLabel("100")
         layout.addWidget(QLabel("Temperature"), alignment=Qt.AlignLeft)
-        layout.addWidget(temperatureSlider, alignment=Qt.AlignLeft)
-        layout.addWidget(temperatureLabel, alignment=Qt.AlignLeft)
+        layout.addWidget(self.temperatureSlider, alignment=Qt.AlignLeft)
+        layout.addWidget(self.temperatureLabel, alignment=Qt.AlignLeft)
         layout.addWidget(QLabel("℃"), alignment=Qt.AlignLeft)
 
         layout.setStretch(3, 200)
@@ -418,48 +546,55 @@ class ControllerGUITab(QWidget):
         # these edits have validators, but input still has to be capped
         # Also, the validator seems overly complex if we cap the value anyway
         layout = QHBoxLayout()
-        tempControllerLowEdit = QLineEdit()
-        tempControllerLowEdit.setMinimumWidth(30)
-        tempControllerLowEdit.setMaximumWidth(60)
-        tempControllerLowEdit.setText("-199.9")
-        tempControllerLowEdit.setValidator(
+        self.rangeLowEdit = QLineEdit()
+        self.rangeLowEdit.setMinimumWidth(30)
+        self.rangeLowEdit.setMaximumWidth(60)
+        self.rangeLowEdit.setText("-199.9")
+        self.rangeLowEdit.setValidator(
             QRegExpValidator(QRegExp("(-[0-9]{1,3}\\.[0-9]|[0-9]{1,3}\\.[0-9|[0-9]{1,4})")))
+        self.rangeLowEdit.editingFinished.connect(self.update_range_low)
 
-        tempControllerHighEdit = QLineEdit()
-        tempControllerHighEdit.setMinimumWidth(30)
-        tempControllerHighEdit.setMaximumWidth(60)
-        tempControllerHighEdit.setText("850.0")
-        tempControllerHighEdit.setValidator(
+        self.rangeHighEdit = QLineEdit()
+        self.rangeHighEdit.setMinimumWidth(30)
+        self.rangeHighEdit.setMaximumWidth(60)
+        self.rangeHighEdit.setText("850.0")
+        self.rangeHighEdit.setValidator(
             QRegExpValidator(QRegExp("(-[0-9]{1,3}\\.[0-9]|[0-9]{1,3}\\.[0-9|[0-9]{1,4})")))
+        self.rangeHighEdit.editingFinished.connect(self.update_range_high)
 
         layout.addWidget(QLabel("Range"))
-        layout.addWidget(tempControllerLowEdit, alignment=Qt.AlignLeft)
-        layout.addWidget(tempControllerHighEdit, alignment=Qt.AlignLeft)
+        layout.addWidget(self.rangeLowEdit, alignment=Qt.AlignLeft)
+        layout.addWidget(self.rangeHighEdit, alignment=Qt.AlignLeft)
         layout.addWidget(QLabel("℃"))
         layout.setStretch(3, 10)
         tempControllerLayout.addLayout(layout)
 
+        self.rampingCheckbox = QCheckBox()
+        self.rampingCheckbox.stateChanged.connect(self.update_ramping_enable)
+
         layout = QHBoxLayout()
         layout.addWidget(QLabel("Ramping"), alignment=Qt.AlignLeft)
-        layout.addWidget(QCheckBox(), alignment=Qt.AlignLeft)
+        layout.addWidget(self.rampingCheckbox, alignment=Qt.AlignLeft)
         layout.setStretch(1, 10)
 
         tempControllerLayout.addLayout(layout)
 
         layout = QHBoxLayout()
 
-        gradientEdit = QLineEdit()
-        gradientEdit.setMinimumWidth(30)
-        gradientEdit.setMaximumWidth(60)
-        gradientEdit.setText("0.1")  # default value from the datasheet
+        self.gradientEdit = QLineEdit()
+        self.gradientEdit.setMinimumWidth(30)
+        self.gradientEdit.setMaximumWidth(60)
+        self.gradientEdit.setText("0.1")  # default value from the datasheet
+        self.gradientEdit.editingFinished.connect(self.update_gradient)
 
-        temperatureButton = QPushButton("Enable output")
-        temperatureButton.setCheckable(True)
+        self.tempControlButton = QPushButton("Enable output")
+        self.tempControlButton.setCheckable(True)
+        self.tempControlButton.clicked.connect(self.update_temp_control_enable)
 
         layout.addWidget(QLabel("Gradient"), alignment=Qt.AlignLeft)
-        layout.addWidget(gradientEdit, alignment=Qt.AlignLeft)
+        layout.addWidget(self.gradientEdit, alignment=Qt.AlignLeft)
         layout.addWidget(QLabel("℃/min"))
-        layout.addWidget(temperatureButton, alignment=Qt.AlignBottom)
+        layout.addWidget(self.tempControlButton, alignment=Qt.AlignBottom)
         layout.setStretch(2, 10)
 
         tempControllerLayout.addLayout(layout)
@@ -474,24 +609,26 @@ class ControllerGUITab(QWidget):
         dosingLayout = QVBoxLayout()
 
         layout = QHBoxLayout()
-        dosingTimesEdit = QLineEdit()
-        dosingTimesEdit.setMinimumWidth(160)
-        dosingTimesEdit.setText("1000, 10000, 15000")
-        dosingTimesEdit.setValidator(QRegExpValidator(QRegExp("([0-9]*, |))+")))
+        self.dosingTimesEdit = QLineEdit()
+        self.dosingTimesEdit.setMinimumWidth(160)
+        self.dosingTimesEdit.setText("1000, 10000, 15000")
+        self.dosingTimesEdit.setValidator(QRegExpValidator(QRegExp("([0-9]+,(| ))+")))
+        self.dosingTimesEdit.textChanged.connect(self.update_dosing_times)
 
         label = QLabel("Times")
         label.setFixedWidth(55)
 
         layout.addWidget(label)
-        layout.addWidget(dosingTimesEdit)
+        layout.addWidget(self.dosingTimesEdit)
         layout.addWidget(QLabel("milliseconds"))
         dosingLayout.addLayout(layout)
 
         layout = QHBoxLayout()
-        dosingValuesEdit = QLineEdit()
-        dosingValuesEdit.setMinimumWidth(160)
-        dosingValuesEdit.setText("1.0, 2.0, 5.0")
-        dosingValuesEdit.setValidator(QRegExpValidator(QRegExp("([0-9]{1,3}\\.[0-9]{1,3},(| ))+")))
+        self.dosingValuesEdit = QLineEdit()
+        self.dosingValuesEdit.setMinimumWidth(160)
+        self.dosingValuesEdit.setText("1.0, 2.0, 5.0")
+        self.dosingValuesEdit.setValidator(QRegExpValidator(QRegExp("([0-9]{1,3}\\.[0-9]{1,3},(| ))+")))
+        self.dosingValuesEdit.textChanged.connect(self.update_dosing_values)
 
         label = QLabel("Setpoints")
         label.setFixedWidth(55)
@@ -499,7 +636,7 @@ class ControllerGUITab(QWidget):
         self.dosingUnitsLabel = QLabel("mu/tb")
 
         layout.addWidget(label)
-        layout.addWidget(dosingValuesEdit)
+        layout.addWidget(self.dosingValuesEdit)
         layout.addWidget(self.dosingUnitsLabel)
         dosingLayout.addLayout(layout)
 
@@ -509,6 +646,7 @@ class ControllerGUITab(QWidget):
         # TODO: lock above elements after starting
         dosingButton = QPushButton("Start dosing")
         dosingButton.setCheckable(True)
+        dosingButton.clicked.connect(self.update_dosing_enable)
 
         dosingLayout.addWidget(nextTimeLabel, alignment=Qt.AlignLeft)
         layout = QHBoxLayout()
