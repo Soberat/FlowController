@@ -138,12 +138,26 @@ class ControllerGUITab(QWidget):
     # TODO: on check, uncheck others
     def update_vor_normal(self):
         print("update_vor_normal")
+        if self.vorNormalButton.isChecked():
+            # disable other buttons to clarify which VOR state is active
+            self.vorClosedButton.setChecked(False)
+            self.vorOpenButton.setChecked(False)
+            self.controller.set_valve_override(Controller.VOR_OPTION_NORMAL)
+
 
     def update_vor_closed(self):
         print("update_vor_closed")
+        if self.vorClosedButton.isChecked():
+            self.vorNormalButton.setChecked(False)
+            self.vorOpenButton.setChecked(False)
+            self.controller.set_valve_override(Controller.VOR_OPTION_CLOSED)
 
     def update_vor_open(self):
         print("update_vor_open")
+        if self.vorOpenButton.isChecked():
+            self.vorClosedButton.setChecked(False)
+            self.vorNormalButton.setChecked(False)
+            self.controller.set_valve_override(Controller.VOR_OPTION_OPEN)
 
     def update_gas_type(self):
         print("update_gas_type")
