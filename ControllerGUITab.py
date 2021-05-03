@@ -314,12 +314,13 @@ class ControllerGUITab(QWidget):
         self.graph.plot(self.samplesPV, pen=pyqtgraph.mkPen((255, 127, 0), width=1.25))
         # pg.mkPen((0, 127, 255), width=1.25)
 
-    def create_sensor1_dialog(self):
-        dg = SensorConfigDialog()
-        dg.accepted.connect(self.connect_sensor1)
-        # if unsuccessful, disable the temperature controller group
-        if dg.exec_() == 0:
-            self.sensor1Group.setChecked(False)
+    def update_sensor1_group(self):
+        if self.tempControllerGroup.isChecked():
+            dg = SensorConfigDialog()
+            dg.accepted.connect(self.connect_sensor1)
+            # if unsuccessful, disable the temperature controller group
+            if dg.exec_() == 0:
+                self.sensor1Group.setChecked(False)
 
     # connect to sensor instance 1 using values returned by the dialog
     def connect_sensor1(self, values):
@@ -333,12 +334,14 @@ class ControllerGUITab(QWidget):
         self.sensor1Timer.timeout.connect(self.sensor1.getData)
         self.sensor1Timer.start()
 
-    def create_sensor2_dialog(self):
-        dg = SensorConfigDialog()
-        dg.accepted.connect(self.connect_sensor2)
-        # if unsuccessful, disable the temperature controller group
-        if dg.exec_() == 0:
-            self.sensor2Group.setChecked(False)
+    def update_sensor2_group(self):
+        if self.tempControllerGroup.isChecked():
+            dg = SensorConfigDialog()
+            dg.accepted.connect(self.connect_sensor2)
+            # if unsuccessful, disable the temperature controller group
+            if dg.exec_() == 0:
+                self.sensor2Group.setChecked(False)
+
 
     # connect to sensor instance 2 using values returned by the dialog
     def connect_sensor2(self, values):
@@ -532,7 +535,7 @@ class ControllerGUITab(QWidget):
         self.sensor1Group = QGroupBox("Sensor 1")
         self.sensor1Group.setCheckable(True)
         self.sensor1Group.setChecked(False)
-        self.sensor1Group.clicked.connect(self.create_sensor1_dialog)
+        self.sensor1Group.clicked.connect(self.update_sensor1_group)
         sensor1Layout = QVBoxLayout()
 
         layout = QHBoxLayout()
@@ -572,7 +575,7 @@ class ControllerGUITab(QWidget):
         self.sensor2Group = QGroupBox("Sensor 2")
         self.sensor2Group.setCheckable(True)
         self.sensor2Group.setChecked(False)
-        self.sensor2Group.clicked.connect(self.create_sensor2_dialog)
+        self.sensor2Group.clicked.connect(self.update_sensor2_group)
         sensor2Layout = QVBoxLayout()
 
         layout = QHBoxLayout()
