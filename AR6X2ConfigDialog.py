@@ -45,7 +45,7 @@ class AR6X2ConfigDialog(QDialog):
         self.address.setValidator(QRegExpValidator(QRegExp("[0-9]{1,5}")))
         self.address.textChanged.connect(self.unlock_ok)
 
-        self.buttonOk = QPushButton("OK")
+        self.buttonOk = QPushButton("Connect")
         self.buttonOk.setEnabled(False)
         self.buttonOk.clicked.connect(self.ok_pressed)
 

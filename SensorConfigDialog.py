@@ -70,7 +70,7 @@ class SensorConfigDialog(QDialog):
         self.header = QLineEdit()
         self.header.textChanged.connect(self.unlock_ok)
 
-        self.buttonOk = QPushButton("OK")
+        self.buttonOk = QPushButton("Connect")
         self.buttonOk.setEnabled(False)
         self.buttonOk.clicked.connect(self.ok_pressed)
 
