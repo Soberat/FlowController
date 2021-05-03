@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import (
     QCheckBox,
     QLineEdit,
     QVBoxLayout,
-    QWidget, QHBoxLayout, QGridLayout, QGroupBox, QSlider, QLabel, QPushButton,
+    QWidget, QHBoxLayout, QGridLayout, QGroupBox, QSlider, QLabel, QPushButton, QFormLayout, QComboBox,
 )
 from pyqtgraph import PlotWidget
 import numpy as np
@@ -15,17 +15,154 @@ import numpy as np
 # TODO: Default values
 # TODO: Handler functions
 class ControllerGUITab(QWidget):
+    LEFT_COLUMN_MAX_WIDTH = 400
+
     def __init__(self):
         super().__init__()
         # Create the master layout
         outerLayout = QGridLayout()
+        self.__graph = None
+
+        # Nest the inner layouts into the outer layout
+        outerLayout.addLayout(self.create_left_column(), 0, 0)
+        outerLayout.addLayout(self.create_right_column(), 0, 1)
+        # Set the window's main layout
+        self.setLayout(outerLayout)
+
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_plot)
+        self.timer.start(500)
+
+    def update_plot(self):
+        self.graph.clear()
+        self.graph.plot(np.linspace(0, 1, 100), np.random.random(100), pen=pyqtgraph.mkPen((255, 127, 0), width=1.25))
+        # pg.mkPen((0, 127, 255), width=1.25)
+
+    def create_left_column(self):
         # Create a vertical layout for the left column
         leftColumnLayout = QVBoxLayout()
-        # Add an empty label to set constant width - not permanent solution
-        label = QLabel("")
-        label.setFixedWidth(200)
-        leftColumnLayout.addWidget(label)
 
+        # Valve override group
+        vorGroup = QGroupBox("Valve override")
+        vorLayout = QVBoxLayout()
+
+        layout = QHBoxLayout()
+
+        vorNormalButton = QPushButton("Normal")
+        vorNormalButton.setMinimumWidth(50)
+        vorNormalButton.setFixedHeight(30)
+
+        vorClosedButton = QPushButton("Closed")
+        vorClosedButton.setMinimumWidth(50)
+        vorClosedButton.setFixedHeight(30)
+
+        vorOpenButton = QPushButton("Open")
+        vorOpenButton.setMinimumWidth(50)
+        vorOpenButton.setFixedHeight(30)
+
+        vorStatusLabel = QLabel("Current status: Normal")
+
+        layout.addWidget(vorNormalButton)
+        layout.addWidget(vorClosedButton)
+        layout.addWidget(vorOpenButton)
+
+        vorLayout.addLayout(layout)
+        vorLayout.addWidget(vorStatusLabel)
+
+        vorGroup.setLayout(vorLayout)
+        vorGroup.setMaximumWidth(ControllerGUITab.LEFT_COLUMN_MAX_WIDTH)
+        leftColumnLayout.addWidget(vorGroup, alignment=Qt.AlignTop)
+
+        # Process configuration group
+        processGroup = QGroupBox("Process configuration")
+        processLayout = QFormLayout()
+
+        gasDropdown = QComboBox()
+
+        pvFullScaleEdit = QLineEdit()
+
+        pvSigtypeDropdown = QComboBox()
+
+        spFullScaleEdit = QLineEdit()
+
+        spSigtypeDropdown = QComboBox()
+
+        spSourceDropdown = QComboBox()
+
+        decimalDropdown = QComboBox()
+
+        unitsDropdown = QComboBox()
+
+        timebaseDropdown = QComboBox()
+
+        processLayout.addRow(QLabel("Gas factor"), gasDropdown)
+        processLayout.addRow(QLabel("PV Full Scale"), pvFullScaleEdit)
+        processLayout.addRow(QLabel("PV Signal Type"), pvSigtypeDropdown)
+        processLayout.addRow(QLabel("SP Full Scale"), spFullScaleEdit)
+        processLayout.addRow(QLabel("SP Signal Type"), spSigtypeDropdown)
+        processLayout.addRow(QLabel("Setpoint source"), spSourceDropdown)
+        processLayout.addRow(QLabel("Decimal point"), decimalDropdown)
+        processLayout.addRow(QLabel("Measurement units"), unitsDropdown)
+        processLayout.addRow(QLabel("Time base"), timebaseDropdown)
+
+        processGroup.setLayout(processLayout)
+        processGroup.setMaximumWidth(ControllerGUITab.LEFT_COLUMN_MAX_WIDTH)
+        leftColumnLayout.addWidget(processGroup, alignment=Qt.AlignTop)
+        leftColumnLayout.setStretch(1, 100)
+
+        runtimeGroup = QGroupBox("Runtime options")
+        runtimeLayout = QVBoxLayout()
+
+        layout = QHBoxLayout()
+
+        bufferSizeEdit = QLineEdit()
+
+        layout.addWidget(QLabel("Sample buffer size"))
+        layout.addWidget(bufferSizeEdit)
+        layout.addWidget(QLabel("samples"))
+
+        runtimeLayout.addLayout(layout)
+
+        layout = QHBoxLayout()
+
+        intervalEdit = QLineEdit()
+
+        layout.addWidget(QLabel("Data update interval"))
+        layout.addWidget(intervalEdit)
+        layout.addWidget(QLabel("seconds"))
+
+        runtimeLayout.addLayout(layout)
+
+        layout = QHBoxLayout()
+
+        setpointEdit = QLineEdit()
+        unitsLabel = QLabel("mu/tb")
+
+        layout.addWidget(QLabel("Setpoint"))
+        layout.addWidget(setpointEdit)
+        layout.addWidget(unitsLabel)
+
+        runtimeLayout.addLayout(layout)
+
+        layout = QHBoxLayout()
+
+        manualMeasureButton = QPushButton("Get measurement")
+        saveCsvButton = QPushButton("Save to CSV")
+
+        layout.addWidget(manualMeasureButton)
+        layout.addWidget(saveCsvButton)
+
+        runtimeLayout.addLayout(layout)
+
+        runtimeGroup.setLayout(runtimeLayout)
+        runtimeGroup.setMaximumWidth(ControllerGUITab.LEFT_COLUMN_MAX_WIDTH)
+        runtimeGroup.setFixedHeight(150)
+
+        leftColumnLayout.addWidget(runtimeGroup, alignment=Qt.AlignBottom)
+
+        return leftColumnLayout
+
+    def create_right_column(self):
         # Create layouts and elements for the right column, including graph and sensor/temperature control/dosing groups
         rightColumnLayout = QGridLayout()
         rightGridLayout = QGridLayout()
@@ -95,6 +232,7 @@ class ControllerGUITab(QWidget):
 
         tempControllerGroup.setLayout(tempControllerLayout)
         tempControllerGroup.setMinimumWidth(200)
+        tempControllerGroup.setFixedHeight(150)
 
         dosingGroup = QGroupBox("Dosing control")
         dosingGroup.setCheckable(True)
@@ -135,6 +273,7 @@ class ControllerGUITab(QWidget):
         # finally, assign the layout to the group
         dosingGroup.setLayout(dosingLayout)
         dosingGroup.setMinimumWidth(200)
+        dosingGroup.setFixedHeight(150)
 
         rightInnerGrid.addWidget(sensor1Group, 0, 0)
         rightInnerGrid.addWidget(sensor2Group, 0, 1)
@@ -155,17 +294,4 @@ class ControllerGUITab(QWidget):
         # Add some checkboxes to the layout
         rightColumnLayout.addLayout(rightGridLayout, 0, 1)
 
-        # Nest the inner layouts into the outer layout
-        outerLayout.addLayout(leftColumnLayout, 0, 0)
-        outerLayout.addLayout(rightColumnLayout, 0, 1)
-        # Set the window's main layout
-        self.setLayout(outerLayout)
-
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.update_plot)
-        self.timer.start(1000)
-
-    def update_plot(self):
-        self.graph.clear()
-        self.graph.plot(np.linspace(0, 1, 100), np.random.random(100), pen=pyqtgraph.mkPen((255, 127, 0), width=1.25))
-        # pg.mkPen((0, 127, 255), width=1.25)
+        return rightColumnLayout
