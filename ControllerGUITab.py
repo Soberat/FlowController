@@ -686,8 +686,8 @@ class ControllerGUITab(QWidget):
         self.dosingValuesEdit = QLineEdit()
         self.dosingValuesEdit.setMinimumWidth(160)
         self.dosingValuesEdit.setText("1.0, 2.0, 5.0")
-        self.dosingValuesEdit.setValidator(QRegExpValidator(QRegExp("([0-9]{1,3}\\.[0-9]{1,3},(| ))+")))
-        self.dosingValuesEdit.textChanged.connect(self.update_dosing_values)
+        self.dosingValuesEdit.setValidator(QRegExpValidator(QRegExp("(([0-9]+|[0-9]+\\.[0-9]+),(| ))+")))
+        self.dosingValuesEdit.textChanged.connect(self.update_dosing_vectors)
 
         label = QLabel("Setpoints")
         label.setFixedWidth(55)
