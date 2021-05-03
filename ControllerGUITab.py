@@ -261,9 +261,13 @@ class ControllerGUITab(QWidget):
         gradientEdit.setMaximumWidth(60)
         gradientEdit.setText("0.1")  # default value from the datasheet
 
+        temperatureButton = QPushButton("Enable output")
+        temperatureButton.setCheckable(True)
+
         layout.addWidget(QLabel("Gradient"), alignment=Qt.AlignLeft)
         layout.addWidget(gradientEdit, alignment=Qt.AlignLeft)
         layout.addWidget(QLabel("℃/min"))
+        layout.addWidget(temperatureButton, alignment=Qt.AlignBottom)
         layout.setStretch(2, 10)
 
         tempControllerLayout.addLayout(layout)
