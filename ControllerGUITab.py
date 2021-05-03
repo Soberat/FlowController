@@ -21,7 +21,7 @@ class ControllerGUITab(QWidget):
         super().__init__()
         # Create the master layout
         outerLayout = QGridLayout()
-        self.__graph = None
+        self.graph = None
 
         # Nest the inner layouts into the outer layout
         outerLayout.addLayout(self.create_left_column(), 0, 0)
@@ -165,7 +165,7 @@ class ControllerGUITab(QWidget):
     def create_right_column(self):
         # Create layouts and elements for the right column, including graph and sensor/temperature control/dosing groups
         rightColumnLayout = QGridLayout()
-        rightGridLayout = QGridLayout()
+        rightGridLayout = QVBoxLayout()
         rightInnerGrid = QGridLayout()
 
         # Creation of sensor 1 and sub-elements
@@ -289,8 +289,8 @@ class ControllerGUITab(QWidget):
         self.graph.getPlotItem().setRange(xRange=(0, 1), yRange=(0, 1))
         self.graph.plot([0, 1, 2, 3], [5, 5, 5, 5])
 
-        rightGridLayout.addWidget(self.graph, 0, 0)
-        rightGridLayout.addLayout(rightInnerGrid, 1, 0)
+        rightGridLayout.addWidget(self.graph)
+        rightGridLayout.addLayout(rightInnerGrid)
         # Add some checkboxes to the layout
         rightColumnLayout.addLayout(rightGridLayout, 0, 1)
 
