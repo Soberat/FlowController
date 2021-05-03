@@ -1,6 +1,8 @@
 import sys
 
 from PyQt5.QtCore import QFile, QTextStream
+from PyQt5.QtGui import QIcon
+
 from ControllerGUITab import ControllerGUITab
 import qdarkstyle
 
@@ -16,6 +18,7 @@ from PyQt5.QtWidgets import (
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
+        self.setWindowIcon(QIcon("icon.png"))
         self.setWindowTitle("FlowController by Mirosław Wiącek")
         self.setMinimumSize(900, 730)
 
