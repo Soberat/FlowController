@@ -39,8 +39,10 @@ class Controller:
     SP_FUNC_BLEND = 3
 
     # Setpoint sources
-    SP_SOURCE_KEYPAD = 0
-    SP_SOURCE_SERIAL = 1
+    SP_SOURCES = {
+        "Keypad": 0,
+        "Serial": 1
+    }
 
     # "Targets", required for reading full_scale and signal_type values, that share codes between SP and PV
     # Values chosen arbitrarily
@@ -331,8 +333,8 @@ class Controller:
 
     # Set the setpoint source
     def set_source(self, source):
-        assert (source == Controller.SP_SOURCE_SERIAL or source == Controller.SP_SOURCE_KEYPAD)
-        return self.__write_value(Controller.PARAM_SP_SOURCE, source)
+        assert (source in Controller.SP_SOURCES.keys())
+        return self.__write_value(Controller.PARAM_SP_SOURCE, Controller.SP_SOURCES.get(source))
 
     # Save samples to a csv file, named after the current time and controller number it is coming from
     def save_readouts(self):

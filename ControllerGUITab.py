@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import (
 )
 from pyqtgraph import PlotWidget
 import numpy as np
+from Controller import Controller
 
 
 # TODO: Left column
@@ -78,24 +79,31 @@ class ControllerGUITab(QWidget):
         processLayout = QFormLayout()
 
         gasDropdown = QComboBox()
+        gasDropdown.addItems(Controller.GAS_TYPES.keys())
 
         pvFullScaleEdit = QLineEdit()
 
         pvSigtypeDropdown = QComboBox()
+        pvSigtypeDropdown.addItems(Controller.INPUT_PORT_TYPES.keys())
 
         spFullScaleEdit = QLineEdit()
 
         spSigtypeDropdown = QComboBox()
+        spSigtypeDropdown.addItems(Controller.OUTPUT_PORT_TYPES.keys())
 
         spSourceDropdown = QComboBox()
+        spSourceDropdown.addItems(Controller.SP_SOURCES.keys())
 
         decimalDropdown = QComboBox()
+        decimalDropdown.addItems(Controller.DECIMAL_POINTS.keys())
 
         unitsDropdown = QComboBox()
+        unitsDropdown.addItems(Controller.MEASUREMENT_UNITS.keys())
 
         timebaseDropdown = QComboBox()
+        timebaseDropdown.addItems(Controller.RATE_TIME_BASE.keys())
 
-        processLayout.addRow(QLabel("Gas factor"), gasDropdown)
+        processLayout.addRow(QLabel("Gas"), gasDropdown)
         processLayout.addRow(QLabel("PV Full Scale"), pvFullScaleEdit)
         processLayout.addRow(QLabel("PV Signal Type"), pvSigtypeDropdown)
         processLayout.addRow(QLabel("SP Full Scale"), spFullScaleEdit)
