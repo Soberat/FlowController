@@ -39,6 +39,7 @@ class ControllerGUITab(QWidget):
         self.intervalEdit = None
         self.bufferSizeEdit = None
         self.setpointEdit = None
+        self.dosingUnitsLabel = None
 
         # Data buffers
         self.sampleBufferSize = 64
@@ -330,11 +331,13 @@ class ControllerGUITab(QWidget):
         sensor1SampleIntervalEdit = QLineEdit()
         sensor1SampleIntervalEdit.setValidator(QIntValidator())
         sensor1SampleIntervalEdit.setFixedWidth(100)
-        label = QLabel('milliseconds')
 
-        layout.addWidget(QLabel('Sampling interval'))
-        layout.addWidget(sensor1SampleIntervalEdit)
+        label = QLabel('Sampling interval')
+        label.setFixedWidth(90)
         layout.addWidget(label)
+        layout.addWidget(sensor1SampleIntervalEdit)
+        layout.addWidget(QLabel('milliseconds'))
+        layout.setStretch(2, 10)
         sensor1Layout.addLayout(layout)
 
         layout = QHBoxLayout()
@@ -342,11 +345,13 @@ class ControllerGUITab(QWidget):
         sensor1BufferSizeEdit = QLineEdit()
         sensor1BufferSizeEdit.setValidator(QIntValidator())
         sensor1BufferSizeEdit.setFixedWidth(100)
-        label = QLabel('samples')
 
-        layout.addWidget(QLabel('Buffer size'))
-        layout.addWidget(sensor1BufferSizeEdit)
+        label = QLabel('Buffer size')
+        label.setFixedWidth(90)
         layout.addWidget(label)
+        layout.addWidget(sensor1BufferSizeEdit)
+        layout.addWidget(QLabel('samples'))
+        layout.setStretch(2, 10)
         sensor1Layout.addLayout(layout)
         self.sensor1Group.setLayout(sensor1Layout)
 
@@ -362,11 +367,13 @@ class ControllerGUITab(QWidget):
         sensor2SampleIntervalEdit = QLineEdit()
         sensor2SampleIntervalEdit.setValidator(QIntValidator())
         sensor2SampleIntervalEdit.setFixedWidth(100)
-        label = QLabel('milliseconds')
 
-        layout.addWidget(QLabel('Sampling interval'))
-        layout.addWidget(sensor2SampleIntervalEdit)
+        label = QLabel('Sampling interval')
+        label.setFixedWidth(90)
         layout.addWidget(label)
+        layout.addWidget(sensor2SampleIntervalEdit)
+        layout.addWidget(QLabel('milliseconds'))
+        layout.setStretch(2, 10)
         sensor2Layout.addLayout(layout)
 
         layout = QHBoxLayout()
@@ -374,11 +381,13 @@ class ControllerGUITab(QWidget):
         sensor2BufferSizeEdit = QLineEdit()
         sensor2BufferSizeEdit.setValidator(QIntValidator())
         sensor2BufferSizeEdit.setFixedWidth(100)
-        label = QLabel('samples')
 
-        layout.addWidget(QLabel('Buffer size'))
-        layout.addWidget(sensor2BufferSizeEdit)
+        label = QLabel('Buffer size')
+        label.setFixedWidth(90)
         layout.addWidget(label)
+        layout.addWidget(sensor2BufferSizeEdit)
+        layout.addWidget(QLabel('samples'))
+        layout.setStretch(2, 10)
         sensor2Layout.addLayout(layout)
         self.sensor2Group.setLayout(sensor2Layout)
 
@@ -466,30 +475,32 @@ class ControllerGUITab(QWidget):
 
         layout = QHBoxLayout()
         dosingTimesEdit = QLineEdit()
-        dosingTimesEdit.setMinimumWidth(200)
+        dosingTimesEdit.setMinimumWidth(160)
         dosingTimesEdit.setText("1000, 10000, 15000")
         dosingTimesEdit.setValidator(QRegExpValidator(QRegExp("([0-9]*, |))+")))
 
         label = QLabel("Times")
-        label.setFixedWidth(80)
+        label.setFixedWidth(55)
 
-        layout.addWidget(label, alignment=Qt.AlignLeft)
-        layout.addWidget(dosingTimesEdit, alignment=Qt.AlignLeft)
-        layout.setStretch(1, 10)
+        layout.addWidget(label)
+        layout.addWidget(dosingTimesEdit)
+        layout.addWidget(QLabel("milliseconds"))
         dosingLayout.addLayout(layout)
 
         layout = QHBoxLayout()
         dosingValuesEdit = QLineEdit()
-        dosingValuesEdit.setMinimumWidth(200)
+        dosingValuesEdit.setMinimumWidth(160)
         dosingValuesEdit.setText("1.0, 2.0, 5.0")
         dosingValuesEdit.setValidator(QRegExpValidator(QRegExp("([0-9]{1,3}\\.[0-9]{1,3},(| ))+")))
 
-        label = QLabel("Setpoint values")
-        label.setFixedWidth(80)
+        label = QLabel("Setpoints")
+        label.setFixedWidth(55)
 
-        layout.addWidget(label, alignment=Qt.AlignLeft)
-        layout.addWidget(dosingValuesEdit, alignment=Qt.AlignLeft)
-        layout.setStretch(1, 10)
+        self.dosingUnitsLabel = QLabel("mu/tb")
+
+        layout.addWidget(label)
+        layout.addWidget(dosingValuesEdit)
+        layout.addWidget(self.dosingUnitsLabel)
         dosingLayout.addLayout(layout)
 
         nextTimeLabel = QLabel("10 seconds until next dose")
