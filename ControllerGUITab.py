@@ -50,17 +50,22 @@ class ControllerGUITab(QWidget):
 
         layout = QHBoxLayout()
 
+        # TODO: on check, unchech others
         vorNormalButton = QPushButton("Normal")
         vorNormalButton.setMinimumWidth(50)
         vorNormalButton.setFixedHeight(30)
+        vorNormalButton.setCheckable(True)
+        vorNormalButton.setChecked(True)
 
         vorClosedButton = QPushButton("Closed")
         vorClosedButton.setMinimumWidth(50)
         vorClosedButton.setFixedHeight(30)
+        vorClosedButton.setCheckable(True)
 
         vorOpenButton = QPushButton("Open")
         vorOpenButton.setMinimumWidth(50)
         vorOpenButton.setFixedHeight(30)
+        vorOpenButton.setCheckable(True)
 
         vorStatusLabel = QLabel("Current status: Normal")
 
