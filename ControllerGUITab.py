@@ -279,6 +279,9 @@ class ControllerGUITab(QWidget):
 
         layout = QHBoxLayout()
         dosingTimesEdit = QLineEdit()
+        dosingTimesEdit.setMinimumWidth(200)
+        dosingTimesEdit.setText("1000, 10000, 15000")
+        dosingTimesEdit.setValidator(QRegExpValidator(QRegExp("([0-9]*, |))+")))
 
         label = QLabel("Times")
         label.setFixedWidth(35)
@@ -290,6 +293,9 @@ class ControllerGUITab(QWidget):
 
         layout = QHBoxLayout()
         dosingValuesEdit = QLineEdit()
+        dosingValuesEdit.setMinimumWidth(200)
+        dosingValuesEdit.setText("1.0, 2.0, 5.0")
+        dosingValuesEdit.setValidator(QRegExpValidator(QRegExp("([0-9]{1,3}\\.[0-9]{1,3},(| ))+")))
 
         label = QLabel("Values")
         label.setFixedWidth(35)
@@ -303,6 +309,7 @@ class ControllerGUITab(QWidget):
         nextDoseLabel = QLabel("Next dose value: 50")
 
         dosingButton = QPushButton("Start dosing")
+        dosingButton.setCheckable(True)
 
         dosingLayout.addWidget(nextTimeLabel, alignment=Qt.AlignLeft)
         dosingLayout.addWidget(nextDoseLabel, alignment=Qt.AlignLeft)
