@@ -1,5 +1,6 @@
+from PyQt5 import QtCore
 from PyQt5.QtCore import QRegExp, pyqtSignal, QTimer
-from PyQt5.QtGui import QRegExpValidator
+from PyQt5.QtGui import QRegExpValidator, QIcon
 from PyQt5.QtWidgets import QDialog, QFormLayout, QPushButton, QLineEdit, QComboBox
 from serial.tools.list_ports import comports
 
@@ -29,6 +30,11 @@ class AR6X2ConfigPopup(QDialog):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Prepare dialog window, disable whatsthis
+        self.setFixedSize(200, 120)
+        self.setWindowIcon(QIcon('icon.png'))
+        self.setWindowTitle("Configure AR6X2 device")
+        self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint)
         self.devices = set(comports())
 
         self.port = QComboBox()
