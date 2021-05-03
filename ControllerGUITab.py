@@ -10,6 +10,8 @@ from PyQt5.QtWidgets import (
 from pyqtgraph import PlotWidget
 import numpy as np
 from Controller import Controller
+from AR6X2ConfigPopup import AR6X2ConfigPopup
+from AR6X2 import AR6X2
 
 
 # TODO: Left column
@@ -24,6 +26,8 @@ class ControllerGUITab(QWidget):
         # Create the master layout
         outerLayout = QGridLayout()
         self.graph = None
+        self.temperatureController = None
+        self.tempControllerGroup = None
 
         # Nest the inner layouts into the outer layout
         outerLayout.addLayout(self.create_left_column(), 0, 0)
@@ -39,6 +43,17 @@ class ControllerGUITab(QWidget):
         self.graph.clear()
         self.graph.plot(np.linspace(0, 1, 100), np.random.random(100), pen=pyqtgraph.mkPen((255, 127, 0), width=1.25))
         # pg.mkPen((0, 127, 255), width=1.25)
+
+    # Connect to the AR6X2 controller using given parameters
+    def connect_temp_controller(self, values):
+        self.temperatureController = AR6X2(port=values['port'], address=values['address'])
+
+    def create_temperature_dialog(self):
+        dg = AR6X2ConfigPopup()
+        dg.accepted.connect(self.connect_temp_controller)
+        # if unsuccessful, disable the temperature controller group
+        if dg.exec_() == 0:
+            self.tempControllerGroup.setChecked(False)
 
     def create_left_column(self):
         # Create a vertical layout for the left column
@@ -203,9 +218,10 @@ class ControllerGUITab(QWidget):
         sensor2Group.setChecked(False)
 
         # TODO: Add address and comport fields
-        tempControllerGroup = QGroupBox("Temperature controller")
-        tempControllerGroup.setCheckable(True)
-        tempControllerGroup.setChecked(False)
+        self.tempControllerGroup = QGroupBox("Temperature controller")
+        self.tempControllerGroup.setCheckable(True)
+        self.tempControllerGroup.setChecked(False)
+        self.tempControllerGroup.clicked.connect(self.create_temperature_dialog)
         tempControllerLayout = QVBoxLayout()
 
         layout = QHBoxLayout()
@@ -232,13 +248,15 @@ class ControllerGUITab(QWidget):
         tempControllerLowEdit.setMinimumWidth(30)
         tempControllerLowEdit.setMaximumWidth(60)
         tempControllerLowEdit.setText("-199.9")
-        tempControllerLowEdit.setValidator(QRegExpValidator(QRegExp("(-[0-9]{1,3}\\.[0-9]|[0-9]{1,3}\\.[0-9|[0-9]{1,4})")))
+        tempControllerLowEdit.setValidator(
+            QRegExpValidator(QRegExp("(-[0-9]{1,3}\\.[0-9]|[0-9]{1,3}\\.[0-9|[0-9]{1,4})")))
 
         tempControllerHighEdit = QLineEdit()
         tempControllerHighEdit.setMinimumWidth(30)
         tempControllerHighEdit.setMaximumWidth(60)
         tempControllerHighEdit.setText("850.0")
-        tempControllerHighEdit.setValidator(QRegExpValidator(QRegExp("(-[0-9]{1,3}\\.[0-9]|[0-9]{1,3}\\.[0-9|[0-9]{1,4})")))
+        tempControllerHighEdit.setValidator(
+            QRegExpValidator(QRegExp("(-[0-9]{1,3}\\.[0-9]|[0-9]{1,3}\\.[0-9|[0-9]{1,4})")))
 
         layout.addWidget(QLabel("Range"))
         layout.addWidget(tempControllerLowEdit, alignment=Qt.AlignLeft)
@@ -272,9 +290,9 @@ class ControllerGUITab(QWidget):
 
         tempControllerLayout.addLayout(layout)
 
-        tempControllerGroup.setLayout(tempControllerLayout)
-        tempControllerGroup.setMinimumWidth(200)
-        tempControllerGroup.setFixedHeight(150)
+        self.tempControllerGroup.setLayout(tempControllerLayout)
+        self.tempControllerGroup.setMinimumWidth(200)
+        self.tempControllerGroup.setFixedHeight(150)
 
         dosingGroup = QGroupBox("Dosing control")
         dosingGroup.setCheckable(True)
@@ -326,7 +344,7 @@ class ControllerGUITab(QWidget):
 
         rightInnerGrid.addWidget(sensor1Group, 0, 0)
         rightInnerGrid.addWidget(sensor2Group, 0, 1)
-        rightInnerGrid.addWidget(tempControllerGroup, 1, 0)
+        rightInnerGrid.addWidget(self.tempControllerGroup, 1, 0)
         rightInnerGrid.addWidget(dosingGroup, 1, 1)
 
         rightInnerGrid.setColumnStretch(0, 100)
