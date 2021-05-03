@@ -28,7 +28,7 @@ class ControllerGUITab(QWidget):
         # Create the master layout
         outerLayout = QGridLayout()
         self.graph = None
-        self.controller: Controller
+        self.controller = None
         self.temperatureController = None
         self.tempControllerGroup = None
         self.sensor1 = None
@@ -38,12 +38,13 @@ class ControllerGUITab(QWidget):
 
         self.intervalEdit = None
         self.bufferSizeEdit = None
+        self.setpointEdit = None
 
         # Data buffers
-        self.__sampleBufferSize = 64
-        self.samplesPV = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.float16)
-        self.samplesTotalizer = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.float16)
-        self.sampleTimestamps = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.uint64)
+        self.sampleBufferSize = 64
+        self.samplesPV = RingBuffer(capacity=self.sampleBufferSize, dtype=np.float16)
+        self.samplesTotalizer = RingBuffer(capacity=self.sampleBufferSize, dtype=np.float16)
+        self.sampleTimestamps = RingBuffer(capacity=self.sampleBufferSize, dtype=np.uint64)
 
         # Nest the inner layouts into the outer layout
         outerLayout.addLayout(self.create_left_column(), 0, 0)
@@ -57,7 +58,7 @@ class ControllerGUITab(QWidget):
 
     def update_buffer_size(self):
         self.change_buffer_size(int(self.bufferSizeEdit.text()))
-        self.__sampleBufferSize = int(self.bufferSizeEdit.text())
+        self.sampleBufferSize = int(self.bufferSizeEdit.text())
 
     def update_graph_timer(self):
         self.graphTimer.setInterval(int(self.intervalEdit.text()))
@@ -78,32 +79,39 @@ class ControllerGUITab(QWidget):
     # Save samples to a csv file, named after the current time and controller number it is coming from
     def save_to_csv(self):
         now = datetime.now()
-        filename = now.strftime(f"controller{self.Controller.__channel}_%Y-%m-%d_%H-%M-%S.csv")
+        if self.controller is not None:
+            filename = now.strftime(f"controller{self.controller.__channel}_%Y-%m-%d_%H-%M-%S.csv")
+        else:
+            filename = now.strftime("controller0_%Y-%m-%d_%H-%M-%S.csv")
         file = open(filename, 'w')
-        file.write(
-            f"Gas: {self.controller.__gas}, Gas factor:{self.controller.__gasFactor}, Decimal point:{self.controller.__decimal_point}, Units:{self.controller.__measure_units}/{self.controller.__time_base}\n")
+        if self.controller is not None:
+            file.write(
+                f"Gas: {self.controller.__gas}, Gas factor:{self.controller.__gasFactor}, Decimal point:{self.controller.__decimal_point}, Units:{self.controller.__measure_units}/{self.controller.__time_base}\n")
         file.write("Measurement [Rate], Measurement [Total], Unix timestamp (in milliseconds)\n")
         for i in range(0, self.sampleBufferSize - 1):
             file.write(f'{self.samplesPV[i]},{self.samplesTotalizer[i]},{self.sampleTimestamps[i]}\n')
         file.write('\n')
 
         # if available, append data from sensors
-        if self.sensor1.buffer.count() > 0:
+        if self.sensor1 is not None and self.sensor1.buffer.count() > 0:
             file.write(f"Sensor 1 header: {self.sensor1.header}\n")
             for i in range(0, self.sensor1.buffer.count()):
                 file.write(self.sensor1.buffer[i] + '\n')
         file.write('\n')
 
-        if self.sensor2.buffer.count() > 0:
+        if self.sensor2 is not None and self.sensor2.buffer.count() > 0:
             file.write(f"Sensor 2 header: {self.sensor2.header}\n")
             for i in range(0, self.sensor2.buffer.count()):
                 file.write(self.sensor2.buffer[i] + '\n')
 
         file.close()
 
+    def update_setpoint(self):
+        value = float(self.setpointEdit.text())
+        self.controller.set_setpoint(value)
+
     def update_plot(self):
         self.graph.clear()
-        self.graph.plot(np.linspace(0, 1, 100), np.random.random(100), pen=pyqtgraph.mkPen((255, 127, 0), width=1.25))
         self.get_measurement()
         self.graph.plot(self.samplesPV, pen=pyqtgraph.mkPen((255, 127, 0), width=1.25))
         # pg.mkPen((0, 127, 255), width=1.25)
@@ -271,13 +279,15 @@ class ControllerGUITab(QWidget):
 
         layout = QHBoxLayout()
 
-        setpointEdit = QLineEdit()
-        setpointEdit.setText("1")
-        setpointEdit.setValidator(QRegExpValidator(QRegExp("[0-9]*.[0-9]*")))
+        self.setpointEdit = QLineEdit()
+        self.setpointEdit.setText("1")
+        self.setpointEdit.setValidator(QRegExpValidator(QRegExp("[0-9]*.[0-9]*")))
+        self.setpointEdit.editingFinished.connect(self.update_setpoint)
+
         unitsLabel = QLabel("mu/tb")
 
         layout.addWidget(QLabel("Setpoint"))
-        layout.addWidget(setpointEdit)
+        layout.addWidget(self.setpointEdit)
         layout.addWidget(unitsLabel)
 
         runtimeLayout.addLayout(layout)
@@ -523,7 +533,7 @@ class ControllerGUITab(QWidget):
 
     # function to change the amount of stored samples without losing previously gathered samples
     def change_buffer_size(self, value):
-        if value > self.__sampleBufferSize:
+        if value > self.sampleBufferSize:
             newBufPV = RingBuffer(capacity=value, dtype=np.int16)
             newBufTotal = RingBuffer(capacity=value, dtype=np.int16)
             newTimestampBuf = RingBuffer(capacity=value, dtype=np.uint64)
@@ -535,7 +545,7 @@ class ControllerGUITab(QWidget):
             self.samplesPV = newBufPV
             self.samplesTotalizer = newBufTotal
             self.sampleTimestamps = newTimestampBuf
-        elif value < self.__sampleBufferSize:
+        elif value < self.sampleBufferSize:
             newBufPV = RingBuffer(capacity=value, dtype=np.int16)
             newBufTotal = RingBuffer(capacity=value, dtype=np.int16)
             newTimestampBuf = RingBuffer(capacity=value, dtype=np.uint64)
@@ -554,6 +564,6 @@ class ControllerGUITab(QWidget):
     # Also, I think that those parameters should be set at the beginning of the process
     # and they wouldn't be changed mid process.
     def wipe_buffers(self):
-        self.samplesPV = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.int16)
-        self.samplesTotalizer = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.int16)
-        self.sampleTimestamps = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.uint64)
+        self.samplesPV = RingBuffer(capacity=self.sampleBufferSize, dtype=np.int16)
+        self.samplesTotalizer = RingBuffer(capacity=self.sampleBufferSize, dtype=np.int16)
+        self.sampleTimestamps = RingBuffer(capacity=self.sampleBufferSize, dtype=np.uint64)

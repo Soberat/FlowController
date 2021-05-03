@@ -149,7 +149,6 @@ class Controller:
         self.__outputPort = 2 * channel
         self.__address: str = deviceAddress  # this is a string because it needs to be zero-padded to be 5 chars long
 
-
         # Physical device measurements
         self.__flowReadout = 0
         self.__gas = 0
