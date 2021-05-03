@@ -1,5 +1,6 @@
 import pyqtgraph
-from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtCore import Qt, QTimer, QRegExp
+from PyQt5.QtGui import QRegExpValidator
 from PyQt5.QtWidgets import (
     QCheckBox,
     QLineEdit,
@@ -82,11 +83,15 @@ class ControllerGUITab(QWidget):
         gasDropdown.addItems(Controller.GAS_TYPES.keys())
 
         pvFullScaleEdit = QLineEdit()
+        pvFullScaleEdit.setText("100.000")
+        pvFullScaleEdit.setValidator(QRegExpValidator(QRegExp("(-|)[0-9]{1,3}\\.[0-9]{1,3}")))
 
         pvSigtypeDropdown = QComboBox()
         pvSigtypeDropdown.addItems(Controller.INPUT_PORT_TYPES.keys())
 
         spFullScaleEdit = QLineEdit()
+        spFullScaleEdit.setText("100.000")
+        spFullScaleEdit.setValidator(QRegExpValidator(QRegExp("(-|)[0-9]{1,3}\\.[0-9]{1,3}")))
 
         spSigtypeDropdown = QComboBox()
         spSigtypeDropdown.addItems(Controller.OUTPUT_PORT_TYPES.keys())
@@ -124,6 +129,8 @@ class ControllerGUITab(QWidget):
         layout = QHBoxLayout()
 
         bufferSizeEdit = QLineEdit()
+        bufferSizeEdit.setText("64")
+        bufferSizeEdit.setValidator(QRegExpValidator(QRegExp("[0-9]*")))
 
         layout.addWidget(QLabel("Sample buffer size"))
         layout.addWidget(bufferSizeEdit)
@@ -134,16 +141,20 @@ class ControllerGUITab(QWidget):
         layout = QHBoxLayout()
 
         intervalEdit = QLineEdit()
+        intervalEdit.setText("500")
+        intervalEdit.setValidator(QRegExpValidator(QRegExp("[0-9]*.[0-9]*")))
 
         layout.addWidget(QLabel("Data update interval"))
         layout.addWidget(intervalEdit)
-        layout.addWidget(QLabel("seconds"))
+        layout.addWidget(QLabel("milliseconds"))
 
         runtimeLayout.addLayout(layout)
 
         layout = QHBoxLayout()
 
         setpointEdit = QLineEdit()
+        setpointEdit.setText("1")
+        setpointEdit.setValidator(QRegExpValidator(QRegExp("[0-9]*.[0-9]*")))
         unitsLabel = QLabel("mu/tb")
 
         layout.addWidget(QLabel("Setpoint"))
