@@ -20,6 +20,7 @@ from numpy_ringbuffer import RingBuffer
 
 # TODO: Getting values from serial, and not assuming defaults
 # TODO: Handler functions
+# TODO: Implement dosing process
 
 class ControllerGUITab(QWidget):
     LEFT_COLUMN_MAX_WIDTH = 400
@@ -73,10 +74,13 @@ class ControllerGUITab(QWidget):
         self.tempControlButton = None
 
         self.dosingTimesEdit = None
+        self.dosingTimes = None
         self.dosingValuesEdit = None
+        self.dosingValues = None
         self.dosingUnitsLabel = None
         self.dosingTimerLabel = None
         self.dosingValueLabel = None
+        self.dosingControlButton = None
 
         # Data buffers
         self.sampleBufferSize = 64
@@ -262,11 +266,21 @@ class ControllerGUITab(QWidget):
             self.temperatureController.ramping_off()
             self.tempControlButton.setText("Enable output")
 
-    def update_dosing_times(self):
-        print("update_dosing_time")
+    def update_dosing_vectors(self):
+        print("update_dosing_vectors")
+        self.dosingValues = [float(x) for x in self.dosingValuesEdit.text().split(sep=',') if x.strip() != '']
+        self.dosingTimes = [int(x) for x in self.dosingTimesEdit.text().split(sep=',') if x.strip() != '']
 
-    def update_dosing_values(self):
-        print("update_dosing_values")
+        print(self.dosingValues)
+        print(self.dosingTimes)
+        if len(self.dosingTimes) != len(self.dosingValues):
+            self.dosingTimesEdit.setStyleSheet("color: red;")
+            self.dosingValuesEdit.setStyleSheet("color: red;")
+            self.dosingControlButton.setEnabled(False)
+        else:
+            self.dosingTimesEdit.setStyleSheet("color: white;")
+            self.dosingValuesEdit.setStyleSheet("color: white;")
+            self.dosingControlButton.setEnabled(True)
 
     def update_dosing_label_timer(self):
         print("update_dosing_label_timer")
@@ -276,6 +290,18 @@ class ControllerGUITab(QWidget):
 
     def update_dosing_enable(self):
         print("update_dosing_enable")
+        if self.dosingControlButton.isChecked():
+            self.dosingValuesEdit.setEnabled(False)
+            self.dosingValuesEdit.setStyleSheet("color: grey")
+            self.dosingTimesEdit.setEnabled(False)
+            self.dosingTimesEdit.setStyleSheet("color: grey")
+            self.dosingControlButton.setText("Disable output")
+        else:
+            self.dosingValuesEdit.setEnabled(True)
+            self.dosingValuesEdit.setStyleSheet("color: white")
+            self.dosingTimesEdit.setEnabled(True)
+            self.dosingTimesEdit.setStyleSheet("color: white")
+            self.dosingControlButton.setText("Enable output")
 
     def update_plot(self):
         self.graph.clear()
@@ -672,7 +698,7 @@ class ControllerGUITab(QWidget):
         self.dosingTimesEdit.setMinimumWidth(160)
         self.dosingTimesEdit.setText("1000, 10000, 15000")
         self.dosingTimesEdit.setValidator(QRegExpValidator(QRegExp("([0-9]+,(| ))+")))
-        self.dosingTimesEdit.textChanged.connect(self.update_dosing_times)
+        self.dosingTimesEdit.textChanged.connect(self.update_dosing_vectors)
 
         label = QLabel("Times")
         label.setFixedWidth(55)
@@ -703,14 +729,14 @@ class ControllerGUITab(QWidget):
         nextDoseLabel = QLabel("Next dose value: 50")
 
         # TODO: lock above elements after starting
-        dosingButton = QPushButton("Start dosing")
-        dosingButton.setCheckable(True)
-        dosingButton.clicked.connect(self.update_dosing_enable)
+        self.dosingControlButton = QPushButton("Start dosing")
+        self.dosingControlButton.setCheckable(True)
+        self.dosingControlButton.clicked.connect(self.update_dosing_enable)
 
         dosingLayout.addWidget(nextTimeLabel, alignment=Qt.AlignLeft)
         layout = QHBoxLayout()
         layout.addWidget(nextDoseLabel, alignment=Qt.AlignLeft)
-        layout.addWidget(dosingButton, alignment=Qt.AlignRight)
+        layout.addWidget(self.dosingControlButton, alignment=Qt.AlignRight)
 
         dosingLayout.addLayout(layout)
 
