@@ -21,6 +21,7 @@ from numpy_ringbuffer import RingBuffer
 # TODO: Getting values from serial, and not assuming defaults
 # TODO: Handler functions
 # TODO: Implement dosing process
+# TODO: Disabling groups should disable their processes
 
 class ControllerGUITab(QWidget):
     LEFT_COLUMN_MAX_WIDTH = 400
@@ -196,10 +197,14 @@ class ControllerGUITab(QWidget):
 
     def update_measure_units(self):
         print("update_measure_units")
+        self.dosingUnitsLabel.setText(f"{self.measureUnitsDropdown.currentText()}/{self.timebaseDropdown.currentText()}")
+        self.setpointUnitsLabel.setText(f"{self.measureUnitsDropdown.currentText()}/{self.timebaseDropdown.currentText()}")
         self.controller.set_measurement_units(self.measureUnitsDropdown.currentText())
 
     def update_time_base(self):
         print("update_time_base")
+        self.dosingUnitsLabel.setText(f"{self.measureUnitsDropdown.currentText()}/{self.timebaseDropdown.currentText()}")
+        self.setpointUnitsLabel.setText(f"{self.measureUnitsDropdown.currentText()}/{self.timebaseDropdown.currentText()}")
         self.controller.set_time_base(self.timebaseDropdown.currentText())
 
     def update_buffer_size(self):
@@ -489,7 +494,7 @@ class ControllerGUITab(QWidget):
         self.setpointEdit.setValidator(QRegExpValidator(QRegExp("[0-9]*.[0-9]*")))
         self.setpointEdit.editingFinished.connect(self.update_setpoint)
 
-        self.setpointUnitsLabel = QLabel("mu/tb")
+        self.setpointUnitsLabel = QLabel("ml/sec")
 
         layout.addWidget(QLabel("Setpoint"))
         layout.addWidget(self.setpointEdit)
