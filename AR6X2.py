@@ -33,9 +33,9 @@ class AR6X2(minimalmodbus.Instrument):
         # A serial connection. The default values match the AR6x2 datasheet
         # However, the AR6x2 unit should have the baudrate set to 19200
         minimalmodbus.Instrument.__init__(self, port, address)
-        self.__rangeLow = 0.0
-        self.__rangeHigh = 100.0
-        self.__currentOutTemp = 0.0
+        self.__rangeLow = -199.9
+        self.__rangeHigh = 850.0
+        self.__currentOutTemp = 100.0
 
     def turn_off(self):
         self.write_register(AR6X2.REGISTER_OUT1_STATE, AR6X2.PARAM_OUTPUT_OFF, 1)
@@ -53,15 +53,19 @@ class AR6X2(minimalmodbus.Instrument):
     # Manual page 13, note (2)
     def set_range_low(self, value):
         assert -199.9 <= value <= 1800.0
+        self.__rangeLow = value
         self.write_register(AR6X2.REGISTER_OUT1_LOW, value, 1)
-        self.write_register(AR6X2.REGISTER_OUT1_TEMP,
-                            np.clip(self.__currentOutTemp, self.__rangeLow, self.__rangeHigh)[0])
+        newTemp = np.clip(self.__currentOutTemp, self.__rangeLow, self.__rangeHigh)[0]
+        self.write_register(AR6X2.REGISTER_OUT1_TEMP, newTemp)
+        return newTemp
 
     def set_range_high(self, value):
         assert -199.9 <= value <= 1800.0
+        self.__rangeHigh = value
         self.write_register(AR6X2.REGISTER_OUT1_HIGH, value, 1)
-        self.write_register(AR6X2.REGISTER_OUT1_TEMP,
-                            np.clip(self.__currentOutTemp, self.__rangeLow, self.__rangeHigh)[0])
+        newTemp = np.clip(self.__currentOutTemp, self.__rangeLow, self.__rangeHigh)[0]
+        self.write_register(AR6X2.REGISTER_OUT1_TEMP, newTemp)
+        return newTemp
 
     # register 0, 1 decimal (thermocouple resolution 0.1 deg C)
     def read_temperature(self):
