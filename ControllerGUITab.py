@@ -355,12 +355,16 @@ class ControllerGUITab(QWidget):
         self.sensor2Timer.timeout.connect(self.sensor2.getData)
         self.sensor2Timer.start()
 
-    def create_temperature_dialog(self):
-        dg = AR6X2ConfigDialog()
-        dg.accepted.connect(self.connect_temp_controller)
-        # if unsuccessful, disable the temperature controller group
-        if dg.exec_() == 0:
-            self.tempControllerGroup.setChecked(False)
+    def update_temperature_group(self):
+        if self.tempControllerGroup.isChecked():
+            dg = AR6X2ConfigDialog()
+            dg.accepted.connect(self.connect_temp_controller)
+            # if unsuccessful, disable the temperature controller group
+            if dg.exec_() == 0:
+                self.tempControllerGroup.setChecked(False)
+        else:
+            self.temperatureController.turn_off()
+            self.tempControlButton.setText("Enable output")
 
     # Connect to the AR6X2 controller using given parameters
     def connect_temp_controller(self, values):
@@ -615,7 +619,7 @@ class ControllerGUITab(QWidget):
         self.tempControllerGroup = QGroupBox("Temperature controller")
         self.tempControllerGroup.setCheckable(True)
         self.tempControllerGroup.setChecked(False)
-        self.tempControllerGroup.clicked.connect(self.create_temperature_dialog)
+        self.tempControllerGroup.clicked.connect(self.update_temperature_group)
         tempControllerLayout = QVBoxLayout()
 
         layout = QHBoxLayout()
