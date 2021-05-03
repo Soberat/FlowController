@@ -20,6 +20,7 @@ from numpy_ringbuffer import RingBuffer
 
 # TODO: Getting values from serial, and not assuming defaults
 # TODO: Handler functions
+
 class ControllerGUITab(QWidget):
     LEFT_COLUMN_MAX_WIDTH = 400
 
@@ -146,7 +147,6 @@ class ControllerGUITab(QWidget):
             self.vorOpenButton.setChecked(False)
             self.controller.set_valve_override(Controller.VOR_OPTION_NORMAL)
 
-
     def update_vor_closed(self):
         print("update_vor_closed")
         if self.vorClosedButton.isChecked():
@@ -227,21 +227,40 @@ class ControllerGUITab(QWidget):
 
     def update_temperature(self):
         print("update_temperature")
+        self.temperatureController.set_temperature(float(self.temperatureSlider.value()))
+        self.temperatureLabel.setText(self.temperatureSlider.value())
 
     def update_range_low(self):
         print("update_range_low")
+        newTemp = self.temperatureController.set_range_low(float(self.rangeLowEdit.text()))
+        self.temperatureSlider.setMinimum(float(self.rangeLowEdit.text()))
+        self.temperatureSlider.setValue(newTemp)
 
     def update_range_high(self):
         print("update_range_high")
+        newTemp = self.temperatureController.set_range_high(float(self.rangeHighEdit.text()))
+        self.temperatureSlider.setMaximum(float(self.rangeHighEdit.text()))
+        self.temperatureSlider.setValue(newTemp)
 
     def update_ramping_enable(self):
         print("update_ramping_enable")
+        if self.rampingCheckbox.isChecked():
+            self.temperatureController.ramping_on()
+        else:
+            self.temperatureController.ramping_off()
 
     def update_gradient(self):
         print("update_gradient")
+        self.temperatureController.set_gradient(float())
 
     def update_temp_control_enable(self):
         print("update_temp_control_enable")
+        if self.tempControlButton.isChecked():
+            self.temperatureController.ramping_on()
+            self.tempControlButton.setText("Disable output")
+        else:
+            self.temperatureController.ramping_off()
+            self.tempControlButton.setText("Enable output")
 
     def update_dosing_times(self):
         print("update_dosing_time")
@@ -558,6 +577,7 @@ class ControllerGUITab(QWidget):
         sensor2Layout.addLayout(layout)
         self.sensor2Group.setLayout(sensor2Layout)
 
+        # TODO: Add temperature readout
         self.tempControllerGroup = QGroupBox("Temperature controller")
         self.tempControllerGroup.setCheckable(True)
         self.tempControllerGroup.setChecked(False)
