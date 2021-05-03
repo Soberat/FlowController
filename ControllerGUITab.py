@@ -15,11 +15,10 @@ from AR6X2 import AR6X2
 from SensorConfigDialog import SensorConfigDialog
 from Sensor import Sensor
 from datetime import datetime
+from numpy_ringbuffer import RingBuffer
 
 
-# TODO: Left column
-# TODO: Sensor groups
-# TODO: Default values
+# TODO: Getting values from serial, and not assuming defaults
 # TODO: Handler functions
 class ControllerGUITab(QWidget):
     LEFT_COLUMN_MAX_WIDTH = 400
@@ -29,12 +28,22 @@ class ControllerGUITab(QWidget):
         # Create the master layout
         outerLayout = QGridLayout()
         self.graph = None
+        self.controller: Controller
         self.temperatureController = None
         self.tempControllerGroup = None
         self.sensor1 = None
         self.sensor2 = None
         self.sensor1Group = None
         self.sensor2Group = None
+
+        self.intervalEdit = None
+        self.bufferSizeEdit = None
+
+        # Data buffers
+        self.__sampleBufferSize = 64
+        self.samplesPV = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.float16)
+        self.samplesTotalizer = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.float16)
+        self.sampleTimestamps = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.uint64)
 
         # Nest the inner layouts into the outer layout
         outerLayout.addLayout(self.create_left_column(), 0, 0)
@@ -47,15 +56,15 @@ class ControllerGUITab(QWidget):
         self.timer.start(500)
 
     # Save samples to a csv file, named after the current time and controller number it is coming from
-    def save_readouts(self):
+    def save_to_csv(self):
         now = datetime.now()
         filename = now.strftime(f"controller{self.Controller.__channel}_%Y-%m-%d_%H-%M-%S.csv")
         file = open(filename, 'w')
         file.write(
-            f"Gas: {self.Controller.__gas}, Gas factor:{self.Controller.__gasFactor}, Decimal point:{self.Controller.__decimal_point}, Units:{self.Controller.__measure_units}/{self.Controller.__time_base}\n")
+            f"Gas: {self.controller.__gas}, Gas factor:{self.controller.__gasFactor}, Decimal point:{self.controller.__decimal_point}, Units:{self.controller.__measure_units}/{self.controller.__time_base}\n")
         file.write("Measurement [Rate], Measurement [Total], Unix timestamp (in milliseconds)\n")
-        for i in range(0, self.Controller.__sampleBufferSize - 1):
-            file.write(f'{self.Controller.samplesPV[i]},{self.Controller.samplesTotalizer[i]},{self.Controller.sampleTimestamps[i]}\n')
+        for i in range(0, self.sampleBufferSize - 1):
+            file.write(f'{self.samplesPV[i]},{self.samplesTotalizer[i]},{self.sampleTimestamps[i]}\n')
         file.write('\n')
 
         # if available, append data from sensors
@@ -75,6 +84,7 @@ class ControllerGUITab(QWidget):
     def update_plot(self):
         self.graph.clear()
         self.graph.plot(np.linspace(0, 1, 100), np.random.random(100), pen=pyqtgraph.mkPen((255, 127, 0), width=1.25))
+        self.graph.plot(self.samplesPV, pen=pyqtgraph.mkPen((255, 127, 0), width=1.25))
         # pg.mkPen((0, 127, 255), width=1.25)
 
     def create_sensor1_dialog(self):
@@ -438,8 +448,8 @@ class ControllerGUITab(QWidget):
         dosingValuesEdit.setText("1.0, 2.0, 5.0")
         dosingValuesEdit.setValidator(QRegExpValidator(QRegExp("([0-9]{1,3}\\.[0-9]{1,3},(| ))+")))
 
-        label = QLabel("Values")
-        label.setFixedWidth(35)
+        label = QLabel("Setpoint values")
+        label.setFixedWidth(80)
 
         layout.addWidget(label, alignment=Qt.AlignLeft)
         layout.addWidget(dosingValuesEdit, alignment=Qt.AlignLeft)
@@ -473,7 +483,6 @@ class ControllerGUITab(QWidget):
         self.graph = PlotWidget()
         self.graph.getPlotItem().showGrid(x=True, y=True, alpha=1)
         self.graph.setBackground((25, 35, 45))
-        self.graph.getPlotItem().setRange(xRange=(0, 1), yRange=(0, 1))
         self.graph.plot([0, 1, 2, 3], [5, 5, 5, 5])
 
         rightGridLayout.addWidget(self.graph)
@@ -482,3 +491,40 @@ class ControllerGUITab(QWidget):
         rightColumnLayout.addLayout(rightGridLayout, 0, 1)
 
         return rightColumnLayout
+
+    # function to change the amount of stored samples without losing previously gathered samples
+    def change_buffer_size(self, value):
+        if value > self.__sampleBufferSize:
+            newBufPV = RingBuffer(capacity=value, dtype=np.int16)
+            newBufTotal = RingBuffer(capacity=value, dtype=np.int16)
+            newTimestampBuf = RingBuffer(capacity=value, dtype=np.uint64)
+
+            newBufPV.extend(self.samplesPV)
+            newBufTotal.extend(self.samplesTotalizer)
+            newTimestampBuf.extend(self.sampleTimestamps)
+
+            self.samplesPV = newBufPV
+            self.samplesTotalizer = newBufTotal
+            self.sampleTimestamps = newTimestampBuf
+        elif value < self.__sampleBufferSize:
+            newBufPV = RingBuffer(capacity=value, dtype=np.int16)
+            newBufTotal = RingBuffer(capacity=value, dtype=np.int16)
+            newTimestampBuf = RingBuffer(capacity=value, dtype=np.uint64)
+
+            newBufPV.extend(self.samplesPV[:-value])
+            newBufTotal.extend(self.samplesTotalizer[:-value])
+            newTimestampBuf.extend(self.sampleTimestamps[:-value])
+
+            self.samplesPV = newBufPV
+            self.samplesTotalizer = newBufTotal
+            self.sampleTimestamps = newTimestampBuf
+
+    # Interpretation of saved values depends on the measurement units, time base and decimal point
+    # Since we would have to add those to every single sample it would increase memory usage
+    # and would force the user to manually convert the values in case of a change, we just wipe the buffers
+    # Also, I think that those parameters should be set at the beginning of the process
+    # and they wouldn't be changed mid process.
+    def wipe_buffers(self):
+        self.samplesPV = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.int16)
+        self.samplesTotalizer = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.int16)
+        self.sampleTimestamps = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.uint64)
