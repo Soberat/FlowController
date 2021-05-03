@@ -12,6 +12,7 @@ import numpy as np
 from Controller import Controller
 from AR6X2ConfigDialog import AR6X2ConfigDialog
 from AR6X2 import AR6X2
+from SensorConfigDialog import SensorConfigDialog
 from Sensor import Sensor
 from datetime import datetime
 
@@ -32,6 +33,8 @@ class ControllerGUITab(QWidget):
         self.tempControllerGroup = None
         self.sensor1 = None
         self.sensor2 = None
+        self.sensor1Group = None
+        self.sensor2Group = None
 
         # Nest the inner layouts into the outer layout
         outerLayout.addLayout(self.create_left_column(), 0, 0)
@@ -74,9 +77,37 @@ class ControllerGUITab(QWidget):
         self.graph.plot(np.linspace(0, 1, 100), np.random.random(100), pen=pyqtgraph.mkPen((255, 127, 0), width=1.25))
         # pg.mkPen((0, 127, 255), width=1.25)
 
-    # Connect to the AR6X2 controller using given parameters
-    def connect_temp_controller(self, values):
-        self.temperatureController = AR6X2(port=values['port'], address=values['address'])
+    def create_sensor1_dialog(self):
+        dg = SensorConfigDialog()
+        dg.accepted.connect(self.connect_sensor1)
+        # if unsuccessful, disable the temperature controller group
+        if dg.exec_() == 0:
+            self.sensor1Group.setChecked(False)
+
+    # connect to sensor instance 1 using values returned by the dialog
+    def connect_sensor1(self, values):
+        self.sensor1 = Sensor(comport=values['port'],
+                              baudrate=values['baudrate'],
+                              databits=values['databits'],
+                              parity=values['paritybits'],
+                              stopbits=values['stopbits'],
+                              dataHeader=values['header'])
+
+    def create_sensor2_dialog(self):
+        dg = SensorConfigDialog()
+        dg.accepted.connect(self.connect_sensor2)
+        # if unsuccessful, disable the temperature controller group
+        if dg.exec_() == 0:
+            self.sensor2Group.setChecked(False)
+
+    # connect to sensor instance 2 using values returned by the dialog
+    def connect_sensor2(self, values):
+        self.sensor2 = Sensor(comport=values['port'],
+                              baudrate=values['baudrate'],
+                              databits=values['databits'],
+                              parity=values['paritybits'],
+                              stopbits=values['stopbits'],
+                              dataHeader=values['header'])
 
     def create_temperature_dialog(self):
         dg = AR6X2ConfigDialog()
@@ -84,6 +115,10 @@ class ControllerGUITab(QWidget):
         # if unsuccessful, disable the temperature controller group
         if dg.exec_() == 0:
             self.tempControllerGroup.setChecked(False)
+
+    # Connect to the AR6X2 controller using given parameters
+    def connect_temp_controller(self, values):
+        self.temperatureController = AR6X2(port=values['port'], address=values['address'])
 
     def create_left_column(self):
         # Create a vertical layout for the left column
@@ -98,18 +133,18 @@ class ControllerGUITab(QWidget):
         # TODO: on check, uncheck others
         vorNormalButton = QPushButton("Normal")
         vorNormalButton.setMinimumWidth(50)
-        vorNormalButton.setFixedHeight(30)
+        vorNormalButton.setFixedHeight(75)
         vorNormalButton.setCheckable(True)
         vorNormalButton.setChecked(True)
 
         vorClosedButton = QPushButton("Closed")
         vorClosedButton.setMinimumWidth(50)
-        vorClosedButton.setFixedHeight(30)
+        vorClosedButton.setFixedHeight(75)
         vorClosedButton.setCheckable(True)
 
         vorOpenButton = QPushButton("Open")
         vorOpenButton.setMinimumWidth(50)
-        vorOpenButton.setFixedHeight(30)
+        vorOpenButton.setFixedHeight(75)
         vorOpenButton.setCheckable(True)
 
         vorStatusLabel = QLabel("Current status: Normal")
@@ -238,9 +273,10 @@ class ControllerGUITab(QWidget):
         rightInnerGrid = QGridLayout()
 
         # Creation of sensor 1 and sub-elements
-        sensor1Group = QGroupBox("Sensor 1")
-        sensor1Group.setCheckable(True)
-        sensor1Group.setChecked(False)
+        self.sensor1Group = QGroupBox("Sensor 1")
+        self.sensor1Group.setCheckable(True)
+        self.sensor1Group.setChecked(False)
+        self.sensor1Group.clicked.connect(self.create_sensor1_dialog)
         sensor1Layout = QVBoxLayout()
 
         layout = QHBoxLayout()
@@ -266,12 +302,13 @@ class ControllerGUITab(QWidget):
         layout.addWidget(sensor1BufferSizeEdit)
         layout.addWidget(label)
         sensor1Layout.addLayout(layout)
-        sensor1Group.setLayout(sensor1Layout)
+        self.sensor1Group.setLayout(sensor1Layout)
 
         # Creation of sensor 2 and sub-elements
-        sensor2Group = QGroupBox("Sensor 2")
-        sensor2Group.setCheckable(True)
-        sensor2Group.setChecked(False)
+        self.sensor2Group = QGroupBox("Sensor 2")
+        self.sensor2Group.setCheckable(True)
+        self.sensor2Group.setChecked(False)
+        self.sensor2Group.clicked.connect(self.create_sensor2_dialog)
         sensor2Layout = QVBoxLayout()
 
         layout = QHBoxLayout()
@@ -297,38 +334,7 @@ class ControllerGUITab(QWidget):
         layout.addWidget(sensor2BufferSizeEdit)
         layout.addWidget(label)
         sensor2Layout.addLayout(layout)
-        sensor2Group.setLayout(sensor2Layout)
-
-        # Creation of sensor 2 and sub-elements
-        sensor2Group = QGroupBox("Sensor 2")
-        sensor2Group.setCheckable(True)
-        sensor2Group.setChecked(False)
-        sensor2Layout = QVBoxLayout()
-
-        layout = QHBoxLayout()
-
-        sensor2SampleIntervalEdit = QLineEdit()
-        sensor2SampleIntervalEdit.setValidator(QIntValidator())
-        sensor2SampleIntervalEdit.setFixedWidth(100)
-        label = QLabel('milliseconds')
-
-        layout.addWidget(QLabel('Sampling interval'))
-        layout.addWidget(sensor2SampleIntervalEdit)
-        layout.addWidget(label)
-        sensor2Layout.addLayout(layout)
-
-        layout = QHBoxLayout()
-
-        sensor2BufferSizeEdit = QLineEdit()
-        sensor2BufferSizeEdit.setValidator(QIntValidator())
-        sensor2BufferSizeEdit.setFixedWidth(100)
-        label = QLabel('samples')
-
-        layout.addWidget(QLabel('Buffer size'))
-        layout.addWidget(sensor2BufferSizeEdit)
-        layout.addWidget(label)
-        sensor2Layout.addLayout(layout)
-        sensor2Group.setLayout(sensor2Layout)
+        self.sensor2Group.setLayout(sensor2Layout)
 
         # TODO: Add address and comport fields
         self.tempControllerGroup = QGroupBox("Temperature controller")
@@ -456,8 +462,8 @@ class ControllerGUITab(QWidget):
         dosingGroup.setMinimumWidth(200)
         dosingGroup.setFixedHeight(150)
 
-        rightInnerGrid.addWidget(sensor1Group, 0, 0)
-        rightInnerGrid.addWidget(sensor2Group, 0, 1)
+        rightInnerGrid.addWidget(self.sensor1Group, 0, 0)
+        rightInnerGrid.addWidget(self.sensor2Group, 0, 1)
         rightInnerGrid.addWidget(self.tempControllerGroup, 1, 0)
         rightInnerGrid.addWidget(dosingGroup, 1, 1)
 
