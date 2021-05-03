@@ -315,7 +315,7 @@ class ControllerGUITab(QWidget):
         # pg.mkPen((0, 127, 255), width=1.25)
 
     def update_sensor1_group(self):
-        if self.tempControllerGroup.isChecked():
+        if self.sensor1Group.isChecked():
             dg = SensorConfigDialog()
             dg.accepted.connect(self.connect_sensor1)
             # if unsuccessful, disable the temperature controller group
@@ -335,7 +335,7 @@ class ControllerGUITab(QWidget):
         self.sensor1Timer.start()
 
     def update_sensor2_group(self):
-        if self.tempControllerGroup.isChecked():
+        if self.sensor2Group.isChecked():
             dg = SensorConfigDialog()
             dg.accepted.connect(self.connect_sensor2)
             # if unsuccessful, disable the temperature controller group
