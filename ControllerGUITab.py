@@ -273,7 +273,7 @@ class ControllerGUITab(QWidget):
 
         print(self.dosingValues)
         print(self.dosingTimes)
-        if len(self.dosingTimes) != len(self.dosingValues):
+        if len(self.dosingTimes) != len(self.dosingValues) or len(self.dosingTimes)*len(self.dosingValues) == 0:
             self.dosingTimesEdit.setStyleSheet("color: red;")
             self.dosingValuesEdit.setStyleSheet("color: red;")
             self.dosingControlButton.setEnabled(False)
