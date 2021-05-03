@@ -44,7 +44,7 @@ class AR6X2(minimalmodbus.Instrument):
         self.write_register(AR6X2.REGISTER_OUT1_STATE, AR6X2.PARAM_OUTPUT_HEATING, 1)
 
     def set_temperature(self, temperature):
-        assert self.__rangeLow <= temperature <= self.__rangeHigh
+        temperature = temperature.clip(temperature, self.__rangeLow, self.__rangeHigh)[0]
         self.write_register(AR6X2.REGISTER_OUT1_TEMP, temperature, 1)
         self.__currentOutTemp = temperature
 
@@ -52,7 +52,7 @@ class AR6X2(minimalmodbus.Instrument):
     # If Low1 is bigger than High1 then "we get an inverse curve"
     # Manual page 13, note (2)
     def set_range_low(self, value):
-        assert -199.9 <= value <= 1800.0
+        value = np.clip(value, -199.9, 1800.0)[0]
         self.__rangeLow = value
         self.write_register(AR6X2.REGISTER_OUT1_LOW, value, 1)
         newTemp = np.clip(self.__currentOutTemp, self.__rangeLow, self.__rangeHigh)[0]
@@ -60,7 +60,7 @@ class AR6X2(minimalmodbus.Instrument):
         return newTemp
 
     def set_range_high(self, value):
-        assert -199.9 <= value <= 1800.0
+        value = np.clip(value, -199.9, 1800.0)[0]
         self.__rangeHigh = value
         self.write_register(AR6X2.REGISTER_OUT1_HIGH, value, 1)
         newTemp = np.clip(self.__currentOutTemp, self.__rangeLow, self.__rangeHigh)[0]
@@ -76,7 +76,7 @@ class AR6X2(minimalmodbus.Instrument):
     # Page 18, section 12.7
     # Values between 1 and 300 are mapped between 1.0 and 30.0
     def set_gradient(self, gradient):
-        assert 1.0 <= gradient <= 30.0
+        gradient = np.clip(gradient, 1.0, 30.0)[0]
         self.write_register(AR6X2.REGISTER_RAMP_GRADIENT, gradient*10, 1)
         self.write_register(AR6X2.REGISTER_RAMP_TIMEHOLD, 0, 1)
 
