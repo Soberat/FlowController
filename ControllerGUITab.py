@@ -50,7 +50,7 @@ class ControllerGUITab(QWidget):
 
         layout = QHBoxLayout()
 
-        # TODO: on check, unchech others
+        # TODO: on check, uncheck others
         vorNormalButton = QPushButton("Normal")
         vorNormalButton.setMinimumWidth(50)
         vorNormalButton.setFixedHeight(30)
@@ -213,11 +213,14 @@ class ControllerGUITab(QWidget):
         temperatureSlider = QSlider(Qt.Horizontal)
         temperatureSlider.setMinimumWidth(95)
         temperatureSlider.setMaximumWidth(1000)
-        temperatureLabel = QLabel("Value")
+        temperatureSlider.setMinimum(-199.9)
+        temperatureSlider.setMaximum(850.0)
+        temperatureSlider.setValue(100)
+        temperatureLabel = QLabel("100")
         layout.addWidget(QLabel("Temperature"), alignment=Qt.AlignLeft)
         layout.addWidget(temperatureSlider, alignment=Qt.AlignLeft)
         layout.addWidget(temperatureLabel, alignment=Qt.AlignLeft)
-        layout.addWidget(QLabel("℃"))
+        layout.addWidget(QLabel("℃"), alignment=Qt.AlignLeft)
 
         layout.setStretch(3, 200)
         tempControllerLayout.addLayout(layout)
