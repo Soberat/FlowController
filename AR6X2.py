@@ -51,10 +51,15 @@ class AR6X2(minimalmodbus.Instrument):
     # Set the operation temperature range
     # If Low1 is bigger than High1 then "we get an inverse curve"
     # Manual page 13, note (2)
-    def set_range(self, lowHi):
-        assert lowHi is tuple
-        self.write_register(AR6X2.REGISTER_OUT1_LOW, lowHi[0], 1)
-        self.write_register(AR6X2.REGISTER_OUT1_LOW, lowHi[1], 1)
+    def set_range_low(self, value):
+        assert -199.9 <= value <= 1800.0
+        self.write_register(AR6X2.REGISTER_OUT1_LOW, value, 1)
+        self.write_register(AR6X2.REGISTER_OUT1_TEMP,
+                            np.clip(self.__currentOutTemp, self.__rangeLow, self.__rangeHigh)[0])
+
+    def set_range_high(self, value):
+        assert -199.9 <= value <= 1800.0
+        self.write_register(AR6X2.REGISTER_OUT1_HIGH, value, 1)
         self.write_register(AR6X2.REGISTER_OUT1_TEMP,
                             np.clip(self.__currentOutTemp, self.__rangeLow, self.__rangeHigh)[0])
 
@@ -65,8 +70,10 @@ class AR6X2(minimalmodbus.Instrument):
     # Set the gradient of 2 stage ramping
     # To hold set1 indefinitely we set th1 to 0
     # Page 18, section 12.7
+    # Values between 1 and 300 are mapped between 1.0 and 30.0
     def set_gradient(self, gradient):
-        self.write_register(AR6X2.REGISTER_RAMP_GRADIENT, gradient, 1)
+        assert 1.0 <= gradient <= 30.0
+        self.write_register(AR6X2.REGISTER_RAMP_GRADIENT, gradient*10, 1)
         self.write_register(AR6X2.REGISTER_RAMP_TIMEHOLD, 0, 1)
 
     # Setting the ramping mode to auto will start the process immediately
