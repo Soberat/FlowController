@@ -167,9 +167,6 @@ class Controller:
         # PySerial connection
         self.__serial: serial.Serial = serialConnection
 
-        # Optional sensor objects
-        self.sensor1 = Sensor()
-        self.sensor2 = Sensor()
 
     def __read_value(self, param, target=None):
         if param == Controller.PARAM_SP_FUNCTION or param == Controller.PARAM_SP_RATE or param == Controller.PARAM_SP_VOR or param == Controller.PARAM_SP_BATCH or param == Controller.PARAM_SP_BLEND or param == Controller.PARAM_SP_SOURCE or \
@@ -335,31 +332,6 @@ class Controller:
     def set_source(self, source):
         assert (source in Controller.SP_SOURCES.keys())
         return self.__write_value(Controller.PARAM_SP_SOURCE, Controller.SP_SOURCES.get(source))
-
-    # Save samples to a csv file, named after the current time and controller number it is coming from
-    def save_readouts(self):
-        now = datetime.now()
-        filename = now.strftime(f"controller{self.__channel}_%Y-%m-%d_%H-%M-%S.csv")
-        file = open(filename, 'w')
-        file.write(f"Gas: {self.__gas}, Gas factor:{self.__gasFactor}, Decimal point:{self.__decimal_point}, Units:{self.__measure_units}/{self.__time_base}\n")
-        file.write("Measurement [Rate], Measurement [Total], Unix timestamp (in milliseconds)\n")
-        for i in range(0, self.__sampleBufferSize - 1):
-            file.write(f'{self.samplesPV[i]},{self.samplesTotalizer[i]},{self.sampleTimestamps[i]}\n')
-        file.write('\n')
-
-        # if available, append data from sensors
-        if self.sensor1.buffer.count() > 0:
-            file.write(f"Sensor 1 header: {self.sensor1.header}\n")
-            for i in range(0, self.sensor1.buffer.count()):
-                file.write(self.sensor1.buffer[i] + '\n')
-        file.write('\n')
-
-        if self.sensor2.buffer.count() > 0:
-            file.write(f"Sensor 2 header: {self.sensor2.header}\n")
-            for i in range(0, self.sensor2.buffer.count()):
-                file.write(self.sensor2.buffer[i] + '\n')
-
-        file.close()
 
     # function to change the amount of stored samples without losing previously gathered samples
     def change_buffer_size(self, value):

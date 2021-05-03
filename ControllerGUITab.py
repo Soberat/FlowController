@@ -12,6 +12,8 @@ import numpy as np
 from Controller import Controller
 from AR6X2ConfigDialog import AR6X2ConfigDialog
 from AR6X2 import AR6X2
+from Sensor import Sensor
+from datetime import datetime
 
 
 # TODO: Left column
@@ -28,6 +30,8 @@ class ControllerGUITab(QWidget):
         self.graph = None
         self.temperatureController = None
         self.tempControllerGroup = None
+        self.sensor1 = None
+        self.sensor2 = None
 
         # Nest the inner layouts into the outer layout
         outerLayout.addLayout(self.create_left_column(), 0, 0)
@@ -38,6 +42,32 @@ class ControllerGUITab(QWidget):
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_plot)
         self.timer.start(500)
+
+    # Save samples to a csv file, named after the current time and controller number it is coming from
+    def save_readouts(self):
+        now = datetime.now()
+        filename = now.strftime(f"controller{self.Controller.__channel}_%Y-%m-%d_%H-%M-%S.csv")
+        file = open(filename, 'w')
+        file.write(
+            f"Gas: {self.Controller.__gas}, Gas factor:{self.Controller.__gasFactor}, Decimal point:{self.Controller.__decimal_point}, Units:{self.Controller.__measure_units}/{self.Controller.__time_base}\n")
+        file.write("Measurement [Rate], Measurement [Total], Unix timestamp (in milliseconds)\n")
+        for i in range(0, self.Controller.__sampleBufferSize - 1):
+            file.write(f'{self.Controller.samplesPV[i]},{self.Controller.samplesTotalizer[i]},{self.Controller.sampleTimestamps[i]}\n')
+        file.write('\n')
+
+        # if available, append data from sensors
+        if self.sensor1.buffer.count() > 0:
+            file.write(f"Sensor 1 header: {self.sensor1.header}\n")
+            for i in range(0, self.sensor1.buffer.count()):
+                file.write(self.sensor1.buffer[i] + '\n')
+        file.write('\n')
+
+        if self.sensor2.buffer.count() > 0:
+            file.write(f"Sensor 2 header: {self.sensor2.header}\n")
+            for i in range(0, self.sensor2.buffer.count()):
+                file.write(self.sensor2.buffer[i] + '\n')
+
+        file.close()
 
     def update_plot(self):
         self.graph.clear()
