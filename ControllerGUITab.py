@@ -197,6 +197,7 @@ class ControllerGUITab(QWidget):
         sensor2Group.setCheckable(True)
         sensor2Group.setChecked(False)
 
+        # TODO: Add address and comport fields
         tempControllerGroup = QGroupBox("Temperature controller")
         tempControllerGroup.setCheckable(True)
         tempControllerGroup.setChecked(False)
@@ -211,23 +212,31 @@ class ControllerGUITab(QWidget):
         layout.addWidget(QLabel("Temperature"), alignment=Qt.AlignLeft)
         layout.addWidget(temperatureSlider, alignment=Qt.AlignLeft)
         layout.addWidget(temperatureLabel, alignment=Qt.AlignLeft)
+        layout.addWidget(QLabel("℃"))
 
-        layout.setStretch(2, 200)
+        layout.setStretch(3, 200)
         tempControllerLayout.addLayout(layout)
 
+        # these edits have validators, but input still has to be capped
+        # Also, the validator seems overly complex if we cap the value anyway
         layout = QHBoxLayout()
         tempControllerLowEdit = QLineEdit()
         tempControllerLowEdit.setMinimumWidth(30)
         tempControllerLowEdit.setMaximumWidth(60)
+        tempControllerLowEdit.setText("-199.9")
+        tempControllerLowEdit.setValidator(QRegExpValidator(QRegExp("(-[0-9]{1,3}\\.[0-9]|[0-9]{1,3}\\.[0-9|[0-9]{1,4})")))
 
         tempControllerHighEdit = QLineEdit()
         tempControllerHighEdit.setMinimumWidth(30)
         tempControllerHighEdit.setMaximumWidth(60)
+        tempControllerHighEdit.setText("850.0")
+        tempControllerHighEdit.setValidator(QRegExpValidator(QRegExp("(-[0-9]{1,3}\\.[0-9]|[0-9]{1,3}\\.[0-9|[0-9]{1,4})")))
 
         layout.addWidget(QLabel("Range"))
         layout.addWidget(tempControllerLowEdit, alignment=Qt.AlignLeft)
         layout.addWidget(tempControllerHighEdit, alignment=Qt.AlignLeft)
-        layout.setStretch(2, 10)
+        layout.addWidget(QLabel("℃"))
+        layout.setStretch(3, 10)
         tempControllerLayout.addLayout(layout)
 
         layout = QHBoxLayout()
@@ -242,10 +251,12 @@ class ControllerGUITab(QWidget):
         gradientEdit = QLineEdit()
         gradientEdit.setMinimumWidth(30)
         gradientEdit.setMaximumWidth(60)
+        gradientEdit.setText("0.1")  # default value from the datasheet
 
         layout.addWidget(QLabel("Gradient"), alignment=Qt.AlignLeft)
         layout.addWidget(gradientEdit, alignment=Qt.AlignLeft)
-        layout.setStretch(1, 10)
+        layout.addWidget(QLabel("℃/min"))
+        layout.setStretch(2, 10)
 
         tempControllerLayout.addLayout(layout)
 
