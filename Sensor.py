@@ -40,3 +40,14 @@ class Sensor:
         assert self.__serial.is_open
         self.buffer.append(self.__serial.readall())
 
+    # function to change the amount of stored samples without losing previously gathered samples
+    def change_buffer_size(self, value):
+        if value > self.__bufferSize:
+            newBuffer = RingBuffer(capacity=value, dtype=str)
+            newBuffer.extend(self.buffer)
+            self.buffer = newBuffer
+        elif value < self.__bufferSize:
+            newBuffer = RingBuffer(capacity=value, dtype=str)
+            newBuffer.extend(self.buffer[:-value])
+            self.buffer = newBuffer
+

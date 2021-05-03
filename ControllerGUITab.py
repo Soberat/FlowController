@@ -55,9 +55,11 @@ class ControllerGUITab(QWidget):
         self.setpointEdit = None
         self.setpointUnitsLabel = None
 
+        self.sensor1Timer = None
         self.sensor1SampleIntervalEdit = None
         self.sensor1BufferSizeEdit = None
 
+        self.sensor2Timer = QTimer()
         self.sensor2SampleIntervalEdit = None
         self.sensor2BufferSizeEdit = None
 
@@ -209,15 +211,19 @@ class ControllerGUITab(QWidget):
 
     def update_sensor1_timer(self):
         print("update_sensor1_timer")
+        self.sensor1Timer.setInterval(int(self.sensor1SampleIntervalEdit.text()))
 
     def update_sensor1_buffer(self):
         print("update_sensor1_buffer")
+        self.sensor1.change_buffer_size(int(self.sensor1BufferSizeEdit.text()))
 
     def update_sensor2_timer(self):
         print("update_sensor2_timer")
+        self.sensor2Timer.setInterval(int(self.sensor2SampleIntervalEdit.text()))
 
     def update_sensor2_buffer(self):
         print("update_sensor2_buffer")
+        self.sensor2.change_buffer_size(int(self.sensor2BufferSizeEdit.text()))
 
     def update_temperature(self):
         print("update_temperature")
@@ -258,7 +264,6 @@ class ControllerGUITab(QWidget):
         self.graph.plot(self.samplesPV, pen=pyqtgraph.mkPen((255, 127, 0), width=1.25))
         # pg.mkPen((0, 127, 255), width=1.25)
 
-    # TODO: setup timer to get data from sensors
     def create_sensor1_dialog(self):
         dg = SensorConfigDialog()
         dg.accepted.connect(self.connect_sensor1)
@@ -274,6 +279,9 @@ class ControllerGUITab(QWidget):
                               parity=values['paritybits'],
                               stopbits=values['stopbits'],
                               dataHeader=values['header'])
+        self.sensor1Timer = QTimer()
+        self.sensor1Timer.timeout.connect(self.sensor1.getData)
+        self.sensor1Timer.start()
 
     def create_sensor2_dialog(self):
         dg = SensorConfigDialog()
@@ -290,6 +298,9 @@ class ControllerGUITab(QWidget):
                               parity=values['paritybits'],
                               stopbits=values['stopbits'],
                               dataHeader=values['header'])
+        self.sensor2Timer = QTimer()
+        self.sensor2Timer.timeout.connect(self.sensor2.getData)
+        self.sensor2Timer.start()
 
     def create_temperature_dialog(self):
         dg = AR6X2ConfigDialog()
@@ -480,6 +491,7 @@ class ControllerGUITab(QWidget):
         self.sensor1SampleIntervalEdit.setValidator(QIntValidator())
         self.sensor1SampleIntervalEdit.setFixedWidth(100)
         self.sensor1SampleIntervalEdit.editingFinished.connect(self.update_sensor1_timer)
+        self.sensor1SampleIntervalEdit.setText("1000")
 
         label = QLabel('Sampling interval')
         label.setFixedWidth(90)
@@ -495,6 +507,7 @@ class ControllerGUITab(QWidget):
         self.sensor1BufferSizeEdit.setValidator(QIntValidator())
         self.sensor1BufferSizeEdit.setFixedWidth(100)
         self.sensor1BufferSizeEdit.editingFinished.connect(self.update_sensor1_buffer)
+        self.sensor1BufferSizeEdit.setText("64")
 
         label = QLabel('Buffer size')
         label.setFixedWidth(90)
@@ -518,6 +531,7 @@ class ControllerGUITab(QWidget):
         self.sensor2SampleIntervalEdit.setValidator(QIntValidator())
         self.sensor2SampleIntervalEdit.setFixedWidth(100)
         self.sensor2SampleIntervalEdit.editingFinished.connect(self.update_sensor2_timer)
+        self.sensor2SampleIntervalEdit.setText("1000")
 
         label = QLabel('Sampling interval')
         label.setFixedWidth(90)
@@ -533,6 +547,7 @@ class ControllerGUITab(QWidget):
         self.sensor2BufferSizeEdit.setValidator(QIntValidator())
         self.sensor2BufferSizeEdit.setFixedWidth(100)
         self.sensor2BufferSizeEdit.editingFinished.connect(self.update_sensor2_buffer)
+        self.sensor2BufferSizeEdit.setText("64")
 
         label = QLabel('Buffer size')
         label.setFixedWidth(90)
