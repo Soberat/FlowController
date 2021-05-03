@@ -51,9 +51,29 @@ class ControllerGUITab(QWidget):
         # Set the window's main layout
         self.setLayout(outerLayout)
 
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.update_plot)
-        self.timer.start(500)
+        self.graphTimer = QTimer()
+        self.graphTimer.timeout.connect(self.update_plot)
+        self.graphTimer.start(500)
+
+    def update_buffer_size(self):
+        self.change_buffer_size(int(self.bufferSizeEdit.text()))
+        self.__sampleBufferSize = int(self.bufferSizeEdit.text())
+
+    def update_graph_timer(self):
+        self.graphTimer.setInterval(int(self.intervalEdit.text()))
+
+    def get_measurement(self):
+        # Demo implementation, generating random data
+        self.samplesTotalizer.append(0)  # unused
+        self.samplesPV.append(np.random.random_integers(0, 100, 1)[0])
+        self.sampleTimestamps.append(datetime.now().timestamp())
+
+        return
+        # Proper implementation that gets the data from the device over serial
+        total, current, timestamp = self.controller.get_measurements()
+        self.samplesTotalizer.append(total)
+        self.samplesPV.append(current)
+        self.sampleTimestamps.append(timestamp)
 
     # Save samples to a csv file, named after the current time and controller number it is coming from
     def save_to_csv(self):
@@ -84,9 +104,11 @@ class ControllerGUITab(QWidget):
     def update_plot(self):
         self.graph.clear()
         self.graph.plot(np.linspace(0, 1, 100), np.random.random(100), pen=pyqtgraph.mkPen((255, 127, 0), width=1.25))
+        self.get_measurement()
         self.graph.plot(self.samplesPV, pen=pyqtgraph.mkPen((255, 127, 0), width=1.25))
         # pg.mkPen((0, 127, 255), width=1.25)
 
+    # TODO: setup timer to get data from sensors
     def create_sensor1_dialog(self):
         dg = SensorConfigDialog()
         dg.accepted.connect(self.connect_sensor1)
@@ -223,24 +245,26 @@ class ControllerGUITab(QWidget):
 
         layout = QHBoxLayout()
 
-        bufferSizeEdit = QLineEdit()
-        bufferSizeEdit.setText("64")
-        bufferSizeEdit.setValidator(QRegExpValidator(QRegExp("[0-9]*")))
+        self.bufferSizeEdit = QLineEdit()
+        self.bufferSizeEdit.setText("64")
+        self.bufferSizeEdit.setValidator(QRegExpValidator(QRegExp("[0-9]*")))
+        self.bufferSizeEdit.editingFinished.connect(self.update_buffer_size)
 
         layout.addWidget(QLabel("Sample buffer size"))
-        layout.addWidget(bufferSizeEdit)
+        layout.addWidget(self.bufferSizeEdit)
         layout.addWidget(QLabel("samples"))
 
         runtimeLayout.addLayout(layout)
 
         layout = QHBoxLayout()
 
-        intervalEdit = QLineEdit()
-        intervalEdit.setText("500")
-        intervalEdit.setValidator(QRegExpValidator(QRegExp("[0-9]*.[0-9]*")))
+        self.intervalEdit = QLineEdit()
+        self.intervalEdit.setText("500")
+        self.intervalEdit.setValidator(QRegExpValidator(QRegExp("[0-9]*.[0-9]*")))
+        self.intervalEdit.editingFinished.connect(self.update_graph_timer)
 
         layout.addWidget(QLabel("Data update interval"))
-        layout.addWidget(intervalEdit)
+        layout.addWidget(self.intervalEdit)
         layout.addWidget(QLabel("milliseconds"))
 
         runtimeLayout.addLayout(layout)
@@ -261,7 +285,9 @@ class ControllerGUITab(QWidget):
         layout = QHBoxLayout()
 
         manualMeasureButton = QPushButton("Get measurement")
+        manualMeasureButton.clicked.connect(self.update_plot)
         saveCsvButton = QPushButton("Save to CSV")
+        saveCsvButton.clicked.connect(self.save_to_csv)
 
         layout.addWidget(manualMeasureButton)
         layout.addWidget(saveCsvButton)
@@ -435,7 +461,7 @@ class ControllerGUITab(QWidget):
         dosingTimesEdit.setValidator(QRegExpValidator(QRegExp("([0-9]*, |))+")))
 
         label = QLabel("Times")
-        label.setFixedWidth(35)
+        label.setFixedWidth(80)
 
         layout.addWidget(label, alignment=Qt.AlignLeft)
         layout.addWidget(dosingTimesEdit, alignment=Qt.AlignLeft)
@@ -464,8 +490,11 @@ class ControllerGUITab(QWidget):
         dosingButton.setCheckable(True)
 
         dosingLayout.addWidget(nextTimeLabel, alignment=Qt.AlignLeft)
-        dosingLayout.addWidget(nextDoseLabel, alignment=Qt.AlignLeft)
-        dosingLayout.addWidget(dosingButton, alignment=Qt.AlignRight)
+        layout = QHBoxLayout()
+        layout.addWidget(nextDoseLabel, alignment=Qt.AlignLeft)
+        layout.addWidget(dosingButton, alignment=Qt.AlignRight)
+
+        dosingLayout.addLayout(layout)
 
         # finally, assign the layout to the group
         dosingGroup.setLayout(dosingLayout)
