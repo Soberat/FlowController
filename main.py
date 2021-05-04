@@ -1,10 +1,8 @@
 import sys
 
-from PyQt5.QtCore import QFile, QTextStream
 from PyQt5.QtGui import QIcon
 
 from ControllerGUITab import ControllerGUITab
-import qdarkstyle
 
 from PyQt5.QtWidgets import (
     QApplication,
@@ -36,7 +34,11 @@ class MainWindow(QWidget):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    app.setStyleSheet(qdarkstyle.load_stylesheet())
+    try:
+        import qdarkstyle
+        app.setStyleSheet(qdarkstyle.load_stylesheet())
+    except ImportError as e:
+        pass
     window = MainWindow()
     window.show()
     sys.exit(app.exec_())

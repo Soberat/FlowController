@@ -1,3 +1,5 @@
+import sys
+
 import pyqtgraph
 from PyQt5.QtCore import Qt, QTimer, QRegExp
 from PyQt5.QtGui import QRegExpValidator, QIntValidator
@@ -767,7 +769,8 @@ class ControllerGUITab(QWidget):
 
         self.graph = PlotWidget()
         self.graph.getPlotItem().showGrid(x=True, y=True, alpha=1)
-        self.graph.setBackground((25, 35, 45))
+        if "qdarkstyle" in sys.modules:
+            self.graph.setBackground((25, 35, 45))
         self.graph.plot([0, 1, 2, 3], [5, 5, 5, 5])
 
         rightGridLayout.addWidget(self.graph)
