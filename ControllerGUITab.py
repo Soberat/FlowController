@@ -332,6 +332,7 @@ class ControllerGUITab(QWidget):
                               stopbits=values['stopbits'],
                               dataHeader=values['header'])
         self.sensor1Timer = QTimer()
+        self.sensor1Timer.setInterval(1000)
         self.sensor1Timer.timeout.connect(self.sensor1.getData)
         self.sensor1Timer.start()
 
@@ -352,6 +353,7 @@ class ControllerGUITab(QWidget):
                               stopbits=values['stopbits'],
                               dataHeader=values['header'])
         self.sensor2Timer = QTimer()
+        self.sensor2Timer.setInterval(1000)
         self.sensor2Timer.timeout.connect(self.sensor2.getData)
         self.sensor2Timer.start()
 
