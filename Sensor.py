@@ -8,7 +8,7 @@ class Sensor:
     def __init__(self, comport='COM1', baudrate=9600, parity=serial.PARITY_NONE, databits=serial.EIGHTBITS, stopbits=serial.STOPBITS_ONE, dataHeader='', bufferSize=128):
         self.__serial = serial.Serial(baudrate=baudrate,
                                       parity=parity,
-                                      databits=databits,
+                                      bytesize=databits,
                                       stopbits=stopbits)
         self.__serial.port = comport
         self.__bufferSize = bufferSize
