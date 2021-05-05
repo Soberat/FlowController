@@ -16,11 +16,11 @@ class SensorConfigDialog(QDialog):
                     self.paritybits.text(),
                     self.stopbits.text(),
                     self.header.text()]
-        return all([len(x) > 0 for x in elements])
+        self.buttonOk.setEnabled(all([len(x) > 0 for x in elements]))
 
     def ok_pressed(self):
         values = {'port': self.port.currentText(),
-                  'baudrate': self.address.text(),
+                  'baudrate': self.baudrate.text(),
                   'databits': self.databits.text(),
                   'paritybits': self.paritybits.text(),
                   'stopbits': self.stopbits.text(),
