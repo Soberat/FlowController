@@ -20,11 +20,16 @@ class SensorConfigDialog(QDialog):
             '1.5': serial.STOPBITS_ONE_POINT_FIVE,
             '2': serial.STOPBITS_TWO}
 
+    data = {'5': serial.FIVEBITS,
+            '6': serial.SIXBITS,
+            '7': serial.SEVENBITS,
+            '8': serial.EIGHTBITS}
+
     # unlock OK only if all fields are set
     def unlock_ok(self):
         elements = [self.port.currentText(),
                     self.baudrate.text(),
-                    self.databits.text(),
+                    self.databits.currentText(),
                     self.paritybits.currentText(),
                     self.stopbits.currentText(),
                     self.header.text()]
@@ -33,7 +38,7 @@ class SensorConfigDialog(QDialog):
     def ok_pressed(self):
         values = {'port': self.port.currentText(),
                   'baudrate': self.baudrate.text(),
-                  'databits': self.databits.text(),
+                  'databits': self.data[self.databits.currentText()],
                   'paritybits': self.parity[self.paritybits.currentText()],
                   'stopbits': self.stop[self.stopbits.currentText()],
                   'header': self.header.text()}
@@ -67,9 +72,9 @@ class SensorConfigDialog(QDialog):
         self.baudrate.setValidator(QRegExpValidator(QRegExp("[0-9]{1,5}")))
         self.baudrate.textChanged.connect(self.unlock_ok)
 
-        self.databits = QLineEdit()
-        self.databits.setValidator(QRegExpValidator(QRegExp("[0-9]{1,5}")))
-        self.databits.textChanged.connect(self.unlock_ok)
+        self.databits = QComboBox()
+        self.databits.addItems(self.data.keys())
+        self.databits.currentTextChanged.connect(self.unlock_ok)
 
         self.paritybits = QComboBox()
         self.paritybits.addItems(self.parity.keys())
