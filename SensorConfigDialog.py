@@ -32,7 +32,7 @@ class SensorConfigDialog(QDialog):
         self.close()
 
     def refresh_devices(self):
-        devices = set(comports())
+        devices = [device.name for device in set(comports())]
         if devices != self.devices:
             self.devices = devices
             self.port.clear()
@@ -45,7 +45,7 @@ class SensorConfigDialog(QDialog):
         self.setWindowIcon(QIcon('icon.png'))
         self.setWindowTitle("Configure serial device")
         self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint)
-        self.devices = set(comports())
+        self.devices = [device.name for device in set(comports())]
 
         self.port = QComboBox()
         self.port.addItems(self.devices)
