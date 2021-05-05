@@ -145,7 +145,6 @@ class ControllerGUITab(QWidget):
         file.close()
 
     # Handler functions for UI elements
-    # TODO: on check, uncheck others
     def update_vor_normal(self):
         print("update_vor_normal")
         if self.vorNormalButton.isChecked():
@@ -280,7 +279,7 @@ class ControllerGUITab(QWidget):
 
         print(self.dosingValues)
         print(self.dosingTimes)
-        if len(self.dosingTimes) != len(self.dosingValues) or len(self.dosingTimes)*len(self.dosingValues) == 0:
+        if len(self.dosingTimes) != len(self.dosingValues) or len(self.dosingTimes) * len(self.dosingValues) == 0:
             self.dosingTimesEdit.setStyleSheet("color: red;")
             self.dosingValuesEdit.setStyleSheet("color: red;")
             self.dosingControlButton.setEnabled(False)
@@ -343,7 +342,6 @@ class ControllerGUITab(QWidget):
             # if unsuccessful, disable the temperature controller group
             if dg.exec_() == 0:
                 self.sensor2Group.setChecked(False)
-
 
     # connect to sensor instance 2 using values returned by the dialog
     def connect_sensor2(self, values):
@@ -420,7 +418,7 @@ class ControllerGUITab(QWidget):
 
         self.pvFullScaleEdit = QLineEdit()
         self.pvFullScaleEdit.setText("100.000")
-        self.pvFullScaleEdit.setValidator(QRegExpValidator(QRegExp("(-|)[0-9]{1,3}\\.[0-9]{1,3}")))
+        self.pvFullScaleEdit.setValidator(QRegExpValidator(QRegExp("(-|)[0-9]{1,3}(|\\.[0-9]{1,3})")))
         self.pvFullScaleEdit.editingFinished.connect(self.update_pv_full_scale)
 
         self.pvSigtypeDropdown = QComboBox()
@@ -429,7 +427,7 @@ class ControllerGUITab(QWidget):
 
         self.spFullScaleEdit = QLineEdit()
         self.spFullScaleEdit.setText("100.000")
-        self.spFullScaleEdit.setValidator(QRegExpValidator(QRegExp("(-|)[0-9]{1,3}\\.[0-9]{1,3}")))
+        self.spFullScaleEdit.setValidator(QRegExpValidator(QRegExp("(-|)[0-9]{1,3}(|\\.[0-9]{1,3})")))
         self.spFullScaleEdit.editingFinished.connect(self.update_sp_full_scale)
 
         self.spSigtypeDropdown = QComboBox()
@@ -742,7 +740,6 @@ class ControllerGUITab(QWidget):
         nextTimeLabel = QLabel("10 seconds until next dose")
         nextDoseLabel = QLabel("Next dose value: 50")
 
-        # TODO: lock above elements after starting
         self.dosingControlButton = QPushButton("Start dosing")
         self.dosingControlButton.setCheckable(True)
         self.dosingControlButton.clicked.connect(self.update_dosing_enable)
