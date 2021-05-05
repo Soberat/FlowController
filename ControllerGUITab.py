@@ -131,15 +131,15 @@ class ControllerGUITab(QWidget):
         file.write('\n')
 
         # if available, append data from sensors
-        if self.sensor1 is not None and self.sensor1.buffer.count() > 0:
+        if self.sensor1 is not None and len(self.sensor1.buffer) > 0:
             file.write(f"Sensor 1 header: {self.sensor1.header}\n")
-            for i in range(0, self.sensor1.buffer.count()):
+            for i in range(0, len(self.sensor1.buffer)):
                 file.write(self.sensor1.buffer[i] + '\n')
         file.write('\n')
 
-        if self.sensor2 is not None and self.sensor2.buffer.count() > 0:
+        if self.sensor2 is not None and len(self.sensor2.buffer) > 0:
             file.write(f"Sensor 2 header: {self.sensor2.header}\n")
-            for i in range(0, self.sensor2.buffer.count()):
+            for i in range(0, len(self.sensor2.buffer)):
                 file.write(self.sensor2.buffer[i] + '\n')
 
         file.close()
