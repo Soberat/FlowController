@@ -1,3 +1,4 @@
+import serial
 from PyQt5 import QtCore
 from PyQt5.QtCore import QRegExp, pyqtSignal, QTimer
 from PyQt5.QtGui import QRegExpValidator, QIcon
@@ -8,12 +9,19 @@ from serial.tools.list_ports import comports
 class SensorConfigDialog(QDialog):
     accepted = pyqtSignal(dict)
 
+    parity = {'None': serial.PARITY_NONE,
+              'Odd': serial.PARITY_ODD,
+              'Space': serial.PARITY_SPACE,
+              'Even': serial.PARITY_EVEN,
+              'Mark': serial.PARITY_MARK,
+              'Names': serial.PARITY_NAMES}
+
     # unlock OK only if all fields are set
     def unlock_ok(self):
         elements = [self.port.currentText(),
                     self.baudrate.text(),
                     self.databits.text(),
-                    self.paritybits.text(),
+                    self.paritybits.currentText(),
                     self.stopbits.text(),
                     self.header.text()]
         self.buttonOk.setEnabled(all([len(x) > 0 for x in elements]))
@@ -22,7 +30,7 @@ class SensorConfigDialog(QDialog):
         values = {'port': self.port.currentText(),
                   'baudrate': self.baudrate.text(),
                   'databits': self.databits.text(),
-                  'paritybits': self.paritybits.text(),
+                  'paritybits': self.parity[self.paritybits.currentText()],
                   'stopbits': self.stopbits.text(),
                   'header': self.header.text()}
         self.accepted.emit(values)
@@ -59,9 +67,9 @@ class SensorConfigDialog(QDialog):
         self.databits.setValidator(QRegExpValidator(QRegExp("[0-9]{1,5}")))
         self.databits.textChanged.connect(self.unlock_ok)
 
-        self.paritybits = QLineEdit()
-        self.paritybits.setValidator(QRegExpValidator(QRegExp("[0-9]{1,5}")))
-        self.paritybits.textChanged.connect(self.unlock_ok)
+        self.paritybits = QComboBox()
+        self.paritybits.addItems(self.parity.keys())
+        self.paritybits.currentTextChanged.connect(self.unlock_ok)
 
         self.stopbits = QLineEdit()
         self.stopbits.setValidator(QRegExpValidator(QRegExp("[0-9]{1,5}")))
