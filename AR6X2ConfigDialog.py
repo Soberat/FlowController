@@ -22,7 +22,7 @@ class AR6X2ConfigDialog(QDialog):
         self.close()
 
     def refresh_devices(self):
-        devices = set(comports())
+        devices = [device.name for device in set(comports())]
         if devices != self.devices:
             self.devices = devices
             self.port.clear()
@@ -35,7 +35,7 @@ class AR6X2ConfigDialog(QDialog):
         self.setWindowIcon(QIcon('icon.png'))
         self.setWindowTitle("Configure AR6X2 device")
         self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint)
-        self.devices = set(comports())
+        self.devices = [device.name for device in set(comports())]
 
         self.port = QComboBox()
         self.port.addItems(self.devices)
