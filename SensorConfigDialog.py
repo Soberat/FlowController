@@ -20,10 +20,11 @@ class SensorConfigDialog(QDialog):
             '1.5': serial.STOPBITS_ONE_POINT_FIVE,
             '2': serial.STOPBITS_TWO}
 
-    data = {'5': serial.FIVEBITS,
-            '6': serial.SIXBITS,
+    data = {'8': serial.EIGHTBITS,
             '7': serial.SEVENBITS,
-            '8': serial.EIGHTBITS}
+            '6': serial.SIXBITS,
+            '5': serial.FIVEBITS
+            }
 
     # unlock OK only if all fields are set
     def unlock_ok(self):
@@ -85,6 +86,7 @@ class SensorConfigDialog(QDialog):
         self.stopbits.currentTextChanged.connect(self.unlock_ok)
 
         self.header = QLineEdit()
+        self.header.setText("Sensor")
         self.header.textChanged.connect(self.unlock_ok)
 
         self.buttonOk = QPushButton("Connect")
