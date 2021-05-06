@@ -1,7 +1,7 @@
 import sys
 import pyqtgraph
 from PyQt5.QtCore import Qt, QTimer, QRegExp
-from PyQt5.QtGui import QRegExpValidator, QIntValidator
+from PyQt5.QtGui import QRegExpValidator, QIntValidator, QIcon
 from PyQt5.QtWidgets import (
     QCheckBox,
     QLineEdit,
@@ -428,6 +428,8 @@ class ControllerGUITab(QWidget):
             self.sensor1.getData()
         except SerialException as se:
             dg = QErrorMessage()
+            dg.setWindowIcon(QIcon('icon.png'))
+            dg.setWindowTitle("Sensor 1 Exception")
             self.sensor1Group.setChecked(False)
             self.update_sensor1_group()
             dg.showMessage(f"Sensor 1 has encountered an exception: {se}")
@@ -465,6 +467,8 @@ class ControllerGUITab(QWidget):
             self.sensor2.getData()
         except SerialException as se:
             dg = QErrorMessage()
+            dg.setWindowIcon(QIcon('icon.png'))
+            dg.setWindowTitle("Sensor 2 Exception")
             self.sensor2Group.setChecked(False)
             self.update_sensor2_group()
             dg.showMessage(f"Sensor 2 has encountered an exception: {se}")
