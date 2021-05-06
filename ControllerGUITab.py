@@ -19,6 +19,7 @@ from datetime import datetime
 from numpy_ringbuffer import RingBuffer
 from serial import SerialException
 
+
 # TODO: Getting values from serial, and not assuming defaults
 # TODO: Handler functions
 # TODO: Implement dosing process
@@ -103,6 +104,8 @@ class ControllerGUITab(QWidget):
         # We will use the above timer to update dosing labels
         self.dosingValue = None
         self.dosingTimer = QTimer()
+
+        self.defaultStyleSheet = QLineEdit().styleSheet()
 
     def get_measurement(self):
         # Demo implementation, generating random data
@@ -287,8 +290,8 @@ class ControllerGUITab(QWidget):
             self.dosingValuesEdit.setStyleSheet("color: red;")
             self.dosingControlButton.setEnabled(False)
         else:
-            self.dosingTimesEdit.setStyleSheet("color: white;")
-            self.dosingValuesEdit.setStyleSheet("color: white;")
+            self.dosingTimesEdit.setStyleSheet(self.defaultStyleSheet)
+            self.dosingValuesEdit.setStyleSheet(self.defaultStyleSheet)
             self.dosingControlButton.setEnabled(True)
 
     def update_dosing_label_timer(self):
@@ -304,13 +307,15 @@ class ControllerGUITab(QWidget):
             self.dosingValuesEdit.setStyleSheet("color: grey")
             self.dosingTimesEdit.setEnabled(False)
             self.dosingTimesEdit.setStyleSheet("color: grey")
-            self.dosingControlButton.setText("Disable output")
+            self.dosingControlButton.setText("Disable dosing")
+            self.setpointEdit.setEnabled(False)
         else:
             self.dosingValuesEdit.setEnabled(True)
-            self.dosingValuesEdit.setStyleSheet("color: white")
+            self.dosingValuesEdit.setStyleSheet(self.defaultStyleSheet)
             self.dosingTimesEdit.setEnabled(True)
-            self.dosingTimesEdit.setStyleSheet("color: white")
-            self.dosingControlButton.setText("Enable output")
+            self.dosingTimesEdit.setStyleSheet(self.defaultStyleSheet)
+            self.dosingControlButton.setText("Enable dosing")
+            self.setpointEdit.setEnabled(True)
 
     def update_plot(self):
         self.graph.clear()
@@ -777,8 +782,8 @@ class ControllerGUITab(QWidget):
         layout.addWidget(self.dosingUnitsLabel)
         dosingLayout.addLayout(layout)
 
-        self.dosingTimerLabel = QLabel("10 seconds until next dose")
-        self.dosingValueLabel = QLabel("Next dose value: 50")
+        self.dosingTimerLabel = QLabel("Dosing disabled")
+        self.dosingValueLabel = QLabel("")
 
         self.dosingControlButton = QPushButton("Start dosing")
         self.dosingControlButton.setCheckable(True)
