@@ -61,7 +61,7 @@ class SensorConfigDialog(QDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Prepare dialog window, disable whatsthis
-        self.setFixedSize(280, 230)
+        self.setFixedSize(280, 285)
         self.setWindowIcon(QIcon('icon.png'))
         self.setWindowTitle("Configure serial device")
         self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint)
