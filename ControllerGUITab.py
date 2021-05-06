@@ -750,8 +750,7 @@ class ControllerGUITab(QWidget):
         self.tempControllerGroup.setFixedHeight(150)
 
         dosingGroup = QGroupBox("Dosing control")
-        dosingGroup.setCheckable(True)
-        dosingGroup.setChecked(False)
+        dosingGroup.setCheckable(False)
         dosingLayout = QVBoxLayout()
 
         layout = QHBoxLayout()
