@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import (
     QCheckBox,
     QLineEdit,
     QVBoxLayout,
-    QWidget, QHBoxLayout, QGridLayout, QGroupBox, QSlider, QLabel, QPushButton, QFormLayout, QComboBox,
+    QWidget, QHBoxLayout, QGridLayout, QGroupBox, QSlider, QLabel, QPushButton, QFormLayout, QComboBox, QErrorMessage
 )
 from pyqtgraph import PlotWidget
 import numpy as np
@@ -17,7 +17,7 @@ from SensorConfigDialog import SensorConfigDialog
 from Sensor import Sensor
 from datetime import datetime
 from numpy_ringbuffer import RingBuffer
-
+from serial import SerialException
 
 # TODO: Getting values from serial, and not assuming defaults
 # TODO: Handler functions
@@ -337,8 +337,19 @@ class ControllerGUITab(QWidget):
         self.sensor1.open()
         self.sensor1Timer = QTimer()
         self.sensor1Timer.setInterval(1000)
-        self.sensor1Timer.timeout.connect(self.sensor1.getData)
+        self.sensor1Timer.timeout.connect(self.sensor1_get_data)
         self.sensor1Timer.start()
+
+    # Wrapper function to handle exceptions from GUI level
+    def sensor1_get_data(self):
+        try:
+            self.sensor1.getData()
+        except SerialException:
+            dg = QErrorMessage()
+            self.sensor1Group.setChecked(False)
+            self.update_sensor1_group()
+            dg.showMessage("Sensor 1 has encountered an exception!")
+            dg.exec_()
 
     def update_sensor2_group(self):
         if self.sensor2Group.isChecked():
@@ -363,8 +374,19 @@ class ControllerGUITab(QWidget):
         self.sensor2.open()
         self.sensor2Timer = QTimer()
         self.sensor2Timer.setInterval(1000)
-        self.sensor2Timer.timeout.connect(self.sensor2.getData)
+        self.sensor2Timer.timeout.connect(self.sensor2_get_data)
         self.sensor2Timer.start()
+
+    # Wrapper function to handle exceptions from GUI level
+    def sensor2_get_data(self):
+        try:
+            self.sensor2.getData()
+        except SerialException:
+            dg = QErrorMessage()
+            self.sensor2Group.setChecked(False)
+            self.update_sensor2_group()
+            dg.showMessage("Sensor 2 has encountered an exception!")
+            dg.exec_()
 
     def update_temperature_group(self):
         if self.tempControllerGroup.isChecked():
