@@ -81,8 +81,7 @@ class ControllerGUITab(QWidget):
         self.dosingValuesEdit = None
         self.dosingValues = None
         self.dosingUnitsLabel = None
-        self.dosingTimerLabel = None
-        self.dosingValueLabel = None
+        self.dosingLabel = None
         self.dosingControlButton = None
 
         # Data buffers
@@ -329,9 +328,6 @@ class ControllerGUITab(QWidget):
         self.graph.clear()
         self.get_measurement()
         self.graph.plot(self.samplesPV, pen=pyqtgraph.mkPen((255, 127, 0), width=1.25))
-
-        if self.dosingTimer is not None:
-            self.dosingTimerLabel.setText(str(self.dosingTimer.remainingTime()))
         # pg.mkPen((0, 127, 255), width=1.25)
 
     def update_sensor1_group(self):
@@ -790,16 +786,14 @@ class ControllerGUITab(QWidget):
         layout.addWidget(self.dosingUnitsLabel)
         dosingLayout.addLayout(layout)
 
-        self.dosingTimerLabel = QLabel("Dosing disabled")
-        self.dosingValueLabel = QLabel("")
+        self.dosingLabel = QLabel("Dosing disabled")
 
         self.dosingControlButton = QPushButton("Start dosing")
         self.dosingControlButton.setCheckable(True)
         self.dosingControlButton.clicked.connect(self.update_dosing_enable)
 
-        dosingLayout.addWidget(self.dosingTimerLabel, alignment=Qt.AlignLeft)
+        dosingLayout.addWidget(self.dosingLabel, alignment=Qt.AlignLeft)
         layout = QHBoxLayout()
-        layout.addWidget(self.dosingValueLabel, alignment=Qt.AlignLeft)
         layout.addWidget(self.dosingControlButton, alignment=Qt.AlignRight)
 
         dosingLayout.addLayout(layout)
