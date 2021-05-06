@@ -134,13 +134,13 @@ class ControllerGUITab(QWidget):
         if self.sensor1 is not None and len(self.sensor1.buffer) > 0:
             file.write(f"Sensor 1 header: {self.sensor1.header}\n")
             for i in range(0, len(self.sensor1.buffer)):
-                file.write(self.sensor1.buffer[i] + '\n')
+                file.write(str(self.sensor1.buffer[i]))
         file.write('\n')
 
         if self.sensor2 is not None and len(self.sensor2.buffer) > 0:
             file.write(f"Sensor 2 header: {self.sensor2.header}\n")
             for i in range(0, len(self.sensor2.buffer)):
-                file.write(self.sensor2.buffer[i] + '\n')
+                file.write(self.sensor2.buffer[i])
 
         file.close()
 
@@ -322,6 +322,9 @@ class ControllerGUITab(QWidget):
             # if unsuccessful, disable the temperature controller group
             if dg.exec_() == 0:
                 self.sensor1Group.setChecked(False)
+        else:
+            self.sensor1.close()
+            self.sensor1Timer.stop()
 
     # connect to sensor instance 1 using values returned by the dialog
     def connect_sensor1(self, values):
@@ -330,7 +333,9 @@ class ControllerGUITab(QWidget):
                               databits=values['databits'],
                               parity=values['paritybits'],
                               stopbits=values['stopbits'],
+                              datalen=values['datalen'],
                               dataHeader=values['header'])
+        self.sensor1.open()
         self.sensor1Timer = QTimer()
         self.sensor1Timer.setInterval(1000)
         self.sensor1Timer.timeout.connect(self.sensor1.getData)
@@ -343,6 +348,9 @@ class ControllerGUITab(QWidget):
             # if unsuccessful, disable the temperature controller group
             if dg.exec_() == 0:
                 self.sensor2Group.setChecked(False)
+        else:
+            self.sensor2.close()
+            self.sensor2Timer.stop()
 
     # connect to sensor instance 2 using values returned by the dialog
     def connect_sensor2(self, values):
@@ -351,7 +359,9 @@ class ControllerGUITab(QWidget):
                               databits=values['databits'],
                               parity=values['paritybits'],
                               stopbits=values['stopbits'],
+                              datalen=values['datalen'],
                               dataHeader=values['header'])
+        self.sensor2.open()
         self.sensor2Timer = QTimer()
         self.sensor2Timer.setInterval(1000)
         self.sensor2Timer.timeout.connect(self.sensor2.getData)

@@ -1,7 +1,7 @@
 import serial
 from PyQt5 import QtCore
 from PyQt5.QtCore import QRegExp, pyqtSignal, QTimer
-from PyQt5.QtGui import QRegExpValidator, QIcon
+from PyQt5.QtGui import QRegExpValidator, QIcon, QIntValidator
 from PyQt5.QtWidgets import QDialog, QFormLayout, QPushButton, QLineEdit, QComboBox
 from serial.tools.list_ports import comports
 
@@ -33,6 +33,7 @@ class SensorConfigDialog(QDialog):
                     self.databits.currentText(),
                     self.paritybits.currentText(),
                     self.stopbits.currentText(),
+                    self.datalen.text(),
                     self.header.text()]
         self.buttonOk.setEnabled(all([len(x) > 0 for x in elements]))
 
@@ -42,6 +43,7 @@ class SensorConfigDialog(QDialog):
                   'databits': self.data[self.databits.currentText()],
                   'paritybits': self.parity[self.paritybits.currentText()],
                   'stopbits': self.stop[self.stopbits.currentText()],
+                  'datalen': int(self.datalen.text()),
                   'header': self.header.text()}
         self.accepted.emit(values)
         self.accept()
@@ -85,6 +87,11 @@ class SensorConfigDialog(QDialog):
         self.stopbits.addItems(self.stop.keys())
         self.stopbits.currentTextChanged.connect(self.unlock_ok)
 
+        self.datalen = QLineEdit()
+        self.datalen.setText("64")
+        self.datalen.setValidator(QIntValidator())
+        self.datalen.textChanged.connect(self.unlock_ok)
+
         self.header = QLineEdit()
         self.header.setText("Sensor")
         self.header.textChanged.connect(self.unlock_ok)
@@ -106,6 +113,7 @@ class SensorConfigDialog(QDialog):
         form.addRow('Data bits', self.databits)
         form.addRow('Parity bits', self.paritybits)
         form.addRow('Stop bits', self.stopbits)
+        form.addRow('Data length', self.datalen)
         form.addRow('Header', self.header)
         form.addRow('', self.buttonOk)
         form.addRow('', self.buttonCancel)
