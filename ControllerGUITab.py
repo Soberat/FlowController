@@ -96,15 +96,25 @@ class ControllerGUITab(QWidget):
         # Set the window's main layout
         self.setLayout(outerLayout)
 
+        # Generic timer that calls generic_update every second
+        # Used to update a few labels
+        self.genericTimer = QTimer()
+        self.genericTimer.timeout.connect(self.update_generic)
+        self.genericTimer.start(1000)
+
         self.graphTimer = QTimer()
         self.graphTimer.timeout.connect(self.update_plot)
         self.graphTimer.start(500)
 
-        # We will use the above timer to update dosing labels
         self.dosingValue = None
         self.dosingTimer = QTimer()
+        self.dosingTimer.timeout.connect(self.dosing_process)
 
         self.defaultStyleSheet = QLineEdit().styleSheet()
+
+        # Current dosing value, used to set the setpoint edit
+        # text correctly after a process shutdown
+        self.spValue = 1.0
 
         # Get initial dosing values from the text inside
         self.dosingValues = [float(x) for x in self.dosingValuesEdit.text().split(sep=',') if x.strip() != '']
@@ -209,14 +219,18 @@ class ControllerGUITab(QWidget):
 
     def update_measure_units(self):
         print("update_measure_units")
-        self.dosingUnitsLabel.setText(f"{self.measureUnitsDropdown.currentText()}/{self.timebaseDropdown.currentText()}")
-        self.setpointUnitsLabel.setText(f"{self.measureUnitsDropdown.currentText()}/{self.timebaseDropdown.currentText()}")
+        self.dosingUnitsLabel.setText(
+            f"{self.measureUnitsDropdown.currentText()}/{self.timebaseDropdown.currentText()}")
+        self.setpointUnitsLabel.setText(
+            f"{self.measureUnitsDropdown.currentText()}/{self.timebaseDropdown.currentText()}")
         self.controller.set_measurement_units(self.measureUnitsDropdown.currentText())
 
     def update_time_base(self):
         print("update_time_base")
-        self.dosingUnitsLabel.setText(f"{self.measureUnitsDropdown.currentText()}/{self.timebaseDropdown.currentText()}")
-        self.setpointUnitsLabel.setText(f"{self.measureUnitsDropdown.currentText()}/{self.timebaseDropdown.currentText()}")
+        self.dosingUnitsLabel.setText(
+            f"{self.measureUnitsDropdown.currentText()}/{self.timebaseDropdown.currentText()}")
+        self.setpointUnitsLabel.setText(
+            f"{self.measureUnitsDropdown.currentText()}/{self.timebaseDropdown.currentText()}")
         self.controller.set_time_base(self.timebaseDropdown.currentText())
 
     def update_buffer_size(self):
@@ -316,6 +330,7 @@ class ControllerGUITab(QWidget):
             self.dosingTimesEdit.setStyleSheet("color: grey")
             self.dosingControlButton.setText("Disable dosing")
             self.setpointEdit.setEnabled(False)
+            self.dosing_process()
         else:
             self.dosingValuesEdit.setEnabled(True)
             self.dosingValuesEdit.setStyleSheet(self.defaultStyleSheet)
@@ -323,6 +338,57 @@ class ControllerGUITab(QWidget):
             self.dosingTimesEdit.setStyleSheet(self.defaultStyleSheet)
             self.dosingControlButton.setText("Enable dosing")
             self.setpointEdit.setEnabled(True)
+            self.end_dosing_process()
+
+    # This function sets the setpoint to those values that were set when "Enable dosing" was pressed
+    # and iterates over them
+    def dosing_process(self):
+        self.spValue = self.dosingValues.pop()
+        spTime = self.dosingTimes.pop()
+
+        self.setpointEdit.setText(f"{str(self.spValue)} - dosing is enabled")
+
+        if len(self.dosingTimes) == 0:
+            self.dosingTimer.timeout.disconnect()
+            self.dosingTimer.singleShot(spTime, self.end_dosing_process)
+
+        # self.update_setpoint()
+
+        self.dosingTimer.setInterval(spTime)
+        self.dosingTimer.start()
+
+    def update_generic(self):
+        if self.dosingTimer.isActive() and len(self.dosingValues) > 0:
+            self.dosingLabel.setText(
+                f"{self.dosingTimer.remainingTime() / 1000} seconds until next dosing value: {self.dosingValues[-1]}")
+        elif self.dosingTimer.isActive() and len(self.dosingValues) == 0:
+            self.dosingLabel.setText(f"{self.dosingTimer.remainingTime() / 1000} seconds until end of process")
+        else:
+            self.dosingLabel.setText("Dosing disabled")
+
+    def end_dosing_process(self):
+        self.dosingControlButton.setChecked(False)
+        self.dosingControlButton.setText("Enable dosing")
+        self.dosingLabel.setText("Dosing disabled")
+        self.dosingTimer.stop()
+
+        # Since all the values have been popped and the text is unchanged, we fill the vectors again
+        self.dosingValues = [float(x) for x in self.dosingValuesEdit.text().split(sep=',') if x.strip() != '']
+        self.dosingTimes = [int(x) for x in self.dosingTimesEdit.text().split(sep=',') if x.strip() != '']
+        self.dosingValues.reverse()
+        self.dosingTimes.reverse()
+
+        # Remove the string portion from setpoint field
+        self.setpointEdit.setText(str(self.spValue))
+
+        # Unlock the setpoint and dosing values/times fields
+        self.setpointEdit.setEnabled(True)
+        self.dosingValuesEdit.setEnabled(True)
+        self.dosingTimesEdit.setEnabled(True)
+
+        # Return to normal stylesheet
+        self.dosingValuesEdit.setStyleSheet(self.defaultStyleSheet)
+        self.dosingTimesEdit.setStyleSheet(self.defaultStyleSheet)
 
     def update_plot(self):
         self.graph.clear()
