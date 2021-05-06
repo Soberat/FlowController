@@ -107,6 +107,12 @@ class ControllerGUITab(QWidget):
 
         self.defaultStyleSheet = QLineEdit().styleSheet()
 
+        # Get initial dosing values from the text inside
+        self.dosingValues = [float(x) for x in self.dosingValuesEdit.text().split(sep=',') if x.strip() != '']
+        self.dosingTimes = [int(x) for x in self.dosingTimesEdit.text().split(sep=',') if x.strip() != '']
+        self.dosingValues.reverse()
+        self.dosingTimes.reverse()
+
     def get_measurement(self):
         # Demo implementation, generating random data
         self.samplesTotalizer.append(0)  # unused
@@ -283,8 +289,10 @@ class ControllerGUITab(QWidget):
         self.dosingValues = [float(x) for x in self.dosingValuesEdit.text().split(sep=',') if x.strip() != '']
         self.dosingTimes = [int(x) for x in self.dosingTimesEdit.text().split(sep=',') if x.strip() != '']
 
-        print(self.dosingValues)
-        print(self.dosingTimes)
+        # Since we will be using pop() to get the next values, we reverse the arrays
+        self.dosingValues.reverse()
+        self.dosingTimes.reverse()
+
         if len(self.dosingTimes) != len(self.dosingValues) or len(self.dosingTimes) * len(self.dosingValues) == 0:
             self.dosingTimesEdit.setStyleSheet("color: red;")
             self.dosingValuesEdit.setStyleSheet("color: red;")
