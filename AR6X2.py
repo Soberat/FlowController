@@ -44,7 +44,7 @@ class AR6X2(minimalmodbus.Instrument):
         self.write_register(AR6X2.REGISTER_OUT1_STATE, AR6X2.PARAM_OUTPUT_HEATING, 1)
 
     def set_temperature(self, temperature):
-        temperature = temperature.clip(temperature, self.__rangeLow, self.__rangeHigh)[0]
+        temperature = np.clip(temperature, self.__rangeLow, self.__rangeHigh)
         self.write_register(AR6X2.REGISTER_OUT1_TEMP, temperature, 1)
         self.__currentOutTemp = temperature
 
@@ -55,7 +55,7 @@ class AR6X2(minimalmodbus.Instrument):
         value = np.clip(value, -199.9, 1800.0)[0]
         self.__rangeLow = value
         self.write_register(AR6X2.REGISTER_OUT1_LOW, value, 1)
-        newTemp = np.clip(self.__currentOutTemp, self.__rangeLow, self.__rangeHigh)[0]
+        newTemp = np.clip(self.__currentOutTemp, self.__rangeLow, self.__rangeHigh)
         self.write_register(AR6X2.REGISTER_OUT1_TEMP, newTemp)
         return newTemp
 
