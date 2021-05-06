@@ -100,6 +100,10 @@ class ControllerGUITab(QWidget):
         self.graphTimer.timeout.connect(self.update_plot)
         self.graphTimer.start(500)
 
+        # We will use the above timer to update dosing labels
+        self.dosingValue = None
+        self.dosingTimer = QTimer()
+
     def get_measurement(self):
         # Demo implementation, generating random data
         self.samplesTotalizer.append(0)  # unused
@@ -312,6 +316,9 @@ class ControllerGUITab(QWidget):
         self.graph.clear()
         self.get_measurement()
         self.graph.plot(self.samplesPV, pen=pyqtgraph.mkPen((255, 127, 0), width=1.25))
+
+        if self.dosingTimer is not None:
+            self.dosingTimerLabel.setText(str(self.dosingTimer.remainingTime()))
         # pg.mkPen((0, 127, 255), width=1.25)
 
     def update_sensor1_group(self):
@@ -763,23 +770,23 @@ class ControllerGUITab(QWidget):
         label = QLabel("Setpoints")
         label.setFixedWidth(55)
 
-        self.dosingUnitsLabel = QLabel("mu/tb")
+        self.dosingUnitsLabel = QLabel("ml/sec")
 
         layout.addWidget(label)
         layout.addWidget(self.dosingValuesEdit)
         layout.addWidget(self.dosingUnitsLabel)
         dosingLayout.addLayout(layout)
 
-        nextTimeLabel = QLabel("10 seconds until next dose")
-        nextDoseLabel = QLabel("Next dose value: 50")
+        self.dosingTimerLabel = QLabel("10 seconds until next dose")
+        self.dosingValueLabel = QLabel("Next dose value: 50")
 
         self.dosingControlButton = QPushButton("Start dosing")
         self.dosingControlButton.setCheckable(True)
         self.dosingControlButton.clicked.connect(self.update_dosing_enable)
 
-        dosingLayout.addWidget(nextTimeLabel, alignment=Qt.AlignLeft)
+        dosingLayout.addWidget(self.dosingTimerLabel, alignment=Qt.AlignLeft)
         layout = QHBoxLayout()
-        layout.addWidget(nextDoseLabel, alignment=Qt.AlignLeft)
+        layout.addWidget(self.dosingValueLabel, alignment=Qt.AlignLeft)
         layout.addWidget(self.dosingControlButton, alignment=Qt.AlignRight)
 
         dosingLayout.addLayout(layout)
