@@ -20,10 +20,7 @@ from numpy_ringbuffer import RingBuffer
 from serial import SerialException
 
 
-# TODO: Getting values from serial, and not assuming defaults
-# TODO: Handler functions
-# TODO: Implement dosing process
-# TODO: Disabling the dosing group should disable the process
+# TODO: Master connection
 
 class ControllerGUITab(QWidget):
     LEFT_COLUMN_MAX_WIDTH = 400
@@ -389,6 +386,9 @@ class ControllerGUITab(QWidget):
         # Return to normal stylesheet
         self.dosingValuesEdit.setStyleSheet(self.defaultStyleSheet)
         self.dosingTimesEdit.setStyleSheet(self.defaultStyleSheet)
+
+        # reconnect the dosing_process function to the timer
+        self.dosingTimer.timeout.connect(self.dosing_process)
 
     def update_plot(self):
         self.graph.clear()
