@@ -32,7 +32,7 @@ class AR6X2(minimalmodbus.Instrument):
     def __init__(self, port, address):
         # A serial connection. The default values match the AR6x2 datasheet
         # However, the AR6x2 unit should have the baudrate set to 19200
-        minimalmodbus.Instrument.__init__(self, port, address)
+        minimalmodbus.Instrument.__init__(self, port, int(address))
         self.__rangeLow = -199.9
         self.__rangeHigh = 850.0
         self.__currentOutTemp = 100.0
