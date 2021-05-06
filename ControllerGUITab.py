@@ -344,11 +344,11 @@ class ControllerGUITab(QWidget):
     def sensor1_get_data(self):
         try:
             self.sensor1.getData()
-        except SerialException:
+        except SerialException as se:
             dg = QErrorMessage()
             self.sensor1Group.setChecked(False)
             self.update_sensor1_group()
-            dg.showMessage("Sensor 1 has encountered an exception!")
+            dg.showMessage(f"Sensor 1 has encountered an exception: {se}")
             dg.exec_()
 
     def update_sensor2_group(self):
@@ -381,11 +381,11 @@ class ControllerGUITab(QWidget):
     def sensor2_get_data(self):
         try:
             self.sensor2.getData()
-        except SerialException:
+        except SerialException as se:
             dg = QErrorMessage()
             self.sensor2Group.setChecked(False)
             self.update_sensor2_group()
-            dg.showMessage("Sensor 2 has encountered an exception!")
+            dg.showMessage(f"Sensor 2 has encountered an exception: {se}")
             dg.exec_()
 
     def update_temperature_group(self):
