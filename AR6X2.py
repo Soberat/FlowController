@@ -6,6 +6,9 @@ class AR6X2(minimalmodbus.Instrument):
     """
     Instrument class for APAR AR6X2 controllers
 
+    This class and implementation is mostly untested, due to the fact that
+    I don't have such a device on hand (or at least something working with modbus)
+
     Args:
         * port (str): port name
         * address (int): slave address in the range 1 to 247
