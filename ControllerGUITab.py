@@ -1,5 +1,4 @@
 import sys
-
 import pyqtgraph
 from PyQt5.QtCore import Qt, QTimer, QRegExp
 from PyQt5.QtGui import QRegExpValidator, QIntValidator
@@ -23,7 +22,7 @@ from numpy_ringbuffer import RingBuffer
 # TODO: Getting values from serial, and not assuming defaults
 # TODO: Handler functions
 # TODO: Implement dosing process
-# TODO: Disabling groups should disable their processes
+# TODO: Disabling the dosing group should disable the process
 
 class ControllerGUITab(QWidget):
     LEFT_COLUMN_MAX_WIDTH = 400
@@ -64,7 +63,7 @@ class ControllerGUITab(QWidget):
         self.sensor1SampleIntervalEdit = None
         self.sensor1BufferSizeEdit = None
 
-        self.sensor2Timer = QTimer()
+        self.sensor2Timer = None
         self.sensor2SampleIntervalEdit = None
         self.sensor2BufferSizeEdit = None
 
