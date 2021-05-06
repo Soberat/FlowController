@@ -761,7 +761,7 @@ class ControllerGUITab(QWidget):
         layout = QHBoxLayout()
         self.dosingTimesEdit = QLineEdit()
         self.dosingTimesEdit.setMinimumWidth(160)
-        self.dosingTimesEdit.setText("1000, 10000, 15000")
+        self.dosingTimesEdit.setText("10000, 10000, 15000")
         self.dosingTimesEdit.setValidator(QRegExpValidator(QRegExp("([0-9]+,(| ))+")))
         self.dosingTimesEdit.textChanged.connect(self.update_dosing_vectors)
 
