@@ -1,5 +1,4 @@
 import sys
-
 import pyqtgraph
 from PyQt5.QtCore import Qt, QTimer, QRegExp
 from PyQt5.QtGui import QRegExpValidator, QIntValidator
@@ -7,7 +6,7 @@ from PyQt5.QtWidgets import (
     QCheckBox,
     QLineEdit,
     QVBoxLayout,
-    QWidget, QHBoxLayout, QGridLayout, QGroupBox, QSlider, QLabel, QPushButton, QFormLayout, QComboBox,
+    QWidget, QHBoxLayout, QGridLayout, QGroupBox, QSlider, QLabel, QPushButton, QFormLayout, QComboBox, QErrorMessage
 )
 from pyqtgraph import PlotWidget
 import numpy as np
@@ -18,12 +17,12 @@ from SensorConfigDialog import SensorConfigDialog
 from Sensor import Sensor
 from datetime import datetime
 from numpy_ringbuffer import RingBuffer
-
+from serial import SerialException
 
 # TODO: Getting values from serial, and not assuming defaults
 # TODO: Handler functions
 # TODO: Implement dosing process
-# TODO: Disabling groups should disable their processes
+# TODO: Disabling the dosing group should disable the process
 
 class ControllerGUITab(QWidget):
     LEFT_COLUMN_MAX_WIDTH = 400
@@ -64,7 +63,7 @@ class ControllerGUITab(QWidget):
         self.sensor1SampleIntervalEdit = None
         self.sensor1BufferSizeEdit = None
 
-        self.sensor2Timer = QTimer()
+        self.sensor2Timer = None
         self.sensor2SampleIntervalEdit = None
         self.sensor2BufferSizeEdit = None
 
@@ -131,16 +130,16 @@ class ControllerGUITab(QWidget):
         file.write('\n')
 
         # if available, append data from sensors
-        if self.sensor1 is not None and self.sensor1.buffer.count() > 0:
+        if self.sensor1 is not None and len(self.sensor1.buffer) > 0:
             file.write(f"Sensor 1 header: {self.sensor1.header}\n")
-            for i in range(0, self.sensor1.buffer.count()):
-                file.write(self.sensor1.buffer[i] + '\n')
+            for i in range(0, len(self.sensor1.buffer)):
+                file.write(str(self.sensor1.buffer[i]))
         file.write('\n')
 
-        if self.sensor2 is not None and self.sensor2.buffer.count() > 0:
+        if self.sensor2 is not None and len(self.sensor2.buffer) > 0:
             file.write(f"Sensor 2 header: {self.sensor2.header}\n")
-            for i in range(0, self.sensor2.buffer.count()):
-                file.write(self.sensor2.buffer[i] + '\n')
+            for i in range(0, len(self.sensor2.buffer)):
+                file.write(self.sensor2.buffer[i])
 
         file.close()
 
@@ -322,6 +321,9 @@ class ControllerGUITab(QWidget):
             # if unsuccessful, disable the temperature controller group
             if dg.exec_() == 0:
                 self.sensor1Group.setChecked(False)
+        else:
+            self.sensor1.close()
+            self.sensor1Timer.stop()
 
     # connect to sensor instance 1 using values returned by the dialog
     def connect_sensor1(self, values):
@@ -330,10 +332,24 @@ class ControllerGUITab(QWidget):
                               databits=values['databits'],
                               parity=values['paritybits'],
                               stopbits=values['stopbits'],
+                              datalen=values['datalen'],
                               dataHeader=values['header'])
+        self.sensor1.open()
         self.sensor1Timer = QTimer()
-        self.sensor1Timer.timeout.connect(self.sensor1.getData)
+        self.sensor1Timer.setInterval(1000)
+        self.sensor1Timer.timeout.connect(self.sensor1_get_data)
         self.sensor1Timer.start()
+
+    # Wrapper function to handle exceptions from GUI level
+    def sensor1_get_data(self):
+        try:
+            self.sensor1.getData()
+        except SerialException:
+            dg = QErrorMessage()
+            self.sensor1Group.setChecked(False)
+            self.update_sensor1_group()
+            dg.showMessage("Sensor 1 has encountered an exception!")
+            dg.exec_()
 
     def update_sensor2_group(self):
         if self.sensor2Group.isChecked():
@@ -342,6 +358,9 @@ class ControllerGUITab(QWidget):
             # if unsuccessful, disable the temperature controller group
             if dg.exec_() == 0:
                 self.sensor2Group.setChecked(False)
+        else:
+            self.sensor2.close()
+            self.sensor2Timer.stop()
 
     # connect to sensor instance 2 using values returned by the dialog
     def connect_sensor2(self, values):
@@ -350,10 +369,24 @@ class ControllerGUITab(QWidget):
                               databits=values['databits'],
                               parity=values['paritybits'],
                               stopbits=values['stopbits'],
+                              datalen=values['datalen'],
                               dataHeader=values['header'])
+        self.sensor2.open()
         self.sensor2Timer = QTimer()
-        self.sensor2Timer.timeout.connect(self.sensor2.getData)
+        self.sensor2Timer.setInterval(1000)
+        self.sensor2Timer.timeout.connect(self.sensor2_get_data)
         self.sensor2Timer.start()
+
+    # Wrapper function to handle exceptions from GUI level
+    def sensor2_get_data(self):
+        try:
+            self.sensor2.getData()
+        except SerialException:
+            dg = QErrorMessage()
+            self.sensor2Group.setChecked(False)
+            self.update_sensor2_group()
+            dg.showMessage("Sensor 2 has encountered an exception!")
+            dg.exec_()
 
     def update_temperature_group(self):
         if self.tempControllerGroup.isChecked():
