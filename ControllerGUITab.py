@@ -115,7 +115,7 @@ class ControllerGUITab(QWidget):
 
         # Get initial dosing values from the text inside
         self.dosingValues = [float(x) for x in self.dosingValuesEdit.text().split(sep=',') if x.strip() != '']
-        self.dosingTimes = [int(x) for x in self.dosingTimesEdit.text().split(sep=',') if x.strip() != '']
+        self.dosingTimes = [float(x)*60*1000 for x in self.dosingTimesEdit.text().split(sep=',') if x.strip() != '']
         self.dosingValues.reverse()
         self.dosingTimes.reverse()
 
@@ -235,7 +235,7 @@ class ControllerGUITab(QWidget):
         self.sampleBufferSize = int(self.bufferSizeEdit.text())
 
     def update_graph_timer(self):
-        self.graphTimer.setInterval(int(self.intervalEdit.text()))
+        self.graphTimer.setInterval(float(self.intervalEdit.text())*60*1000)
 
     def update_setpoint(self):
         value = float(self.setpointEdit.text())
@@ -243,7 +243,7 @@ class ControllerGUITab(QWidget):
 
     def update_sensor1_timer(self):
         print("update_sensor1_timer")
-        self.sensor1Timer.setInterval(int(self.sensor1SampleIntervalEdit.text()))
+        self.sensor1Timer.setInterval(float(self.sensor1SampleIntervalEdit.text())*60*1000)
 
     def update_sensor1_buffer(self):
         print("update_sensor1_buffer")
@@ -251,7 +251,7 @@ class ControllerGUITab(QWidget):
 
     def update_sensor2_timer(self):
         print("update_sensor2_timer")
-        self.sensor2Timer.setInterval(int(self.sensor2SampleIntervalEdit.text()))
+        self.sensor2Timer.setInterval(float(self.sensor2SampleIntervalEdit.text())*60*1000)
 
     def update_sensor2_buffer(self):
         print("update_sensor2_buffer")
@@ -297,7 +297,7 @@ class ControllerGUITab(QWidget):
     def update_dosing_vectors(self):
         print("update_dosing_vectors")
         self.dosingValues = [float(x) for x in self.dosingValuesEdit.text().split(sep=',') if x.strip() != '']
-        self.dosingTimes = [int(x) for x in self.dosingTimesEdit.text().split(sep=',') if x.strip() != '']
+        self.dosingTimes = [float(x)*1000*60 for x in self.dosingTimesEdit.text().split(sep=',') if x.strip() != '']
 
         # Since we will be using pop() to get the next values, we reverse the arrays
         self.dosingValues.reverse()
@@ -357,9 +357,9 @@ class ControllerGUITab(QWidget):
     def update_generic(self):
         if self.dosingTimer.isActive() and len(self.dosingValues) > 0:
             self.dosingLabel.setText(
-                f"{self.dosingTimer.remainingTime() / 1000} seconds until next dosing value: {self.dosingValues[-1]}")
+                f"{int(self.dosingTimer.remainingTime() / 1000)} seconds until next dosing value: {self.dosingValues[-1]}")
         elif self.dosingTimer.isActive() and len(self.dosingValues) == 0:
-            self.dosingLabel.setText(f"{self.dosingTimer.remainingTime() / 1000} seconds until end of process")
+            self.dosingLabel.setText(f"{int(self.dosingTimer.remainingTime() / 1000)} seconds until end of process")
         else:
             self.dosingLabel.setText("Dosing disabled")
 
@@ -371,7 +371,7 @@ class ControllerGUITab(QWidget):
 
         # Since all the values have been popped and the text is unchanged, we fill the vectors again
         self.dosingValues = [float(x) for x in self.dosingValuesEdit.text().split(sep=',') if x.strip() != '']
-        self.dosingTimes = [int(x) for x in self.dosingTimesEdit.text().split(sep=',') if x.strip() != '']
+        self.dosingTimes = [float(x)*60*1000 for x in self.dosingTimesEdit.text().split(sep=',') if x.strip() != '']
         self.dosingValues.reverse()
         self.dosingTimes.reverse()
 
@@ -603,13 +603,13 @@ class ControllerGUITab(QWidget):
         layout = QHBoxLayout()
 
         self.intervalEdit = QLineEdit()
-        self.intervalEdit.setText("500")
+        self.intervalEdit.setText("1")
         self.intervalEdit.setValidator(QRegExpValidator(QRegExp("[0-9]*.[0-9]*")))
         self.intervalEdit.editingFinished.connect(self.update_graph_timer)
 
         layout.addWidget(QLabel("Data update interval"))
         layout.addWidget(self.intervalEdit)
-        layout.addWidget(QLabel("milliseconds"))
+        layout.addWidget(QLabel("minutes"))
 
         runtimeLayout.addLayout(layout)
 
@@ -667,13 +667,13 @@ class ControllerGUITab(QWidget):
         self.sensor1SampleIntervalEdit.setValidator(QIntValidator())
         self.sensor1SampleIntervalEdit.setFixedWidth(100)
         self.sensor1SampleIntervalEdit.editingFinished.connect(self.update_sensor1_timer)
-        self.sensor1SampleIntervalEdit.setText("1000")
+        self.sensor1SampleIntervalEdit.setText("1")
 
         label = QLabel('Sampling interval')
         label.setFixedWidth(90)
         layout.addWidget(label)
         layout.addWidget(self.sensor1SampleIntervalEdit)
-        layout.addWidget(QLabel('milliseconds'))
+        layout.addWidget(QLabel('minutes'))
         layout.setStretch(2, 10)
         sensor1Layout.addLayout(layout)
 
@@ -707,13 +707,13 @@ class ControllerGUITab(QWidget):
         self.sensor2SampleIntervalEdit.setValidator(QIntValidator())
         self.sensor2SampleIntervalEdit.setFixedWidth(100)
         self.sensor2SampleIntervalEdit.editingFinished.connect(self.update_sensor2_timer)
-        self.sensor2SampleIntervalEdit.setText("1000")
+        self.sensor2SampleIntervalEdit.setText("1")
 
         label = QLabel('Sampling interval')
         label.setFixedWidth(90)
         layout.addWidget(label)
         layout.addWidget(self.sensor2SampleIntervalEdit)
-        layout.addWidget(QLabel('milliseconds'))
+        layout.addWidget(QLabel('minutes'))
         layout.setStretch(2, 10)
         sensor2Layout.addLayout(layout)
 
@@ -826,8 +826,8 @@ class ControllerGUITab(QWidget):
         layout = QHBoxLayout()
         self.dosingTimesEdit = QLineEdit()
         self.dosingTimesEdit.setMinimumWidth(160)
-        self.dosingTimesEdit.setText("10000, 10000, 15000")
-        self.dosingTimesEdit.setValidator(QRegExpValidator(QRegExp("([0-9]+,(| ))+")))
+        self.dosingTimesEdit.setText("1, 1, 1.5")
+        self.dosingTimesEdit.setValidator(QRegExpValidator(QRegExp("(([0-9]+|[0-9]+\\.[0-9]+),(| ))+")))
         self.dosingTimesEdit.textChanged.connect(self.update_dosing_vectors)
 
         label = QLabel("Times")
@@ -835,7 +835,7 @@ class ControllerGUITab(QWidget):
 
         layout.addWidget(label)
         layout.addWidget(self.dosingTimesEdit)
-        layout.addWidget(QLabel("milliseconds"))
+        layout.addWidget(QLabel("minutes"))
         dosingLayout.addLayout(layout)
 
         layout = QHBoxLayout()
