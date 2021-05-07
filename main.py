@@ -1,57 +1,44 @@
-import serial
-from serial.tools.list_ports import comports
+import sys
 
-# This code is to be reused by the GUI later on
+from PyQt5.QtGui import QIcon
 
-# communication parameters from datasheet
-serialCon = serial.Serial(baudrate=9600,
-                          parity=serial.PARITY_NONE,
-                          stopbits=serial.STOPBITS_ONE,
-                          bytesize=serial.EIGHTBITS)
-# setting the COM port after the constructor prevents automatic attempts at connecting
-serialCon.port = 'COM3'
+from ControllerGUITab import ControllerGUITab
 
-# COM port parameters
-__deviceId = ""
-__deviceName = ""
-
-# USB device info - unknown if needed
-__deviceVid = 0
-__devicePid = 0
-__deviceSN = ""
-__deviceLoc = ""
-__deviceManufacturer = ""
-__deviceModel = ""
-__deviceInterface = ""
-
-# function that opens the serial port communication and configures anything else that's required
-# TODO: should set the setpoint source and initial setpoint, get and set COM/USB parameters,
-#  get gas parameters, possibly more
-def open(self):
-    if not self.__serial.is_open:
-        self.__serial.open()
-    else:
-        print("Tried to open port {cNum} when it was opened".format(cNum=self.__controllerNumber))
-    return self.__serial.is_open
+from PyQt5.QtWidgets import (
+    QApplication,
+    QVBoxLayout,
+    QWidget,
+    QTabWidget,
+)
 
 
-# TODO: Should reverse what open() did - set the setpoint control to voltage, possibly more
-def close(self):
-    if self.__serial.is_open:
-        self.__serial.close()
-    else:
-        print("Tried to close port {cNum} when it was closed".format(cNum=self.__controllerNumber))
-    return self.__serial.is_open
+# TODO: maybe use QMainWindow
+# TODO: credit icon creator in about
+class MainWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowIcon(QIcon("icon.png"))
+        self.setWindowTitle("FlowController by Mirosław Wiącek")
+        self.setMinimumSize(900, 730)
+
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+
+        tabs = QTabWidget()
+        tabs.addTab(ControllerGUITab(), "Controller 1")
+        tabs.addTab(ControllerGUITab(), "Controller 2")
+        tabs.addTab(ControllerGUITab(), "Controller 3")
+        tabs.addTab(ControllerGUITab(), "Controller 4")
+        layout.addWidget(tabs)
 
 
-# We assume the 'port' argument is taken from ListPortInfo.name.
-# This should preserve compatibility between operating systems
-# Even though the function checks if the serial port is already open,
-# the GUI should also prevent the users form changing the port while it's open.
-def change_port(self, port):
-    if not self.__serial.is_open:
-        self.__serial.port = port
-
-
-def get_com_ports():
-    return list(comports())
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    try:
+        import qdarkstyle
+        app.setStyleSheet(qdarkstyle.load_stylesheet())
+    except ImportError as e:
+        pass
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec_())

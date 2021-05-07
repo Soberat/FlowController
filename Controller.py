@@ -1,6 +1,5 @@
 import numpy as np
 import serial
-from numpy_ringbuffer import RingBuffer
 from datetime import datetime
 
 # Class representing a single Brooks GF40 Mass Flow Controller,
@@ -39,8 +38,10 @@ class Controller:
     SP_FUNC_BLEND = 3
 
     # Setpoint sources
-    SP_SOURCE_KEYPAD = 0
-    SP_SOURCE_SERIAL = 1
+    SP_SOURCES = {
+        "Keypad": 0,
+        "Serial": 1
+    }
 
     # "Targets", required for reading full_scale and signal_type values, that share codes between SP and PV
     # Values chosen arbitrarily
@@ -126,7 +127,8 @@ class Controller:
     # Gas factors for GF40 Mass Flow Controller
     # To be extended later on
     GAS_TYPES = {
-        "air": 1.018
+        "Air": 1.018,
+        "Nitrogen": 1.0
     }
 
     # Base time units
@@ -141,18 +143,12 @@ class Controller:
     TYPE_RESPONSE = '4'
     TYPE_BATCH_CONTROL_STATUS = '5'
 
-    def __init__(self, channel, serialConnection, deviceAddress=None, sampleBufferSize=64):
+    def __init__(self, channel, serialConnection, deviceAddress=None):
         # Addressing parameters
         self.__channel = channel
         self.__inputPort = 2 * channel - 1
         self.__outputPort = 2 * channel
         self.__address: str = deviceAddress  # this is a string because it needs to be zero-padded to be 5 chars long
-
-        # Internal parameters
-        self.__sampleBufferSize = sampleBufferSize
-        self.samplesPV = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.float16)
-        self.samplesTotalizer = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.float16)
-        self.sampleTimestamps = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.uint64)
 
         # Physical device measurements
         self.__flowReadout = 0
@@ -164,10 +160,6 @@ class Controller:
 
         # PySerial connection
         self.__serial: serial.Serial = serialConnection
-
-        # Optional sensor objects
-        self.sensor1 = Sensor()
-        self.sensor2 = Sensor()
 
     def __read_value(self, param, target=None):
         if param == Controller.PARAM_SP_FUNCTION or param == Controller.PARAM_SP_RATE or param == Controller.PARAM_SP_VOR or param == Controller.PARAM_SP_BATCH or param == Controller.PARAM_SP_BLEND or param == Controller.PARAM_SP_SOURCE or \
@@ -234,9 +226,7 @@ class Controller:
         response = self.__serial.read(self.__serial.in_waiting).decode('ascii').split(sep=',')
 
         if response[2] == Controller.TYPE_RESPONSE:
-            self.samplesPV.append(np.float16(response[5]))
-            self.samplesTotalizer.append(np.float16(response[4]))
-            self.sampleTimestamps.append(datetime.now())
+            return np.float16(response[5]), np.float16(response[4]), datetime.now()
 
     #
     def set_decimal_point(self, point):
@@ -245,7 +235,6 @@ class Controller:
         response = self.__write_value(Controller.PARAM_PV_DECIMAL_POINT, value)
         if response is not None:
             self.__decimal_point = point
-            self.wipe_buffers()
         return response
 
     def set_measurement_units(self, units):
@@ -254,7 +243,6 @@ class Controller:
         response = self.__write_value(Controller.PARAM_PV_MEASURE_UNITS, value)
         if response is not None:
             self.__measure_units = units
-            self.wipe_buffers()
         return response
 
     def set_time_base(self, base):
@@ -263,18 +251,16 @@ class Controller:
         response = self.__write_value(Controller.PARAM_PV_TIME_BASE, value)
         if response is not None:
             self.__time_base = base
-            self.wipe_buffers()
         return response
 
     # From manual: "scale factor by which interpolated channel units are multiplied"
-    def set_gas_factor(self, gas):
+    def set_gas(self, gas):
         assert gas in Controller.GAS_TYPES.keys()
         value = int(Controller.GAS_TYPES.get(gas)) * 1000  # value is written to serial as XXXXXX without the decimal
         response = self.__write_value(Controller.PARAM_PV_GAS_FACTOR, value)
         if response is not None:
             self.__gasFactor = response
             self.__gas = gas
-            self.wipe_buffers()
         return response
 
     # Public function to set the head operation point (setpoint)
@@ -331,69 +317,6 @@ class Controller:
 
     # Set the setpoint source
     def set_source(self, source):
-        assert (source == Controller.SP_SOURCE_SERIAL or source == Controller.SP_SOURCE_KEYPAD)
-        return self.__write_value(Controller.PARAM_SP_SOURCE, source)
+        assert (source in Controller.SP_SOURCES.keys())
+        return self.__write_value(Controller.PARAM_SP_SOURCE, Controller.SP_SOURCES.get(source))
 
-    # Save samples to a csv file, named after the current time and controller number it is coming from
-    def save_readouts(self):
-        now = datetime.now()
-        filename = now.strftime(f"controller{self.__channel}_%Y-%m-%d_%H-%M-%S.csv")
-        file = open(filename, 'w')
-        file.write(f"Gas: {self.__gas}, Gas factor:{self.__gasFactor}, Decimal point:{self.__decimal_point}, Units:{self.__measure_units}/{self.__time_base}\n")
-        file.write("Measurement [Rate], Measurement [Total], Unix timestamp (in milliseconds)\n")
-        for i in range(0, self.__sampleBufferSize - 1):
-            file.write(f'{self.samplesPV[i]},{self.samplesTotalizer[i]},{self.sampleTimestamps[i]}\n')
-        file.write('\n')
-
-        # if available, append data from sensors
-        if self.sensor1.buffer.count() > 0:
-            file.write(f"Sensor 1 header: {self.sensor1.header}\n")
-            for i in range(0, self.sensor1.buffer.count()):
-                file.write(self.sensor1.buffer[i] + '\n')
-        file.write('\n')
-
-        if self.sensor2.buffer.count() > 0:
-            file.write(f"Sensor 2 header: {self.sensor2.header}\n")
-            for i in range(0, self.sensor2.buffer.count()):
-                file.write(self.sensor2.buffer[i] + '\n')
-
-        file.close()
-
-    # function to change the amount of stored samples without losing previously gathered samples
-    def change_buffer_size(self, value):
-        assert value >= 8
-
-        if value > self.__sampleBufferSize:
-            newBufPV = RingBuffer(capacity=value, dtype=np.int16)
-            newBufTotal = RingBuffer(capacity=value, dtype=np.int16)
-            newTimestampBuf = RingBuffer(capacity=value, dtype=np.uint64)
-
-            newBufPV.extend(self.samplesPV)
-            newBufTotal.extend(self.samplesTotalizer)
-            newTimestampBuf.extend(self.sampleTimestamps)
-
-            self.samplesPV = newBufPV
-            self.samplesTotalizer = newBufTotal
-            self.sampleTimestamps = newTimestampBuf
-        elif value < self.__sampleBufferSize:
-            newBufPV = RingBuffer(capacity=value, dtype=np.int16)
-            newBufTotal = RingBuffer(capacity=value, dtype=np.int16)
-            newTimestampBuf = RingBuffer(capacity=value, dtype=np.uint64)
-
-            newBufPV.extend(self.samplesPV[:-value])
-            newBufTotal.extend(self.samplesTotalizer[:-value])
-            newTimestampBuf.extend(self.sampleTimestamps[:-value])
-
-            self.samplesPV = newBufPV
-            self.samplesTotalizer = newBufTotal
-            self.sampleTimestamps = newTimestampBuf
-
-    # Interpretation of saved values depends on the measurement units, time base and decimal point
-    # Since we would have to add those to every single sample it would increase memory usage
-    # and would force the user to manually convert the values in case of a change, we just wipe the buffers
-    # Also, I think that those parameters should be set at the beginning of the process
-    # and they wouldn't be changed mid process.
-    def wipe_buffers(self):
-        self.samplesPV = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.int16)
-        self.samplesTotalizer = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.int16)
-        self.sampleTimestamps = RingBuffer(capacity=self.__sampleBufferSize, dtype=np.uint64)
