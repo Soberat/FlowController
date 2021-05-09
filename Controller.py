@@ -171,7 +171,7 @@ class Controller:
                 command = f'AZ{self.__address}.{self.__outputPort}P{param}?\r'
             self.__serial.write(command.encode('ascii'))
 
-            response = self.__serial.read(self.__serial.in_waiting).decode('ascii').split(sep=',')
+            response = self.__serial.read_until('\r'.encode('ascii')).decode('ascii').split(sep=',')
             if response[2] == Controller.TYPE_RESPONSE:
                 return response[4]
         elif param == Controller.PARAM_PV_MEASURE_UNITS or param == Controller.PARAM_PV_TIME_BASE or param == Controller.PARAM_PV_DECIMAL_POINT or param == Controller.PARAM_PV_GAS_FACTOR or \
@@ -182,7 +182,7 @@ class Controller:
                 command = f'AZ{self.__address}.{self.__inputPort}P{param}?\r'
             self.__serial.write(command.encode('ascii'))
 
-            response = self.__serial.read(self.__serial.in_waiting).decode('ascii').split(sep=',')
+            response = self.__serial.read_until('\r'.encode('ascii')).decode('ascii').split(sep=',')
             if response[2] == Controller.TYPE_RESPONSE:
                 return response[4]
         else:
@@ -201,7 +201,7 @@ class Controller:
                 command = f'AZ{self.__address}.{self.__outputPort}P{param}={value}\r'
             self.__serial.write(command.encode('ascii'))
 
-            response = self.__serial.read(self.__serial.in_waiting).decode('ascii').split(sep=',')
+            response = self.__serial.read_until('\r'.encode('ascii')).decode('ascii').split(sep=',')
             if response[2] == Controller.TYPE_RESPONSE:
                 return response[4]
         elif param == Controller.PARAM_PV_MEASURE_UNITS or param == Controller.PARAM_PV_TIME_BASE or param == Controller.PARAM_PV_DECIMAL_POINT or param == Controller.PARAM_PV_GAS_FACTOR or \
@@ -212,7 +212,7 @@ class Controller:
                 command = f'AZ{self.__address}.{self.__outputPort}P{param}={value}\r'
             self.__serial.write(command.encode('ascii'))
 
-            response = self.__serial.read(self.__serial.in_waiting).decode('ascii').split(sep=',')
+            response = self.__serial.read_until('\r'.encode('ascii')).decode('ascii').decode('ascii').split(sep=',')
             if response[2] == Controller.TYPE_RESPONSE:
                 return response[4]
         else:
@@ -223,7 +223,7 @@ class Controller:
         command = f'AZ.{self.__inputPort}K\r'
         self.__serial.write(command.encode('ascii'))
 
-        response = self.__serial.read(self.__serial.in_waiting).decode('ascii').split(sep=',')
+        response = self.__serial.read_until('\r'.encode('ascii')).decode('ascii').split(sep=',')
 
         if response[2] == Controller.TYPE_RESPONSE:
             return np.float16(response[5]), np.float16(response[4]), datetime.now()
