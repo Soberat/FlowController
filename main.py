@@ -1,35 +1,16 @@
 import sys
 
-from PyQt5.QtGui import QIcon
+import serial
+from PyQt5.QtWidgets import QApplication
+from MainWindow import MainWindow
+from MasterControllerConfigDialog import MasterControllerConfigDialog
 
-from ControllerGUITab import ControllerGUITab
-
-from PyQt5.QtWidgets import (
-    QApplication,
-    QVBoxLayout,
-    QWidget,
-    QTabWidget,
-)
+global parameters
 
 
-# TODO: maybe use QMainWindow
-# TODO: credit icon creator in about
-class MainWindow(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.setWindowIcon(QIcon("icon.png"))
-        self.setWindowTitle("FlowController by Mirosław Wiącek")
-        self.setMinimumSize(900, 730)
-
-        layout = QVBoxLayout()
-        self.setLayout(layout)
-
-        tabs = QTabWidget()
-        tabs.addTab(ControllerGUITab(), "Controller 1")
-        tabs.addTab(ControllerGUITab(), "Controller 2")
-        tabs.addTab(ControllerGUITab(), "Controller 3")
-        tabs.addTab(ControllerGUITab(), "Controller 4")
-        layout.addWidget(tabs)
+def callback(values):
+    global parameters
+    parameters = values
 
 
 if __name__ == "__main__":
@@ -39,6 +20,18 @@ if __name__ == "__main__":
         app.setStyleSheet(qdarkstyle.load_stylesheet())
     except ImportError as e:
         pass
-    window = MainWindow()
+
+    global parameters
+    conDialog = MasterControllerConfigDialog()
+    conDialog.accepted.connect(callback)
+    conDialog.exec_()
+
+    ser = serial.Serial(port=parameters['port'],
+                        baudrate=9600,
+                        parity=serial.PARITY_NONE,
+                        stopbits=serial.STOPBITS_ONE,
+                        timeout=None)
+
+    window = MainWindow(serial=ser)
     window.show()
     sys.exit(app.exec_())

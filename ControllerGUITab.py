@@ -20,17 +20,15 @@ from numpy_ringbuffer import RingBuffer
 from serial import SerialException
 
 
-# TODO: Master connection
-
 class ControllerGUITab(QWidget):
     LEFT_COLUMN_MAX_WIDTH = 400
 
-    def __init__(self):
+    def __init__(self, serial, channel):
         super().__init__()
         # Create the master layout
         outerLayout = QGridLayout()
         self.graph = None
-        self.controller = None
+        self.controller = Controller(channel=channel, serialConnection=serial)
         self.temperatureController = None
         self.tempControllerGroup = None
         self.sensor1 = None
@@ -102,7 +100,7 @@ class ControllerGUITab(QWidget):
 
         self.graphTimer = QTimer()
         self.graphTimer.timeout.connect(self.update_plot)
-        self.graphTimer.start(60*1000)
+        self.graphTimer.start(1000)
 
         self.dosingValue = None
         self.dosingTimer = QTimer()
@@ -121,17 +119,13 @@ class ControllerGUITab(QWidget):
         self.dosingTimes.reverse()
 
     def get_measurement(self):
-        # Demo implementation, generating random data
-        self.samplesTotalizer.append(0)  # unused
-        self.samplesPV.append(np.random.random_integers(0, 100, 1)[0])
-        self.sampleTimestamps.append(datetime.now().timestamp())
-
-        return
         # Proper implementation that gets the data from the device over serial
         total, current, timestamp = self.controller.get_measurements()
-        self.samplesTotalizer.append(total)
-        self.samplesPV.append(current)
-        self.sampleTimestamps.append(timestamp)
+
+        if total is not None:
+            self.samplesTotalizer.append(total)
+            self.samplesPV.append(current)
+            self.sampleTimestamps.append(timestamp)
 
     # Save samples to a csv file, named after the current time and controller number it is coming from
     def save_to_csv(self):
