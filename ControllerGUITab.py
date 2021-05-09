@@ -400,6 +400,7 @@ class ControllerGUITab(QWidget):
         else:
             self.sensor1.close()
             self.sensor1Timer.stop()
+            self.sensor1 = None
 
     # connect to sensor instance 1 using values returned by the dialog
     def connect_sensor1(self, values):
@@ -439,6 +440,7 @@ class ControllerGUITab(QWidget):
         else:
             self.sensor2.close()
             self.sensor2Timer.stop()
+            self.sensor2 = None
 
     # connect to sensor instance 2 using values returned by the dialog
     def connect_sensor2(self, values):
@@ -477,6 +479,7 @@ class ControllerGUITab(QWidget):
                 self.tempControllerGroup.setChecked(False)
         else:
             self.temperatureController.turn_off()
+            self.temperatureController = None
             self.tempControlButton.setText("Enable output")
 
     # Connect to the AR6X2 controller using given parameters
