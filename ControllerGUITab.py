@@ -67,6 +67,7 @@ class ControllerGUITab(QWidget):
 
         self.temperatureSlider = None
         self.temperatureLabel = None
+        self.tempReadoutLabel = None
         self.rangeLowEdit = None
         self.rangeHighEdit = None
         self.rampingCheckbox = None
@@ -357,6 +358,11 @@ class ControllerGUITab(QWidget):
         else:
             self.dosingLabel.setText("Dosing disabled")
 
+        if self.temperatureController is not None:
+            self.tempReadoutLabel.setText(f"Readout: {self.temperatureController.read_temperature()} ℃")
+        else:
+            self.tempReadoutLabel.setText("Readout: None ℃")
+
     def end_dosing_process(self):
         self.dosingControlButton.setChecked(False)
         self.dosingControlButton.setText("Enable dosing")
@@ -478,7 +484,6 @@ class ControllerGUITab(QWidget):
             if dg.exec_() == 0:
                 self.tempControllerGroup.setChecked(False)
         else:
-            self.temperatureController.turn_off()
             self.temperatureController = None
             self.tempControlButton.setText("Enable output")
 
@@ -785,9 +790,12 @@ class ControllerGUITab(QWidget):
         self.rampingCheckbox = QCheckBox()
         self.rampingCheckbox.stateChanged.connect(self.update_ramping_enable)
 
+        self.tempReadoutLabel = QLabel("Readout: None ℃")
+
         layout = QHBoxLayout()
         layout.addWidget(QLabel("Ramping"), alignment=Qt.AlignLeft)
         layout.addWidget(self.rampingCheckbox, alignment=Qt.AlignLeft)
+        layout.addWidget(self.tempReadoutLabel, alignment=Qt.AlignBottom)
         layout.setStretch(1, 10)
 
         tempControllerLayout.addLayout(layout)
