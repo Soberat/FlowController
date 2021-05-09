@@ -101,7 +101,7 @@ class ControllerGUITab(QWidget):
 
         self.graphTimer = QTimer()
         self.graphTimer.timeout.connect(self.update_plot)
-        self.graphTimer.start(500)
+        self.graphTimer.start(60*1000)
 
         self.dosingValue = None
         self.dosingTimer = QTimer()
@@ -115,7 +115,7 @@ class ControllerGUITab(QWidget):
 
         # Get initial dosing values from the text inside
         self.dosingValues = [float(x) for x in self.dosingValuesEdit.text().split(sep=',') if x.strip() != '']
-        self.dosingTimes = [float(x)*60*1000 for x in self.dosingTimesEdit.text().split(sep=',') if x.strip() != '']
+        self.dosingTimes = [float(x) * 60 * 1000 for x in self.dosingTimesEdit.text().split(sep=',') if x.strip() != '']
         self.dosingValues.reverse()
         self.dosingTimes.reverse()
 
@@ -235,7 +235,7 @@ class ControllerGUITab(QWidget):
         self.sampleBufferSize = int(self.bufferSizeEdit.text())
 
     def update_graph_timer(self):
-        self.graphTimer.setInterval(float(self.intervalEdit.text())*60*1000)
+        self.graphTimer.setInterval(float(self.intervalEdit.text()) * 60 * 1000)
 
     def update_setpoint(self):
         value = float(self.setpointEdit.text())
@@ -243,7 +243,7 @@ class ControllerGUITab(QWidget):
 
     def update_sensor1_timer(self):
         print("update_sensor1_timer")
-        self.sensor1Timer.setInterval(float(self.sensor1SampleIntervalEdit.text())*60*1000)
+        self.sensor1Timer.setInterval(float(self.sensor1SampleIntervalEdit.text()) * 60 * 1000)
 
     def update_sensor1_buffer(self):
         print("update_sensor1_buffer")
@@ -251,7 +251,7 @@ class ControllerGUITab(QWidget):
 
     def update_sensor2_timer(self):
         print("update_sensor2_timer")
-        self.sensor2Timer.setInterval(float(self.sensor2SampleIntervalEdit.text())*60*1000)
+        self.sensor2Timer.setInterval(float(self.sensor2SampleIntervalEdit.text()) * 60 * 1000)
 
     def update_sensor2_buffer(self):
         print("update_sensor2_buffer")
@@ -297,7 +297,7 @@ class ControllerGUITab(QWidget):
     def update_dosing_vectors(self):
         print("update_dosing_vectors")
         self.dosingValues = [float(x) for x in self.dosingValuesEdit.text().split(sep=',') if x.strip() != '']
-        self.dosingTimes = [float(x)*1000*60 for x in self.dosingTimesEdit.text().split(sep=',') if x.strip() != '']
+        self.dosingTimes = [float(x) * 1000 * 60 for x in self.dosingTimesEdit.text().split(sep=',') if x.strip() != '']
 
         # Since we will be using pop() to get the next values, we reverse the arrays
         self.dosingValues.reverse()
@@ -311,12 +311,6 @@ class ControllerGUITab(QWidget):
             self.dosingTimesEdit.setStyleSheet(self.defaultStyleSheet)
             self.dosingValuesEdit.setStyleSheet(self.defaultStyleSheet)
             self.dosingControlButton.setEnabled(True)
-
-    def update_dosing_label_timer(self):
-        print("update_dosing_label_timer")
-
-    def update_dosing_label_value(self):
-        print("update_dosing_enable")
 
     def update_dosing_enable(self):
         print("update_dosing_enable")
@@ -371,7 +365,7 @@ class ControllerGUITab(QWidget):
 
         # Since all the values have been popped and the text is unchanged, we fill the vectors again
         self.dosingValues = [float(x) for x in self.dosingValuesEdit.text().split(sep=',') if x.strip() != '']
-        self.dosingTimes = [float(x)*60*1000 for x in self.dosingTimesEdit.text().split(sep=',') if x.strip() != '']
+        self.dosingTimes = [float(x) * 60 * 1000 for x in self.dosingTimesEdit.text().split(sep=',') if x.strip() != '']
         self.dosingValues.reverse()
         self.dosingTimes.reverse()
 
