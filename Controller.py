@@ -164,6 +164,8 @@ class Controller:
 
             if response[2] == Controller.TYPE_RESPONSE:
                 return response[4]
+            else:
+                return None
         elif param == Controller.PARAM_PV_MEASURE_UNITS or param == Controller.PARAM_PV_TIME_BASE or param == Controller.PARAM_PV_DECIMAL_POINT or param == Controller.PARAM_PV_GAS_FACTOR or \
                 (param == Controller.PARAM_PV_SIGNAL_TYPE or param == Controller.PARAM_PV_FULL_SCALE and target == Controller.TARGET_PV):
             if self.__address is None:
@@ -174,6 +176,8 @@ class Controller:
 
             if response[2] == Controller.TYPE_RESPONSE:
                 return response[4]
+            else:
+                return None
         else:
             return None
 
@@ -192,6 +196,8 @@ class Controller:
 
             if response[2] == Controller.TYPE_RESPONSE:
                 return response[4]
+            else:
+                return None
         elif param == Controller.PARAM_PV_MEASURE_UNITS or param == Controller.PARAM_PV_TIME_BASE or param == Controller.PARAM_PV_DECIMAL_POINT or param == Controller.PARAM_PV_GAS_FACTOR or \
                 (param == Controller.PARAM_PV_SIGNAL_TYPE or param == Controller.PARAM_PV_FULL_SCALE and target == Controller.TARGET_PV):
             if self.__address is None:
@@ -202,6 +208,8 @@ class Controller:
 
             if response[2] == Controller.TYPE_RESPONSE:
                 return response[4]
+            else:
+                return None
         else:
             return None
 
@@ -213,6 +221,8 @@ class Controller:
 
         if response[2] == Controller.TYPE_RESPONSE:
             return np.float16(response[5]), np.float16(response[4]), datetime.now()
+        else:
+            return None
 
     #
     def set_decimal_point(self, point):
