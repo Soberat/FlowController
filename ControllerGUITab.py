@@ -660,7 +660,7 @@ class ControllerGUITab(QWidget):
         layout = QHBoxLayout()
 
         self.sensor1SampleIntervalEdit = QLineEdit()
-        self.sensor1SampleIntervalEdit.setValidator(QIntValidator())
+        self.sensor1SampleIntervalEdit.setValidator(QRegExpValidator(QRegExp("(-|)[0-9]{1,3}(|\\.[0-9]{1,3})")))
         self.sensor1SampleIntervalEdit.setFixedWidth(100)
         self.sensor1SampleIntervalEdit.editingFinished.connect(self.update_sensor1_timer)
         self.sensor1SampleIntervalEdit.setText("1")
@@ -676,7 +676,7 @@ class ControllerGUITab(QWidget):
         layout = QHBoxLayout()
 
         self.sensor1BufferSizeEdit = QLineEdit()
-        self.sensor1BufferSizeEdit.setValidator(QIntValidator())
+        self.sensor1BufferSizeEdit.setValidator(QRegExpValidator(QRegExp("(-|)[0-9]{1,3}(|\\.[0-9]{1,3})")))
         self.sensor1BufferSizeEdit.setFixedWidth(100)
         self.sensor1BufferSizeEdit.editingFinished.connect(self.update_sensor1_buffer)
         self.sensor1BufferSizeEdit.setText("64")
