@@ -23,12 +23,12 @@ from serial import SerialException
 class ControllerGUITab(QWidget):
     LEFT_COLUMN_MAX_WIDTH = 400
 
-    def __init__(self, serial, channel):
+    def __init__(self, pyvisa, channel):
         super().__init__()
         # Create the master layout
         outerLayout = QGridLayout()
         self.graph = None
-        self.controller = Controller(channel=channel, serialConnection=serial)
+        self.controller = Controller(channel=channel, pyvisaConnection=pyvisa)
         self.temperatureController = None
         self.tempControllerGroup = None
         self.sensor1 = None

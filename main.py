@@ -1,6 +1,6 @@
 import sys
 
-import serial
+import pyvisa
 from PyQt5.QtWidgets import QApplication
 from MainWindow import MainWindow
 from MasterControllerConfigDialog import MasterControllerConfigDialog
@@ -26,12 +26,12 @@ if __name__ == "__main__":
     conDialog.accepted.connect(callback)
     conDialog.exec_()
 
-    ser = serial.Serial(port=parameters['port'],
-                        baudrate=9600,
-                        parity=serial.PARITY_NONE,
-                        stopbits=serial.STOPBITS_ONE,
-                        timeout=None)
+    rm = pyvisa.ResourceManager()
+    rml = rm.list_resources()
+    brooks = rm.open_resource(parameters['resource'], write_termination='\r',
+                              read_termination='\r\n')  # , baud_rate = 9600, write_termination = '\r', read_termination = '\r\n')
+    brooks.time_out = 200
 
-    window = MainWindow(serial=ser)
+    window = MainWindow(pyvisa=brooks)
     window.show()
     sys.exit(app.exec_())

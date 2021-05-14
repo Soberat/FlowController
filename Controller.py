@@ -1,11 +1,9 @@
 import numpy as np
-import serial
 import pyvisa
 from datetime import datetime
 
 # Class representing a single Brooks GF40 Mass Flow Controller,
 # Handling communication via a 0254 controller according to the datasheets
-from Sensor import Sensor
 
 
 class Controller:
@@ -144,7 +142,7 @@ class Controller:
     TYPE_RESPONSE = '4'
     TYPE_BATCH_CONTROL_STATUS = '5'
 
-    def __init__(self, channel, serialConnection, deviceAddress=None):
+    def __init__(self, channel, pyvisaConnection, deviceAddress=None):
         # Addressing parameters
         self.__channel = channel
         self.__inputPort = 2 * channel - 1
@@ -160,7 +158,7 @@ class Controller:
         self.__decimal_point = 'xxx'
 
         # PyVisa connection
-        self.__connection: pyvisa = serialConnection
+        self.__connection: pyvisa = pyvisaConnection
 
     def __read_value(self, param, target=None):
         if param == Controller.PARAM_SP_FUNCTION or param == Controller.PARAM_SP_RATE or param == Controller.PARAM_SP_VOR or param == Controller.PARAM_SP_BATCH or param == Controller.PARAM_SP_BLEND or param == Controller.PARAM_SP_SOURCE or \
