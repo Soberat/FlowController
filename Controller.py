@@ -2,6 +2,7 @@ import numpy as np
 import pyvisa
 from datetime import datetime
 
+
 # Class representing a single Brooks GF40 Mass Flow Controller,
 # Handling communication via a 0254 controller according to the datasheets
 
@@ -154,7 +155,8 @@ class Controller:
 
     def __read_value(self, param, target=None):
         if param == Controller.PARAM_SP_FUNCTION or param == Controller.PARAM_SP_RATE or param == Controller.PARAM_SP_VOR or param == Controller.PARAM_SP_BATCH or param == Controller.PARAM_SP_BLEND or param == Controller.PARAM_SP_SOURCE or \
-                (param == Controller.PARAM_SP_FULL_SCALE or param == Controller.PARAM_SP_SIGNAL_TYPE and target == Controller.TARGET_SP):
+                (
+                        param == Controller.PARAM_SP_FULL_SCALE or param == Controller.PARAM_SP_SIGNAL_TYPE and target == Controller.TARGET_SP):
             # Create and send ascii encoded command via serial, wait for response
             if self.__address is None:
                 command = f'AZ.{self.__outputPort}P{param}?'
@@ -167,7 +169,8 @@ class Controller:
             else:
                 return None
         elif param == Controller.PARAM_PV_MEASURE_UNITS or param == Controller.PARAM_PV_TIME_BASE or param == Controller.PARAM_PV_DECIMAL_POINT or param == Controller.PARAM_PV_GAS_FACTOR or \
-                (param == Controller.PARAM_PV_SIGNAL_TYPE or param == Controller.PARAM_PV_FULL_SCALE and target == Controller.TARGET_PV):
+                (
+                        param == Controller.PARAM_PV_SIGNAL_TYPE or param == Controller.PARAM_PV_FULL_SCALE and target == Controller.TARGET_PV):
             if self.__address is None:
                 command = f'AZ.{self.__inputPort}P{param}?'
             else:
@@ -186,7 +189,8 @@ class Controller:
     def __write_value(self, param, value, target=None):
         # The only difference for writing is the input or output port, which are addressed differently
         if param == Controller.PARAM_SP_FUNCTION or param == Controller.PARAM_SP_RATE or param == Controller.PARAM_SP_VOR or param == Controller.PARAM_SP_BATCH or param == Controller.PARAM_SP_BLEND or param == Controller.PARAM_SP_SOURCE or \
-                (param == Controller.PARAM_SP_FULL_SCALE or param == Controller.PARAM_SP_SIGNAL_TYPE and target == Controller.TARGET_SP):
+                (
+                        param == Controller.PARAM_SP_FULL_SCALE or param == Controller.PARAM_SP_SIGNAL_TYPE and target == Controller.TARGET_SP):
             # Create and send ascii encoded command via serial, wait for response
             if self.__address is None:
                 command = f'AZ.{self.__outputPort}P{param}={value}'
@@ -199,7 +203,8 @@ class Controller:
             else:
                 return None
         elif param == Controller.PARAM_PV_MEASURE_UNITS or param == Controller.PARAM_PV_TIME_BASE or param == Controller.PARAM_PV_DECIMAL_POINT or param == Controller.PARAM_PV_GAS_FACTOR or \
-                (param == Controller.PARAM_PV_SIGNAL_TYPE or param == Controller.PARAM_PV_FULL_SCALE and target == Controller.TARGET_PV):
+                (
+                        param == Controller.PARAM_PV_SIGNAL_TYPE or param == Controller.PARAM_PV_FULL_SCALE and target == Controller.TARGET_PV):
             if self.__address is None:
                 command = f'AZ.{self.__inputPort}P{param}={value}'
             else:
@@ -224,7 +229,48 @@ class Controller:
         else:
             return None
 
-    #
+    # Public function to control manual valve override option
+    def set_valve_override(self, state):
+        assert (
+                state == Controller.VOR_OPTION_NORMAL or state == Controller.VOR_OPTION_CLOSED or state == Controller.VOR_OPTION_OPEN)
+        return self.__write_value(Controller.PARAM_SP_VOR, state)
+
+    # From manual: "scale factor by which interpolated channel units are multiplied"
+    def set_gas(self, gas):
+        assert gas in Controller.GAS_TYPES.keys()
+        value = int(Controller.GAS_TYPES.get(gas)) * 1000  # value is written to serial as XXXXXX without the decimal
+        response = self.__write_value(Controller.PARAM_PV_GAS_FACTOR, value)
+        return response
+
+    # DS: "Analog interpolator representing the eng. units of the greater measured signal"
+    def set_pv_full_scale(self, value):
+        assert (-999.999 <= value <= 999.999)  # Possible setpoint values according to the datasheet (section C-5-4)
+        value = int(value * 1000)  # value is written to serial as XXXXXX without the decimal
+        return self.__write_value(Controller.PARAM_PV_FULL_SCALE, value, target=Controller.TARGET_PV)
+
+    # Set the input signal type
+    def set_pv_signal_type(self, sigtype):
+        assert (self.INPUT_PORT_TYPES.keys().__contains__(sigtype))
+        return self.__write_value(Controller.PARAM_PV_SIGNAL_TYPE, Controller.INPUT_PORT_TYPES[sigtype],
+                                  target=Controller.TARGET_PV)
+
+    # DS: "Analog de-interpolator representing the eng. units of the greatest measured signal"
+    def set_sp_full_scale(self, value):
+        assert (-999.999 <= value <= 999.999)  # Possible setpoint values according to the datasheet (section C-5-4)
+        value = int(value * 1000)  # value is written to serial as XXXXXX without the decimal
+        return self.__write_value(Controller.PARAM_SP_FULL_SCALE, value, target=Controller.TARGET_SP)
+
+    # Set the output signal type
+    def set_sp_signal_type(self, sigtype):
+        assert (self.OUTPUT_PORT_TYPES.keys().__contains__(sigtype))
+        return self.__write_value(Controller.PARAM_SP_SIGNAL_TYPE, Controller.OUTPUT_PORT_TYPES[sigtype],
+                                  target=Controller.TARGET_SP)
+
+    # Set the setpoint source
+    def set_source(self, source):
+        assert (source in Controller.SP_SOURCES.keys())
+        return self.__write_value(Controller.PARAM_SP_SOURCE, Controller.SP_SOURCES.get(source))
+
     def set_decimal_point(self, point):
         assert point in Controller.DECIMAL_POINTS.keys()
         value = Controller.DECIMAL_POINTS.get(point)
@@ -243,13 +289,6 @@ class Controller:
         response = self.__write_value(Controller.PARAM_PV_TIME_BASE, value)
         return response
 
-    # From manual: "scale factor by which interpolated channel units are multiplied"
-    def set_gas(self, gas):
-        assert gas in Controller.GAS_TYPES.keys()
-        value = int(Controller.GAS_TYPES.get(gas)) * 1000  # value is written to serial as XXXXXX without the decimal
-        response = self.__write_value(Controller.PARAM_PV_GAS_FACTOR, value)
-        return response
-
     # Public function to set the head operation point (setpoint)
     def set_setpoint(self, value):
         assert (-999.999 <= value <= 999.999)  # Possible setpoint values according to the datasheet (section C-5-4)
@@ -259,37 +298,9 @@ class Controller:
     # Sets the setpoint function, rate/batch/blend.
     # Plan is to only use rate.
     def set_function(self, function):
-        assert (function == Controller.SP_FUNC_RATE or function == Controller.SP_FUNC_BATCH or function == Controller.SP_FUNC_BLEND)
+        assert (
+                function == Controller.SP_FUNC_RATE or function == Controller.SP_FUNC_BATCH or function == Controller.SP_FUNC_BLEND)
         return self.__write_value(Controller.PARAM_SP_FUNCTION, function)
-
-    # DS: "Analog interpolator representing the eng. units of the greater measured signal"
-    def set_pv_full_scale(self, value):
-        assert (-999.999 <= value <= 999.999)  # Possible setpoint values according to the datasheet (section C-5-4)
-        value = int(value * 1000)  # value is written to serial as XXXXXX without the decimal
-        return self.__write_value(Controller.PARAM_PV_FULL_SCALE, value, target=Controller.TARGET_PV)
-
-    # DS: "Analog de-interpolator representing the eng. units of the greatest measured signal"
-    def set_sp_full_scale(self, value):
-        assert (-999.999 <= value <= 999.999)  # Possible setpoint values according to the datasheet (section C-5-4)
-        value = int(value * 1000)  # value is written to serial as XXXXXX without the decimal
-        return self.__write_value(Controller.PARAM_SP_FULL_SCALE, value, target=Controller.TARGET_SP)
-
-    # Set the input signal type
-    def set_pv_signal_type(self, sigtype):
-        assert (self.INPUT_PORT_TYPES.keys().__contains__(sigtype))
-        return self.__write_value(Controller.PARAM_PV_SIGNAL_TYPE, Controller.INPUT_PORT_TYPES[sigtype],
-                                  target=Controller.TARGET_PV)
-
-    # Set the output signal type
-    def set_sp_signal_type(self, sigtype):
-        assert (self.OUTPUT_PORT_TYPES.keys().__contains__(sigtype))
-        return self.__write_value(Controller.PARAM_SP_SIGNAL_TYPE, Controller.OUTPUT_PORT_TYPES[sigtype],
-                                  target=Controller.TARGET_SP)
-
-    # Public function to control manual valve override option
-    def set_valve_override(self, state):
-        assert (state == Controller.VOR_OPTION_NORMAL or state == Controller.VOR_OPTION_CLOSED or state == Controller.VOR_OPTION_OPEN)
-        return self.__write_value(Controller.PARAM_SP_VOR, state)
 
     # Batch/blend ratios setting
     def set_batch(self, value):
@@ -301,8 +312,3 @@ class Controller:
         assert (-999.999 <= value <= 999.999)  # Possible setpoint values according to the datasheet (section C-5-4)
         value = int(value * 1000)  # value is written to serial as XXXXXX without the decimal
         return self.__write_value(Controller.PARAM_SP_BLEND, value)
-
-    # Set the setpoint source
-    def set_source(self, source):
-        assert (source in Controller.SP_SOURCES.keys())
-        return self.__write_value(Controller.PARAM_SP_SOURCE, Controller.SP_SOURCES.get(source))
