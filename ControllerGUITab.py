@@ -19,8 +19,8 @@ from datetime import datetime
 from numpy_ringbuffer import RingBuffer
 from serial import SerialException
 
+
 # TODO: CSV overhaul
-# TODO: Get values instead of assuming defaults
 
 class ControllerGUITab(QWidget):
     LEFT_COLUMN_MAX_WIDTH = 400
@@ -509,40 +509,47 @@ class ControllerGUITab(QWidget):
         self.gasDropdown = QComboBox()
         self.gasDropdown.addItems(Controller.GAS_TYPES.keys())
         self.gasDropdown.currentTextChanged.connect(self.update_gas_type)
+        self.gasDropdown.setCurrentText(str(self.controller.get_gas()))
 
         self.pvFullScaleEdit = QLineEdit()
-        self.pvFullScaleEdit.setText("100.000")
         self.pvFullScaleEdit.setValidator(QRegExpValidator(QRegExp("(-|)[0-9]{1,3}(|\\.[0-9]{1,3})")))
         self.pvFullScaleEdit.editingFinished.connect(self.update_pv_full_scale)
+        self.pvFullScaleEdit.setText(str(self.controller.get_pv_full_scale()))
 
         self.pvSigtypeDropdown = QComboBox()
         self.pvSigtypeDropdown.addItems(Controller.INPUT_PORT_TYPES.keys())
         self.pvSigtypeDropdown.currentTextChanged.connect(self.update_pv_signal_type)
+        self.pvSigtypeDropdown.setCurrentText(str(self.controller.get_pv_signal_type()))
 
         self.spFullScaleEdit = QLineEdit()
-        self.spFullScaleEdit.setText("100.000")
         self.spFullScaleEdit.setValidator(QRegExpValidator(QRegExp("(-|)[0-9]{1,3}(|\\.[0-9]{1,3})")))
         self.spFullScaleEdit.editingFinished.connect(self.update_sp_full_scale)
+        self.spFullScaleEdit.setText(str(self.controller.get_sp_full_scale()))
 
         self.spSigtypeDropdown = QComboBox()
         self.spSigtypeDropdown.addItems(Controller.OUTPUT_PORT_TYPES.keys())
         self.spSigtypeDropdown.currentTextChanged.connect(self.update_sp_signal_type)
+        self.spSigtypeDropdown.setCurrentText(str(self.controller.get_sp_signal_type()))
 
         self.spSourceDropdown = QComboBox()
         self.spSourceDropdown.addItems(Controller.SP_SOURCES.keys())
         self.spSourceDropdown.currentTextChanged.connect(self.update_source)
+        self.spSourceDropdown.setCurrentText(str(self.controller.get_source()))
 
         self.decimalDropdown = QComboBox()
         self.decimalDropdown.addItems(Controller.DECIMAL_POINTS.keys())
         self.decimalDropdown.currentTextChanged.connect(self.update_decimal_point)
+        self.decimalDropdown.setCurrentText(str(self.controller.get_decimal_point()))
 
         self.measureUnitsDropdown = QComboBox()
         self.measureUnitsDropdown.addItems(Controller.MEASUREMENT_UNITS.keys())
         self.measureUnitsDropdown.currentTextChanged.connect(self.update_measure_units)
+        self.measureUnitsDropdown.setCurrentText(str(self.controller.get_measurement_units()))
 
         self.timebaseDropdown = QComboBox()
         self.timebaseDropdown.addItems(Controller.RATE_TIME_BASE.keys())
         self.timebaseDropdown.currentTextChanged.connect(self.update_time_base)
+        self.timebaseDropdown.setCurrentText(str(self.controller.get_time_base()))
 
         processLayout.addRow(QLabel("Gas"), self.gasDropdown)
         processLayout.addRow(QLabel("PV Full Scale"), self.pvFullScaleEdit)
@@ -591,9 +598,9 @@ class ControllerGUITab(QWidget):
         layout = QHBoxLayout()
 
         self.setpointEdit = QLineEdit()
-        self.setpointEdit.setText("1")
         self.setpointEdit.setValidator(QRegExpValidator(QRegExp("[0-9]*.[0-9]*")))
         self.setpointEdit.editingFinished.connect(self.update_setpoint)
+        self.setpointEdit.setText(str(self.controller.get_setpoint()))
 
         self.setpointUnitsLabel = QLabel("ml/sec")
 
