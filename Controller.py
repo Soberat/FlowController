@@ -166,9 +166,9 @@ class Controller:
                 (param == Controller.PARAM_SP_FULL_SCALE or param == Controller.PARAM_SP_SIGNAL_TYPE and target == Controller.TARGET_SP):
             # Create and send ascii encoded command via serial, wait for response
             if self.__address is None:
-                command = f'AZ.{self.__outputPort}P{param}?\r'
+                command = f'AZ.{self.__outputPort}P{param}?'
             else:
-                command = f'AZ{self.__address}.{self.__outputPort}P{param}?\r'
+                command = f'AZ{self.__address}.{self.__outputPort}P{param}?'
             self.__serial.write(command.encode('ascii'))
 
             response = self.__serial.read_until('\n'.encode('ascii')).decode('ascii').split(sep=',')
@@ -177,9 +177,9 @@ class Controller:
         elif param == Controller.PARAM_PV_MEASURE_UNITS or param == Controller.PARAM_PV_TIME_BASE or param == Controller.PARAM_PV_DECIMAL_POINT or param == Controller.PARAM_PV_GAS_FACTOR or \
                 (param == Controller.PARAM_PV_SIGNAL_TYPE or param == Controller.PARAM_PV_FULL_SCALE and target == Controller.TARGET_PV):
             if self.__address is None:
-                command = f'AZ.{self.__inputPort}P{param}?\r'
+                command = f'AZ.{self.__inputPort}P{param}?'
             else:
-                command = f'AZ{self.__address}.{self.__inputPort}P{param}?\r'
+                command = f'AZ{self.__address}.{self.__inputPort}P{param}?'
             self.__serial.write(command.encode('ascii'))
 
             response = self.__serial.read_until('\n'.encode('ascii')).decode('ascii').split(sep=',')
@@ -196,9 +196,9 @@ class Controller:
                 (param == Controller.PARAM_SP_FULL_SCALE or param == Controller.PARAM_SP_SIGNAL_TYPE and target == Controller.TARGET_SP):
             # Create and send ascii encoded command via serial, wait for response
             if self.__address is None:
-                command = f'AZ.{self.__outputPort}P{param}={value}\r'
+                command = f'AZ.{self.__outputPort}P{param}={value}'
             else:
-                command = f'AZ{self.__address}.{self.__outputPort}P{param}={value}\r'
+                command = f'AZ{self.__address}.{self.__outputPort}P{param}={value}'
             self.__serial.write(command.encode('ascii'))
 
             response = self.__serial.read_until('\n'.encode('ascii')).decode('ascii').split(sep=',')
@@ -207,9 +207,9 @@ class Controller:
         elif param == Controller.PARAM_PV_MEASURE_UNITS or param == Controller.PARAM_PV_TIME_BASE or param == Controller.PARAM_PV_DECIMAL_POINT or param == Controller.PARAM_PV_GAS_FACTOR or \
                 (param == Controller.PARAM_PV_SIGNAL_TYPE or param == Controller.PARAM_PV_FULL_SCALE and target == Controller.TARGET_PV):
             if self.__address is None:
-                command = f'AZ.{self.__inputPort}P{param}={value}\r'
+                command = f'AZ.{self.__inputPort}P{param}={value}'
             else:
-                command = f'AZ{self.__address}.{self.__outputPort}P{param}={value}\r'
+                command = f'AZ{self.__address}.{self.__outputPort}P{param}={value}'
             self.__serial.write(command.encode('ascii'))
 
             response = self.__serial.read_until('\n'.encode('ascii')).decode('ascii').decode('ascii').split(sep=',')
@@ -220,7 +220,7 @@ class Controller:
 
     # Function that generates a 'gather measurements' command and adds the new data to __samples
     def get_measurements(self):
-        command = f'AZ.{self.__inputPort}K\r'
+        command = f'AZ.{self.__inputPort}K'
         self.__serial.write(command.encode('ascii'))
 
         response = self.__serial.read_until('\n'.encode('ascii')).decode('ascii').split(sep=',')
