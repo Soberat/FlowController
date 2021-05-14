@@ -12,7 +12,7 @@ from PyQt5.QtWidgets import (
 # TODO: maybe use QMainWindow
 # TODO: credit icon creator in about
 class MainWindow(QWidget):
-    def __init__(self, serial):
+    def __init__(self, pyvisa):
         super().__init__()
         self.setWindowIcon(QIcon("icon.png"))
         self.setWindowTitle("FlowController by Mirosław Wiącek")
@@ -22,9 +22,9 @@ class MainWindow(QWidget):
         self.setLayout(layout)
 
         tabs = QTabWidget()
-        tabs.addTab(ControllerGUITab(channel=1, serial=serial), "Controller 1")
-        tabs.addTab(ControllerGUITab(channel=2, serial=serial), "Controller 2")
-        tabs.addTab(ControllerGUITab(channel=3, serial=serial), "Controller 3")
-        tabs.addTab(ControllerGUITab(channel=4, serial=serial), "Controller 4")
+        tabs.addTab(ControllerGUITab(channel=1, pyvisa=pyvisa), "Controller 1")
+        tabs.addTab(ControllerGUITab(channel=2, pyvisa=pyvisa), "Controller 2")
+        tabs.addTab(ControllerGUITab(channel=3, pyvisa=pyvisa), "Controller 3")
+        tabs.addTab(ControllerGUITab(channel=4, pyvisa=pyvisa), "Controller 4")
         layout.addWidget(tabs)
 
