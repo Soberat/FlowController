@@ -1,5 +1,4 @@
 import sys
-
 import pyvisa
 from PyQt5.QtWidgets import QApplication
 from MainWindow import MainWindow
@@ -22,12 +21,11 @@ if __name__ == "__main__":
         pass
 
     global parameters
-    conDialog = MasterControllerConfigDialog()
+    rm = pyvisa.ResourceManager()
+    conDialog = MasterControllerConfigDialog(resourceManager=rm)
     conDialog.accepted.connect(callback)
     conDialog.exec_()
 
-    rm = pyvisa.ResourceManager()
-    rml = rm.list_resources()
     brooks = rm.open_resource(parameters['resource'], write_termination='\r',
                               read_termination='\r\n')  # , baud_rate = 9600, write_termination = '\r', read_termination = '\r\n')
     brooks.time_out = 200
