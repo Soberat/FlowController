@@ -155,8 +155,7 @@ class Controller:
 
     def __read_value(self, param, target=None):
         if param == Controller.PARAM_SP_FUNCTION or param == Controller.PARAM_SP_RATE or param == Controller.PARAM_SP_VOR or param == Controller.PARAM_SP_BATCH or param == Controller.PARAM_SP_BLEND or param == Controller.PARAM_SP_SOURCE or \
-                (
-                        param == Controller.PARAM_SP_FULL_SCALE or param == Controller.PARAM_SP_SIGNAL_TYPE and target == Controller.TARGET_SP):
+                (param == Controller.PARAM_SP_FULL_SCALE or param == Controller.PARAM_SP_SIGNAL_TYPE and target == Controller.TARGET_SP):
             # Create and send ascii encoded command via serial, wait for response
             if self.__address is None:
                 command = f'AZ.{self.__outputPort}P{param}?'
@@ -169,8 +168,7 @@ class Controller:
             else:
                 return None
         elif param == Controller.PARAM_PV_MEASURE_UNITS or param == Controller.PARAM_PV_TIME_BASE or param == Controller.PARAM_PV_DECIMAL_POINT or param == Controller.PARAM_PV_GAS_FACTOR or \
-                (
-                        param == Controller.PARAM_PV_SIGNAL_TYPE or param == Controller.PARAM_PV_FULL_SCALE and target == Controller.TARGET_PV):
+                (param == Controller.PARAM_PV_SIGNAL_TYPE or param == Controller.PARAM_PV_FULL_SCALE and target == Controller.TARGET_PV):
             if self.__address is None:
                 command = f'AZ.{self.__inputPort}P{param}?'
             else:
@@ -229,6 +227,7 @@ class Controller:
         else:
             return None
 
+    # Process configuration setters
     # Public function to control manual valve override option
     def set_valve_override(self, state):
         assert (
@@ -312,3 +311,37 @@ class Controller:
         assert (-999.999 <= value <= 999.999)  # Possible setpoint values according to the datasheet (section C-5-4)
         value = int(value * 1000)  # value is written to serial as XXXXXX without the decimal
         return self.__write_value(Controller.PARAM_SP_BLEND, value)
+
+    # Process configuration getters
+    def get_valve_override(self):
+        return self.__read_value(Controller.PARAM_SP_VOR)
+
+    def get_gas(self):
+        return self.__read_value(Controller.PARAM_PV_GAS_FACTOR)
+
+    def get_pv_full_scale(self):
+        return self.__read_value(Controller.PARAM_PV_FULL_SCALE, target=Controller.TARGET_PV)
+
+    def get_pv_signal_type(self):
+        return self.__read_value(Controller.PARAM_PV_SIGNAL_TYPE, target=Controller.TARGET_PV)
+
+    def get_sp_full_scale(self):
+        return self.__read_value(Controller.PARAM_SP_FULL_SCALE, target=Controller.TARGET_SP)
+
+    def get_sp_signal_type(self):
+        return self.__read_value(Controller.PARAM_SP_SIGNAL_TYPE, target=Controller.TARGET_SP)
+
+    def get_source(self):
+        return self.__read_value(Controller.PARAM_SP_SOURCE)
+
+    def get_decimal_point(self):
+        return self.__read_value(Controller.PARAM_PV_DECIMAL_POINT)
+
+    def get_measurement_units(self):
+        return self.__read_value(Controller.PARAM_PV_MEASURE_UNITS)
+
+    def get_time_base(self):
+        return self.__read_value(Controller.PARAM_PV_TIME_BASE)
+
+    def get_setpoint(self):
+        return self.__read_value(Controller.PARAM_SP_RATE)
