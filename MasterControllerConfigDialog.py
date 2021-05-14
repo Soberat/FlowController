@@ -1,8 +1,8 @@
 from PyQt5 import QtCore
-from PyQt5.QtCore import QRegExp, pyqtSignal, QTimer
-from PyQt5.QtGui import QRegExpValidator, QIcon
+from PyQt5.QtCore import pyqtSignal, QTimer
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QDialog, QFormLayout, QPushButton, QLineEdit, QComboBox
-from serial.tools.list_ports import comports
+import pyvisa
 
 
 class MasterControllerConfigDialog(QDialog):
@@ -10,10 +10,10 @@ class MasterControllerConfigDialog(QDialog):
 
     # unlock OK only if both fields are set
     def unlock_ok(self):
-        self.buttonOk.setEnabled(len(self.port.currentText()) > 1)
+        self.buttonOk.setEnabled(len(self.resource.currentText()) > 1)
 
     def ok_pressed(self):
-        values = {'port': self.port.currentText()}
+        values = {'resource': self.resource.currentText()}
         self.accepted.emit(values)
         self.accept()
 
@@ -21,24 +21,28 @@ class MasterControllerConfigDialog(QDialog):
         self.close()
 
     def refresh_devices(self):
-        devices = [device.name for device in set(comports())]
+        devices = [device.name for device in set(self.list_resources())]
         if devices != self.devices:
             self.devices = devices
-            self.port.clear()
-            self.port.addItems(devices)
+            self.resource.clear()
+            self.resource.addItems(devices)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, resourceManager: pyvisa.ResourceManager, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # PyVisa resource manager for listing available resources
+        self.rm = resourceManager
+
         # Prepare dialog window, disable whatsthis
         self.setFixedSize(220, 100)
         self.setWindowIcon(QIcon('icon.png'))
         self.setWindowTitle("Configure Brooks 0254 device")
         self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint)
-        self.devices = [device.name for device in set(comports())]
+        self.devices = [device.name for device in set(self.list_resources())]
 
-        self.port = QComboBox()
-        self.port.addItems(self.devices)
-        self.port.currentTextChanged.connect(self.unlock_ok)
+        self.resource = QComboBox()
+        self.resource.addItems(self.devices)
+        self.resource.currentTextChanged.connect(self.unlock_ok)
 
         self.identity = QLineEdit()
         self.identity.setEnabled(False)
@@ -55,6 +59,6 @@ class MasterControllerConfigDialog(QDialog):
         self.timer.start(1000)
 
         form = QFormLayout(self)
-        form.addRow('Port', self.port)
+        form.addRow('Resource', self.resource)
         form.addRow('', self.buttonOk)
         form.addRow('', self.buttonCancel)
