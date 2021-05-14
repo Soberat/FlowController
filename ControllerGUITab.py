@@ -19,6 +19,8 @@ from datetime import datetime
 from numpy_ringbuffer import RingBuffer
 from serial import SerialException
 
+# TODO: CSV overhaul
+# TODO: Get values instead of assuming defaults
 
 class ControllerGUITab(QWidget):
     LEFT_COLUMN_MAX_WIDTH = 400
@@ -131,7 +133,7 @@ class ControllerGUITab(QWidget):
     def save_to_csv(self):
         now = datetime.now()
         if self.controller is not None:
-            filename = now.strftime(f"controller{self.controller.__channel}_%Y-%m-%d_%H-%M-%S.csv")
+            filename = now.strftime(f"controller{self.controller.channel}_%Y-%m-%d_%H-%M-%S.csv")
         else:
             filename = now.strftime("controller0_%Y-%m-%d_%H-%M-%S.csv")
         file = open(filename, 'w')
@@ -158,8 +160,8 @@ class ControllerGUITab(QWidget):
         file.close()
 
     # Handler functions for UI elements
+    # TODO: react to returned value from functions
     def update_vor_normal(self):
-        print("update_vor_normal")
         if self.vorNormalButton.isChecked():
             # disable other buttons to clarify which VOR state is active
             self.vorClosedButton.setChecked(False)
@@ -167,50 +169,40 @@ class ControllerGUITab(QWidget):
             self.controller.set_valve_override(Controller.VOR_OPTION_NORMAL)
 
     def update_vor_closed(self):
-        print("update_vor_closed")
         if self.vorClosedButton.isChecked():
             self.vorNormalButton.setChecked(False)
             self.vorOpenButton.setChecked(False)
             self.controller.set_valve_override(Controller.VOR_OPTION_CLOSED)
 
     def update_vor_open(self):
-        print("update_vor_open")
         if self.vorOpenButton.isChecked():
             self.vorClosedButton.setChecked(False)
             self.vorNormalButton.setChecked(False)
             self.controller.set_valve_override(Controller.VOR_OPTION_OPEN)
 
     def update_gas_type(self):
-        print("update_gas_type")
         self.controller.set_gas(self.gasDropdown.currentText())
         self.wipe_buffers()
 
     def update_pv_full_scale(self):
-        print("update_pv_full_scale")
         self.controller.set_pv_full_scale(float(self.pvFullScaleEdit.text()))
 
     def update_pv_signal_type(self):
-        print("update_pv_signal_type")
         self.controller.set_pv_signal_type(self.pvSigtypeDropdown.currentText())
 
     def update_sp_full_scale(self):
-        print("update_sp_full_scale")
         self.controller.set_sp_full_scale(float(self.spFullScaleEdit.text()))
 
     def update_sp_signal_type(self):
-        print("update_sp_signal_type")
         self.controller.set_sp_signal_type(self.spSigtypeDropdown.currentText())
 
     def update_source(self):
-        print("update_source_enable")
         self.controller.set_source(self.spSourceDropdown.currentText())
 
     def update_decimal_point(self):
-        print("update_decimal_point")
         self.controller.set_decimal_point(self.decimalDropdown.currentText())
 
     def update_measure_units(self):
-        print("update_measure_units")
         self.dosingUnitsLabel.setText(
             f"{self.measureUnitsDropdown.currentText()}/{self.timebaseDropdown.currentText()}")
         self.setpointUnitsLabel.setText(
@@ -218,7 +210,6 @@ class ControllerGUITab(QWidget):
         self.controller.set_measurement_units(self.measureUnitsDropdown.currentText())
 
     def update_time_base(self):
-        print("update_time_base")
         self.dosingUnitsLabel.setText(
             f"{self.measureUnitsDropdown.currentText()}/{self.timebaseDropdown.currentText()}")
         self.setpointUnitsLabel.setText(
@@ -237,51 +228,41 @@ class ControllerGUITab(QWidget):
         self.controller.set_setpoint(value)
 
     def update_sensor1_timer(self):
-        print("update_sensor1_timer")
         self.sensor1Timer.setInterval(float(self.sensor1SampleIntervalEdit.text()) * 60 * 1000)
 
     def update_sensor1_buffer(self):
-        print("update_sensor1_buffer")
         self.sensor1.change_buffer_size(int(self.sensor1BufferSizeEdit.text()))
 
     def update_sensor2_timer(self):
-        print("update_sensor2_timer")
         self.sensor2Timer.setInterval(float(self.sensor2SampleIntervalEdit.text()) * 60 * 1000)
 
     def update_sensor2_buffer(self):
-        print("update_sensor2_buffer")
         self.sensor2.change_buffer_size(int(self.sensor2BufferSizeEdit.text()))
 
     def update_temperature(self):
-        print("update_temperature")
         self.temperatureController.set_temperature(float(self.temperatureSlider.value()))
         self.temperatureLabel.setText(self.temperatureSlider.value())
 
     def update_range_low(self):
-        print("update_range_low")
         newTemp = self.temperatureController.set_range_low(float(self.rangeLowEdit.text()))
         self.temperatureSlider.setMinimum(float(self.rangeLowEdit.text()))
         self.temperatureSlider.setValue(newTemp)
 
     def update_range_high(self):
-        print("update_range_high")
         newTemp = self.temperatureController.set_range_high(float(self.rangeHighEdit.text()))
         self.temperatureSlider.setMaximum(float(self.rangeHighEdit.text()))
         self.temperatureSlider.setValue(newTemp)
 
     def update_ramping_enable(self):
-        print("update_ramping_enable")
         if self.rampingCheckbox.isChecked():
             self.temperatureController.ramping_on()
         else:
             self.temperatureController.ramping_off()
 
     def update_gradient(self):
-        print("update_gradient")
         self.temperatureController.set_gradient(float())
 
     def update_temp_control_enable(self):
-        print("update_temp_control_enable")
         if self.tempControlButton.isChecked():
             self.temperatureController.ramping_on()
             self.tempControlButton.setText("Disable output")
@@ -290,7 +271,6 @@ class ControllerGUITab(QWidget):
             self.tempControlButton.setText("Enable output")
 
     def update_dosing_vectors(self):
-        print("update_dosing_vectors")
         self.dosingValues = [float(x) for x in self.dosingValuesEdit.text().split(sep=',') if x.strip() != '']
         self.dosingTimes = [float(x) * 1000 * 60 for x in self.dosingTimesEdit.text().split(sep=',') if x.strip() != '']
 
@@ -308,7 +288,6 @@ class ControllerGUITab(QWidget):
             self.dosingControlButton.setEnabled(True)
 
     def update_dosing_enable(self):
-        print("update_dosing_enable")
         if self.dosingControlButton.isChecked():
             self.dosingValuesEdit.setEnabled(False)
             self.dosingValuesEdit.setStyleSheet("color: grey")
