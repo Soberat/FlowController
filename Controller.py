@@ -144,18 +144,10 @@ class Controller:
 
     def __init__(self, channel, pyvisaConnection, deviceAddress=None):
         # Addressing parameters
-        self.__channel = channel
+        self.channel = channel
         self.__inputPort = 2 * channel - 1
         self.__outputPort = 2 * channel
         self.__address: str = deviceAddress  # this is a string because it needs to be zero-padded to be 5 chars long
-
-        # Physical device measurements
-        self.__flowReadout = 0
-        self.__gas = 0
-        self.__gasFactor = 0
-        self.__measure_units = 'scc'
-        self.__time_base = 'min'
-        self.__decimal_point = 'xxx'
 
         # PyVisa connection
         self.__connection: pyvisa = pyvisaConnection
@@ -227,24 +219,18 @@ class Controller:
         assert point in Controller.DECIMAL_POINTS.keys()
         value = Controller.DECIMAL_POINTS.get(point)
         response = self.__write_value(Controller.PARAM_PV_DECIMAL_POINT, value)
-        if response is not None:
-            self.__decimal_point = point
         return response
 
     def set_measurement_units(self, units):
         assert units in Controller.MEASUREMENT_UNITS.keys()
         value = Controller.MEASUREMENT_UNITS.get(units)
         response = self.__write_value(Controller.PARAM_PV_MEASURE_UNITS, value)
-        if response is not None:
-            self.__measure_units = units
         return response
 
     def set_time_base(self, base):
         assert base in Controller.RATE_TIME_BASE.keys()
         value = Controller.RATE_TIME_BASE.get(base)
         response = self.__write_value(Controller.PARAM_PV_TIME_BASE, value)
-        if response is not None:
-            self.__time_base = base
         return response
 
     # From manual: "scale factor by which interpolated channel units are multiplied"
@@ -252,9 +238,6 @@ class Controller:
         assert gas in Controller.GAS_TYPES.keys()
         value = int(Controller.GAS_TYPES.get(gas)) * 1000  # value is written to serial as XXXXXX without the decimal
         response = self.__write_value(Controller.PARAM_PV_GAS_FACTOR, value)
-        if response is not None:
-            self.__gasFactor = response
-            self.__gas = gas
         return response
 
     # Public function to set the head operation point (setpoint)
@@ -313,4 +296,3 @@ class Controller:
     def set_source(self, source):
         assert (source in Controller.SP_SOURCES.keys())
         return self.__write_value(Controller.PARAM_SP_SOURCE, Controller.SP_SOURCES.get(source))
-
