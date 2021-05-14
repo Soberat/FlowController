@@ -904,13 +904,3 @@ class ControllerGUITab(QWidget):
             self.samplesPV = newBufPV
             self.samplesTotalizer = newBufTotal
             self.sampleTimestamps = newTimestampBuf
-
-    # Interpretation of saved values depends on the measurement units, time base and decimal point
-    # Since we would have to add those to every single sample it would increase memory usage
-    # and would force the user to manually convert the values in case of a change, we just wipe the buffers
-    # Also, I think that those parameters should be set at the beginning of the process
-    # and they wouldn't be changed mid process.
-    def wipe_buffers(self):
-        self.samplesPV = RingBuffer(capacity=self.sampleBufferSize, dtype=np.int16)
-        self.samplesTotalizer = RingBuffer(capacity=self.sampleBufferSize, dtype=np.int16)
-        self.sampleTimestamps = RingBuffer(capacity=self.sampleBufferSize, dtype=np.uint64)
