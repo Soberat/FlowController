@@ -1,34 +1,15 @@
-import serial
+import pyvisa
 
-ser = serial.Serial(port=None,
-                    baudrate=9600,
-                    parity=serial.PARITY_NONE,
-                    stopbits=serial.STOPBITS_ONE,
-                    timeout=None)
+rm = pyvisa.ResourceManager()
+print(sorted(set(rm.list_resources())))
+input()
+brooks = rm.open_resource('ASRL3::INSTR', write_termination='\r', read_termination='\r\n')
+brooks.timeout = 200
 
-ser.port = 'COM3'
-ser.open()
-print(f"Is serial open? {ser.isOpen()}")
-assert ser.isOpen()
+idn_response = brooks.query('AZI')
 
-print("Trying identity command...")
-ser.write("AZI\r".encode('ascii'))
-response = ser.read_until('\n'.encode('ascii')).decode()
-print(f"Identity response: {response}")
+print(idn_response.split(sep=','))
 
-print("Trying measurement command...")
-ser.write("AZ.1K\r".encode('ascii'))
-response = ser.read_until('\n'.encode('ascii')).decode()
-print(f"Controller 1 response: {response}")
-
-ser.write("AZ.3K\r".encode('ascii'))
-response = ser.read_until('\n'.encode('ascii')).decode()
-print(f"Controller 2 response: {response}")
-
-ser.write("AZ.5K\r".encode('ascii'))
-response = ser.read_until('\n'.encode('ascii')).decode()
-print(f"Controller 3 response: {response}")
-
-ser.write("AZ.7K\r".encode('ascii'))
-response = ser.read_until('\n'.encode('ascii')).decode()
-print(f"Controller 4 response: {response}")
+command= 'AZ.1K'
+response = brooks.query(command).split(sep=',')
+print(response)
