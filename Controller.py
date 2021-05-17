@@ -184,6 +184,7 @@ class Controller:
 
     # This is an internal write functions to be used by the public functions
     # Returns whatever was written to the variable, None if some error occurred
+    # TODO: Return user-friendly values by parsing the output based on parameter code
     def __write_value(self, param, value, target=None):
         # The only difference for writing is the input or output port, which are addressed differently
         if param == Controller.PARAM_SP_FUNCTION or param == Controller.PARAM_SP_RATE or param == Controller.PARAM_SP_VOR or param == Controller.PARAM_SP_BATCH or param == Controller.PARAM_SP_BLEND or param == Controller.PARAM_SP_SOURCE or \
@@ -197,7 +198,7 @@ class Controller:
             response = self.__connection.query(command).split(sep=',')
 
             if response[2] == Controller.TYPE_RESPONSE:
-                return response[4]
+                return response[4].strip()
             else:
                 return None
         elif param == Controller.PARAM_PV_MEASURE_UNITS or param == Controller.PARAM_PV_TIME_BASE or param == Controller.PARAM_PV_DECIMAL_POINT or param == Controller.PARAM_PV_GAS_FACTOR or \
@@ -210,7 +211,7 @@ class Controller:
             response = self.__connection.query(command).split(sep=',')
 
             if response[2] == Controller.TYPE_RESPONSE:
-                return response[4]
+                return response[4].strip()
             else:
                 return None
         else:
