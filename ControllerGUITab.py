@@ -85,7 +85,7 @@ class ControllerGUITab(QWidget):
         # Data buffers
         self.sampleBufferSize = 64
         self.samplesPV = RingBuffer(capacity=self.sampleBufferSize, dtype=np.float16)
-        self.samplesTotalizer = RingBuffer(capacity=self.sampleBufferSize, dtype=np.float16)
+        self.samplesTotalizer = RingBuffer(capacity=self.sampleBufferSize, dtype=np.float32)
         self.sampleTimestamps = RingBuffer(capacity=self.sampleBufferSize, dtype=np.uint64)
 
         # Nest the inner layouts into the outer layout
@@ -122,8 +122,7 @@ class ControllerGUITab(QWidget):
 
     def get_measurement(self):
         # Proper implementation that gets the data from the device over serial
-        total, current, timestamp = self.controller.get_measurements()
-
+        current, total, timestamp = self.controller.get_measurements()
         if total is not None:
             self.samplesTotalizer.append(total)
             self.samplesPV.append(current)
@@ -880,8 +879,8 @@ class ControllerGUITab(QWidget):
     # function to change the amount of stored samples without losing previously gathered samples
     def change_buffer_size(self, value):
         if value > self.sampleBufferSize:
-            newBufPV = RingBuffer(capacity=value, dtype=np.int16)
-            newBufTotal = RingBuffer(capacity=value, dtype=np.int16)
+            newBufPV = RingBuffer(capacity=value, dtype=np.float16)
+            newBufTotal = RingBuffer(capacity=value, dtype=np.float32)
             newTimestampBuf = RingBuffer(capacity=value, dtype=np.uint64)
 
             newBufPV.extend(self.samplesPV)
@@ -892,8 +891,8 @@ class ControllerGUITab(QWidget):
             self.samplesTotalizer = newBufTotal
             self.sampleTimestamps = newTimestampBuf
         elif value < self.sampleBufferSize:
-            newBufPV = RingBuffer(capacity=value, dtype=np.int16)
-            newBufTotal = RingBuffer(capacity=value, dtype=np.int16)
+            newBufPV = RingBuffer(capacity=value, dtype=np.float16)
+            newBufTotal = RingBuffer(capacity=value, dtype=np.float32)
             newTimestampBuf = RingBuffer(capacity=value, dtype=np.uint64)
 
             newBufPV.extend(self.samplesPV[:-value])
