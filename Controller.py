@@ -224,7 +224,7 @@ class Controller:
         response = self.__connection.query(command).split(sep=',')
 
         if response[2] == Controller.TYPE_RESPONSE:
-            return np.float16(response[5]), np.float16(response[4]), datetime.now()
+            return np.float16(response[5]), np.float32(response[4]), datetime.now().timestamp()
         else:
             return None
 
