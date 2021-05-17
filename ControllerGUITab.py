@@ -602,7 +602,7 @@ class ControllerGUITab(QWidget):
         self.setpointEdit.editingFinished.connect(self.update_setpoint)
         self.setpointEdit.setText(str(self.controller.get_setpoint()))
 
-        self.setpointUnitsLabel = QLabel("ml/sec")
+        self.setpointUnitsLabel = QLabel(f"{self.measureUnitsDropdown.getCurrentText()/self.timebaseDropdown.getCurrentText()}")
 
         layout.addWidget(QLabel("Setpoint"))
         layout.addWidget(self.setpointEdit)
@@ -716,7 +716,6 @@ class ControllerGUITab(QWidget):
         sensor2Layout.addLayout(layout)
         self.sensor2Group.setLayout(sensor2Layout)
 
-        # TODO: Add temperature readout
         self.tempControllerGroup = QGroupBox("Temperature controller")
         self.tempControllerGroup.setCheckable(True)
         self.tempControllerGroup.setChecked(False)
@@ -833,7 +832,7 @@ class ControllerGUITab(QWidget):
         label = QLabel("Setpoints")
         label.setFixedWidth(55)
 
-        self.dosingUnitsLabel = QLabel("ml/sec")
+        self.dosingUnitsLabel = QLabel(f"{self.measureUnitsDropdown.getCurrentText()/self.timebaseDropdown.getCurrentText()}")
 
         layout.addWidget(label)
         layout.addWidget(self.dosingValuesEdit)
