@@ -11,6 +11,7 @@ from PyQt5.QtWidgets import (
 
 # TODO: maybe use QMainWindow
 # TODO: credit icon creator in about
+# TODO: Reenable 4th tab after ensuring it can work when head is unconnected
 class MainWindow(QWidget):
     def __init__(self, pyvisa):
         super().__init__()
@@ -25,6 +26,6 @@ class MainWindow(QWidget):
         tabs.addTab(ControllerGUITab(channel=1, pyvisa=pyvisa), "Controller 1")
         tabs.addTab(ControllerGUITab(channel=2, pyvisa=pyvisa), "Controller 2")
         tabs.addTab(ControllerGUITab(channel=3, pyvisa=pyvisa), "Controller 3")
-        tabs.addTab(ControllerGUITab(channel=4, pyvisa=pyvisa), "Controller 4")
+        #tabs.addTab(ControllerGUITab(channel=4, pyvisa=pyvisa), "Controller 4")
         layout.addWidget(tabs)
 
