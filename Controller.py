@@ -164,7 +164,7 @@ class Controller:
             response = self.__connection.query(command).split(sep=',')
 
             if response[2] == Controller.TYPE_RESPONSE:
-                return response[4]
+                return self.__parse_response(param, response[4])
             else:
                 return None
         elif param == Controller.PARAM_PV_MEASURE_UNITS or param == Controller.PARAM_PV_TIME_BASE or param == Controller.PARAM_PV_DECIMAL_POINT or param == Controller.PARAM_PV_GAS_FACTOR or \
@@ -176,7 +176,7 @@ class Controller:
             response = self.__connection.query(command).split(sep=',')
 
             if response[2] == Controller.TYPE_RESPONSE:
-                return response[4]
+                return self.__parse_response(param, response[4])]
             else:
                 return None
         else:
@@ -198,7 +198,7 @@ class Controller:
             response = self.__connection.query(command).split(sep=',')
 
             if response[2] == Controller.TYPE_RESPONSE:
-                return response[4].strip()
+                return self.__parse_response(param, response[4])
             else:
                 return None
         elif param == Controller.PARAM_PV_MEASURE_UNITS or param == Controller.PARAM_PV_TIME_BASE or param == Controller.PARAM_PV_DECIMAL_POINT or param == Controller.PARAM_PV_GAS_FACTOR or \
@@ -211,11 +211,31 @@ class Controller:
             response = self.__connection.query(command).split(sep=',')
 
             if response[2] == Controller.TYPE_RESPONSE:
-                return response[4].strip()
+                return self.__parse_response(param, response[4])
             else:
                 return None
         else:
             return None
+
+    @staticmethod
+    def __parse_response(param, value):
+        if param == Controller.PARAM_PV_GAS_FACTOR:
+            return Controller.GAS_TYPES.inverse[float(value)]
+        elif param == Controller.PARAM_PV_SIGNAL_TYPE:
+            return Controller.INPUT_PORT_TYPES.inverse[value[0:1]]
+        elif param == Controller.PARAM_SP_SIGNAL_TYPE:
+            return Controller.OUTPUT_PORT_TYPES.inverse[value[0:1]]
+        elif param == Controller.PARAM_SP_SOURCE:
+            return Controller.SP_SOURCES.inverse[int(value)]
+        elif param == Controller.PARAM_PV_DECIMAL_POINT:
+            return Controller.DECIMAL_POINTS.inverse[int(value)]
+        elif param == Controller.PARAM_PV_MEASURE_UNITS:
+            return Controller.MEASUREMENT_UNITS.inverse[int(value)]
+        elif param == Controller.PARAM_PV_TIME_BASE:
+            return Controller.RATE_TIME_BASE.inverse[int(value)]
+        else:
+            return value
+
 
     # Function that generates a 'gather measurements' command and returns the data as a triple of values
     # current PV, total PV and timestamp
