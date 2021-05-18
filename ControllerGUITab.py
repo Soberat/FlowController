@@ -83,6 +83,7 @@ class ControllerGUITab(QWidget):
         self.dosingValues = None
         self.dosingUnitsLabel = None
         self.dosingLabel = None
+        self.dosingVorStateLabel = None
         self.dosingControlButton = None
 
         # Data buffers
@@ -197,18 +198,24 @@ class ControllerGUITab(QWidget):
             self.vorClosedButton.setChecked(False)
             self.vorOpenButton.setChecked(False)
             self.controller.set_valve_override(Controller.VOR_OPTION_NORMAL)
+            self.dosingVorStateLabel.setText("VOR is normal")
+            self.dosingVorStateLabel.setStyleSheet("color: green;")
 
     def update_vor_closed(self):
         if self.vorClosedButton.isChecked():
             self.vorNormalButton.setChecked(False)
             self.vorOpenButton.setChecked(False)
             self.controller.set_valve_override(Controller.VOR_OPTION_CLOSED)
+            self.dosingVorStateLabel.setText("VOR is closed")
+            self.dosingVorStateLabel.setStyleSheet("color: red;")
 
     def update_vor_open(self):
         if self.vorOpenButton.isChecked():
             self.vorClosedButton.setChecked(False)
             self.vorNormalButton.setChecked(False)
             self.controller.set_valve_override(Controller.VOR_OPTION_OPEN)
+            self.dosingVorStateLabel.setText("VOR is open")
+            self.dosingVorStateLabel.setStyleSheet("color: red;")
 
     def update_gas_type(self):
         self.controller.set_gas(self.gasDropdown.currentText())
@@ -896,12 +903,20 @@ class ControllerGUITab(QWidget):
 
         self.dosingLabel = QLabel("Dosing disabled")
 
+        self.dosingVorStateLabel = QLabel(f"VOR is {self.controller.get_valve_override().lower()}")
+
+        if "normal" in self.dosingVorStateLabel.text():
+            self.dosingVorStateLabel.setStyleSheet("color: green")
+        else:
+            self.dosingVorStateLabel.setStyleSheet("color: red")
+
         self.dosingControlButton = QPushButton("Start dosing")
         self.dosingControlButton.setCheckable(True)
         self.dosingControlButton.clicked.connect(self.update_dosing_enable)
 
         dosingLayout.addWidget(self.dosingLabel, alignment=Qt.AlignLeft)
         layout = QHBoxLayout()
+        layout.addWidget(self.dosingVorStateLabel, alignment=Qt.AlignLeft)
         layout.addWidget(self.dosingControlButton, alignment=Qt.AlignRight)
 
         dosingLayout.addLayout(layout)
