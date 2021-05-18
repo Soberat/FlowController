@@ -358,8 +358,12 @@ class ControllerGUITab(QWidget):
 
     def update_generic(self):
         if self.dosingTimer.isActive() and len(self.dosingValues) > 0:
-            self.dosingLabel.setText(
-                f"{int(self.dosingTimer.remainingTime() / 1000)} seconds until next dosing value: {self.dosingValues[-1]}")
+            if self.dosingTimer.remainingTime() / 1000 > 60:
+                self.dosingLabel.setText(
+                    f"{int(self.dosingTimer.remainingTime() / (1000 * 60))} minutes {int(self.dosingTimer.remainingTime() / 1000) % 60} seconds until next dosing value: {self.dosingValues[-1]}")
+            else:
+                self.dosingLabel.setText(
+                    f"{int(self.dosingTimer.remainingTime() / 1000)} seconds until next dosing value: {self.dosingValues[-1]}")
         elif self.dosingTimer.isActive() and len(self.dosingValues) == 0:
             self.dosingLabel.setText(f"{int(self.dosingTimer.remainingTime() / 1000)} seconds until end of process")
         else:
