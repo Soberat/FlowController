@@ -1,7 +1,7 @@
 import numpy as np
 import pyvisa
 from datetime import datetime
-
+from bidict import bidict
 
 # Class representing a single Brooks GF40 Mass Flow Controller,
 # Handling communication via a 0254 controller according to the datasheets
@@ -50,25 +50,25 @@ class Controller:
 
     # Input port types
     # type : internal code dictionary
-    INPUT_PORT_TYPES = {
-        "Off": 0,
-        "0-20mA": 7,
-        "4-20mA": 8,
-        "0-10V": 9,
+    INPUT_PORT_TYPES = bidict({
+        "Off": '0',
+        "0-20mA": '7',
+        "4-20mA": '8',
+        "0-10V": '9',
         "2-10V": ":",
         "0-5V": ';',
         "1-5V": '<'
-    }
+    })
 
-    DECIMAL_POINTS = {
+    DECIMAL_POINTS = bidict({
         "xxx.": 0,
         "xx.x": 1,
         "x.xx": 2,
         ".xxx": 3
-    }
+    })
 
     # Output port types
-    OUTPUT_PORT_TYPES = {
+    OUTPUT_PORT_TYPES = bidict({
         "Off": 0,
         "0-20mA": 1,
         "4-20mA": 2,
@@ -76,10 +76,10 @@ class Controller:
         "2-10V": 4,
         "0-5V": 5,
         "1-5V": 6
-    }
+    })
 
     # Measurement units
-    MEASUREMENT_UNITS = {
+    MEASUREMENT_UNITS = bidict({
         "ml": 0,
         "mls": 1,
         "mln": 2,
@@ -122,22 +122,22 @@ class Controller:
         "g/ml": 39,
         "kg/l": 40,
         "g/l": 41
-    }
+    })
 
     # Gas factors for GF40 Mass Flow Controller
     # To be extended later on
-    GAS_TYPES = {
+    GAS_TYPES = bidict({
         "Air": 1.018,
         "Nitrogen": 1.0
-    }
+    })
 
     # Base time units
-    RATE_TIME_BASE = {
+    RATE_TIME_BASE = bidict({
         "sec": 1,
         "min": 2,
         "hrs": 3,
         "day": 4
-    }
+    })
 
     # Polled Message types - datasheet (C-4-5-2 Message Format)
     TYPE_RESPONSE = '4'
