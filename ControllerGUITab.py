@@ -481,7 +481,6 @@ class ControllerGUITab(QWidget):
         self.vorNormalButton.setMinimumWidth(50)
         self.vorNormalButton.setFixedHeight(75)
         self.vorNormalButton.setCheckable(True)
-        self.vorNormalButton.setChecked(True)
         self.vorNormalButton.clicked.connect(self.update_vor_normal)
 
         self.vorClosedButton = QPushButton("Closed")
@@ -495,6 +494,22 @@ class ControllerGUITab(QWidget):
         self.vorOpenButton.setFixedHeight(75)
         self.vorOpenButton.setCheckable(True)
         self.vorOpenButton.clicked.connect(self.update_vor_open)
+
+        vorState = self.controller.get_valve_override()
+        if vorState == "Normal":
+            self.vorNormalButton.setChecked(True)
+            self.vorClosedButton.setChecked(False)
+            self.vorOpenButton.setChecked(False)
+        elif vorState == "Closed":
+            self.vorNormalButton.setChecked(False)
+            self.vorClosedButton.setChecked(True)
+            self.vorOpenButton.setChecked(False)
+        elif vorState == "Open":
+            self.vorNormalButton.setChecked(False)
+            self.vorClosedButton.setChecked(False)
+            self.vorOpenButton.setChecked(True)
+        else:
+            raise ValueError(f"Unexpected vor state: {vorState}")
 
         layout.addWidget(self.vorNormalButton)
         layout.addWidget(self.vorClosedButton)

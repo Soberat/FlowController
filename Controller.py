@@ -28,6 +28,14 @@ class Controller:
     PARAM_SP_SOURCE = 0x2E
 
     # Valve override states
+    # There is the dictionary for reverse look-up
+    # value -> state, as well as easily readable constants
+    VOR_OPTIONS = bidict({
+        "Normal": 0,
+        "Closed": 1,
+        "Open": 2
+    })
+
     VOR_OPTION_NORMAL = 0
     VOR_OPTION_CLOSED = 1
     VOR_OPTION_OPEN = 2
@@ -38,10 +46,10 @@ class Controller:
     SP_FUNC_BLEND = 3
 
     # Setpoint sources
-    SP_SOURCES = {
+    SP_SOURCES = bidict({
         "Keypad": 0,
         "Serial": 1
-    }
+    })
 
     # "Targets", required for reading full_scale and signal_type values, that share codes between SP and PV
     # Values chosen arbitrarily
@@ -220,7 +228,9 @@ class Controller:
     @staticmethod
     def __parse_response(param, value):
         value = value.strip()
-        if param == Controller.PARAM_PV_GAS_FACTOR:
+        if param == Controller.PARAM_SP_VOR:
+            return Controller.VOR_OPTIONS.inverse[int(value)]
+        elif param == Controller.PARAM_PV_GAS_FACTOR:
             return Controller.GAS_TYPES.inverse[float(value)]
         elif param == Controller.PARAM_PV_SIGNAL_TYPE:
             return Controller.INPUT_PORT_TYPES.inverse[value[len(value)-2:len(value)-1]]    # second char to last is the value
@@ -236,7 +246,6 @@ class Controller:
             return Controller.RATE_TIME_BASE.inverse[int(value)]
         else:
             return value
-
 
     # Function that generates a 'gather measurements' command and returns the data as a triple of values
     # current PV, total PV and timestamp
