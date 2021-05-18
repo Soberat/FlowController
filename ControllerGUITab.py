@@ -314,6 +314,7 @@ class ControllerGUITab(QWidget):
         spTime = self.dosingTimes.pop()
 
         self.setpointEdit.setText(f"{str(self.spValue)} - dosing is enabled")
+        self.controller.set_setpoint(self.spValue)
 
         if len(self.dosingTimes) == 0:
             self.dosingTimer.timeout.disconnect()
