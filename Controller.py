@@ -219,12 +219,13 @@ class Controller:
 
     @staticmethod
     def __parse_response(param, value):
+        value = value.strip()
         if param == Controller.PARAM_PV_GAS_FACTOR:
             return Controller.GAS_TYPES.inverse[float(value)]
         elif param == Controller.PARAM_PV_SIGNAL_TYPE:
-            return Controller.INPUT_PORT_TYPES.inverse[value[0:1]]
+            return Controller.INPUT_PORT_TYPES.inverse[value[len(value)-2:len(value)-1]]    # second char to last is the value
         elif param == Controller.PARAM_SP_SIGNAL_TYPE:
-            return Controller.OUTPUT_PORT_TYPES.inverse[value[0:1]]
+            return Controller.OUTPUT_PORT_TYPES.inverse[value[len(value)-2:len(value)-1]]
         elif param == Controller.PARAM_SP_SOURCE:
             return Controller.SP_SOURCES.inverse[int(value)]
         elif param == Controller.PARAM_PV_DECIMAL_POINT:
