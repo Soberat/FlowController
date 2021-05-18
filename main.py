@@ -1,9 +1,10 @@
 import sys
 import pyvisa
-from PyQt5.QtWidgets import QApplication
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QApplication, QErrorMessage
 from MainWindow import MainWindow
 from MasterControllerConfigDialog import MasterControllerConfigDialog
-
+import traceback
 global parameters
 
 
@@ -29,6 +30,25 @@ if __name__ == "__main__":
     brooks = rm.open_resource(parameters['resource'], write_termination='\r',
                               read_termination='\r\n')  # , baud_rate = 9600, write_termination = '\r', read_termination = '\r\n')
     brooks.time_out = 200
+
+    try:
+        query = brooks.query('AZI')
+        if "Brooks Instrument,Model 0254" not in query:
+            dg = QErrorMessage()
+            dg.setWindowIcon(QIcon('icon.png'))
+            dg.setWindowTitle("Unexpected AZI response")
+            dg.showMessage("AZI response was unexpected. Possibly wrong resource! Check console for response")
+            dg.exec_()
+            print(query)
+            sys.exit()
+    except pyvisa.VisaIOError as vioe:
+        dg = QErrorMessage()
+        dg.setWindowIcon(QIcon('icon.png'))
+        dg.setWindowTitle("Error in AZI response")
+        dg.showMessage("There was an error while querying AZI! Check console for stack trace")
+        dg.exec_()
+        print(traceback.format_exc())
+        sys.exit()
 
     window = MainWindow(pyvisa=brooks, controllers=parameters['controllers'])
     window.show()
