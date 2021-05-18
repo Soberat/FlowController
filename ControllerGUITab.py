@@ -600,7 +600,7 @@ class ControllerGUITab(QWidget):
         self.setpointEdit.editingFinished.connect(self.update_setpoint)
         self.setpointEdit.setText(str(self.controller.get_setpoint()))
 
-        self.setpointUnitsLabel = QLabel(f"{self.measureUnitsDropdown.getCurrentText()}/{self.timebaseDropdown.getCurrentText()}")
+        self.setpointUnitsLabel = QLabel(f"{self.measureUnitsDropdown.currentText()}/{self.timebaseDropdown.currentText()}")
 
         layout.addWidget(QLabel("Setpoint"))
         layout.addWidget(self.setpointEdit)
@@ -830,7 +830,7 @@ class ControllerGUITab(QWidget):
         label = QLabel("Setpoints")
         label.setFixedWidth(55)
 
-        self.dosingUnitsLabel = QLabel(f"{self.measureUnitsDropdown.getCurrentText()}/{self.timebaseDropdown.getCurrentText()}")
+        self.dosingUnitsLabel = QLabel(f"{self.measureUnitsDropdown.currentText()}/{self.timebaseDropdown.currentText()}")
 
         layout.addWidget(label)
         layout.addWidget(self.dosingValuesEdit)
