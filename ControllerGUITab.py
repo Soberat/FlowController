@@ -87,7 +87,7 @@ class ControllerGUITab(QWidget):
         self.sampleBufferSize = 64
         self.samplesPV = RingBuffer(capacity=self.sampleBufferSize, dtype=np.float16)
         self.samplesTotalizer = RingBuffer(capacity=self.sampleBufferSize, dtype=np.float32)
-        self.sampleTimestamps = RingBuffer(capacity=self.sampleBufferSize, dtype=np.uint64)
+        self.sampleTimestamps = RingBuffer(capacity=self.sampleBufferSize, dtype=datetime)
 
         # Nest the inner layouts into the outer layout
         outerLayout.addLayout(self.create_left_column(), 0, 0)
@@ -901,7 +901,7 @@ class ControllerGUITab(QWidget):
         if value > self.sampleBufferSize:
             newBufPV = RingBuffer(capacity=value, dtype=np.float16)
             newBufTotal = RingBuffer(capacity=value, dtype=np.float32)
-            newTimestampBuf = RingBuffer(capacity=value, dtype=np.uint64)
+            newTimestampBuf = RingBuffer(capacity=value, dtype=datetime)
 
             newBufPV.extend(self.samplesPV)
             newBufTotal.extend(self.samplesTotalizer)
@@ -913,7 +913,7 @@ class ControllerGUITab(QWidget):
         elif value < self.sampleBufferSize:
             newBufPV = RingBuffer(capacity=value, dtype=np.float16)
             newBufTotal = RingBuffer(capacity=value, dtype=np.float32)
-            newTimestampBuf = RingBuffer(capacity=value, dtype=np.uint64)
+            newTimestampBuf = RingBuffer(capacity=value, dtype=datetime)
 
             newBufPV.extend(self.samplesPV[:-value])
             newBufTotal.extend(self.samplesTotalizer[:-value])
