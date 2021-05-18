@@ -201,17 +201,21 @@ class ControllerGUITab(QWidget):
         self.controller.set_decimal_point(self.decimalDropdown.currentText())
 
     def update_measure_units(self):
-        self.dosingUnitsLabel.setText(
-            f"{self.measureUnitsDropdown.currentText()}/{self.timebaseDropdown.currentText()}")
-        self.setpointUnitsLabel.setText(
-            f"{self.measureUnitsDropdown.currentText()}/{self.timebaseDropdown.currentText()}")
+        if self.dosingUnitsLabel is not None:
+            self.dosingUnitsLabel.setText(
+                f"{self.measureUnitsDropdown.currentText()}/{self.timebaseDropdown.currentText()}")
+        if self.setpointUnitsLabel is not None:
+            self.setpointUnitsLabel.setText(
+                f"{self.measureUnitsDropdown.currentText()}/{self.timebaseDropdown.currentText()}")
         self.controller.set_measurement_units(self.measureUnitsDropdown.currentText())
 
     def update_time_base(self):
-        self.dosingUnitsLabel.setText(
-            f"{self.measureUnitsDropdown.currentText()}/{self.timebaseDropdown.currentText()}")
-        self.setpointUnitsLabel.setText(
-            f"{self.measureUnitsDropdown.currentText()}/{self.timebaseDropdown.currentText()}")
+        if self.dosingUnitsLabel is not None:
+            self.dosingUnitsLabel.setText(
+                f"{self.measureUnitsDropdown.currentText()}/{self.timebaseDropdown.currentText()}")
+        if self.setpointUnitsLabel is not None:
+            self.setpointUnitsLabel.setText(
+                f"{self.measureUnitsDropdown.currentText()}/{self.timebaseDropdown.currentText()}")
         self.controller.set_time_base(self.timebaseDropdown.currentText())
 
     def update_buffer_size(self):
