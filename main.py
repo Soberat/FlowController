@@ -30,6 +30,6 @@ if __name__ == "__main__":
                               read_termination='\r\n')  # , baud_rate = 9600, write_termination = '\r', read_termination = '\r\n')
     brooks.time_out = 200
 
-    window = MainWindow(pyvisa=brooks)
+    window = MainWindow(pyvisa=brooks, controllers=parameters['controllers'])
     window.show()
     sys.exit(app.exec_())

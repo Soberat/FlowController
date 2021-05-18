@@ -3,6 +3,7 @@ from PyQt5.QtCore import pyqtSignal, QTimer
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QDialog, QFormLayout, QPushButton, QLineEdit, QComboBox, QCheckBox
 import pyvisa
+import sys
 
 
 class MasterControllerConfigDialog(QDialog):
@@ -13,12 +14,18 @@ class MasterControllerConfigDialog(QDialog):
         self.buttonOk.setEnabled(len(self.resource.currentText()) > 1)
 
     def ok_pressed(self):
-        values = {'resource': self.resource.currentText()}
+        values = {'resource': self.resource.currentText(),
+                  'controllers': [self.controller1Checkbox.isChecked(),
+                                  self.controller2Checkbox.isChecked(),
+                                  self.controller3Checkbox.isChecked(),
+                                  self.controller4Checkbox.isChecked()]}
+
         self.accepted.emit(values)
         self.accept()
 
     def cancel_pressed(self):
         self.close()
+        sys.exit()
 
     def refresh_devices(self):
         devices = [device for device in sorted(set(self.rm.list_resources()))]

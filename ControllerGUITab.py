@@ -21,6 +21,7 @@ from serial import SerialException
 
 
 # TODO: CSV overhaul
+# TODO: Verify Brooks 0254 based on AZI query
 
 class ControllerGUITab(QWidget):
     LEFT_COLUMN_MAX_WIDTH = 400
