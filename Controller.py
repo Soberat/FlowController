@@ -176,7 +176,7 @@ class Controller:
             response = self.__connection.query(command).split(sep=',')
 
             if response[2] == Controller.TYPE_RESPONSE:
-                return self.__parse_response(param, response[4])]
+                return self.__parse_response(param, response[4])
             else:
                 return None
         else:
