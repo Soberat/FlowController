@@ -136,7 +136,9 @@ class Controller:
     # To be extended later on
     GAS_TYPES = bidict({
         "Air": 1.018,
-        "Nitrogen": 1.0
+        "Nitrogen": 1.0,
+        "Unknown": 0.852,
+        "None": 0
     })
 
     # Base time units
@@ -231,7 +233,10 @@ class Controller:
         if param == Controller.PARAM_SP_VOR:
             return Controller.VOR_OPTIONS.inverse[int(value)]
         elif param == Controller.PARAM_PV_GAS_FACTOR:
-            return Controller.GAS_TYPES.inverse[float(value)]
+            try:
+                return Controller.GAS_TYPES.inverse[float(value)]
+            except KeyError:
+                raise ValueError("Unknown gas factor, add it to GAS_TYPES in Controller.py")
         elif param == Controller.PARAM_PV_SIGNAL_TYPE:
             return Controller.INPUT_PORT_TYPES.inverse[value[len(value)-2:len(value)-1]]    # second char to last is the value
         elif param == Controller.PARAM_SP_SIGNAL_TYPE:
