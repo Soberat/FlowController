@@ -102,7 +102,7 @@ class ControllerGUITab(QWidget):
 
         self.graphTimer = QTimer()
         self.graphTimer.timeout.connect(self.update_plot)
-        self.graphTimer.start(60*1000) #todo unhardcode
+        self.graphTimer.start(60 * 1000)  # todo unhardcode
 
         self.dosingValue = None
         self.dosingTimer = QTimer()
@@ -369,8 +369,8 @@ class ControllerGUITab(QWidget):
     def update_plot(self):
         self.graph.clear()
         self.get_measurement()
-        self.graph.plot(self.samplesPV, pen=pyqtgraph.mkPen((255, 127, 0), width=1.25))
-        # pg.mkPen((0, 127, 255), width=1.25)
+        self.graph.plot(self.samplesPV, pen=pyqtgraph.mkPen((255, 127, 0), width=1.25), symbolBrush=(255, 127, 0),
+                        symbolPen=pyqtgraph.mkPen((255, 127, 0)), symbol='o', symbolSize=5, name="symbol ='o'")
 
     def update_sensor1_group(self):
         if self.sensor1Group.isChecked():
