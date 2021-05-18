@@ -21,7 +21,7 @@ class MasterControllerConfigDialog(QDialog):
         self.close()
 
     def refresh_devices(self):
-        devices = [device for device in sorted(set(self.list_resources()))]
+        devices = [device for device in sorted(set(self.rm.list_resources()))]
         if devices != self.devices:
             self.devices = devices
             self.resource.clear()
@@ -38,7 +38,7 @@ class MasterControllerConfigDialog(QDialog):
         self.setWindowIcon(QIcon('icon.png'))
         self.setWindowTitle("Configure Brooks 0254 device")
         self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint)
-        self.devices = [device for device in sorted(set(self.list_resources()))]
+        self.devices = [device for device in sorted(set(self.rm.list_resources()))]
 
         self.resource = QComboBox()
         self.resource.addItems(self.devices)
