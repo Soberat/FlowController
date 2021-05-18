@@ -21,9 +21,6 @@ from serial import SerialException
 import re
 
 
-# TODO: CSV overhaul
-# TODO: Verify Brooks 0254 based on AZI query
-
 class ControllerGUITab(QWidget):
     LEFT_COLUMN_MAX_WIDTH = 400
 
@@ -804,6 +801,7 @@ class ControllerGUITab(QWidget):
 
         # these edits have validators, but input still has to be capped
         # Also, the validator seems overly complex if we cap the value anyway
+        # TODO: Get values from device instead of assuming defaults
         layout = QHBoxLayout()
         self.rangeLowEdit = QLineEdit()
         self.rangeLowEdit.setMinimumWidth(30)
