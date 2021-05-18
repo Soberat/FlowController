@@ -181,7 +181,6 @@ class ControllerGUITab(QWidget):
 
     def update_gas_type(self):
         self.controller.set_gas(self.gasDropdown.currentText())
-        self.wipe_buffers()
 
     def update_pv_full_scale(self):
         self.controller.set_pv_full_scale(float(self.pvFullScaleEdit.text()))
