@@ -18,6 +18,7 @@ from Sensor import Sensor
 from datetime import datetime
 from numpy_ringbuffer import RingBuffer
 from serial import SerialException
+import re
 
 
 # TODO: CSV overhaul
@@ -57,6 +58,7 @@ class ControllerGUITab(QWidget):
         self.intervalEdit = None
         self.setpointEdit = None
         self.setpointUnitsLabel = None
+        self.saveCsvButton = None
 
         self.sensor1Timer = None
         self.sensor1SampleIntervalEdit = None
@@ -109,6 +111,9 @@ class ControllerGUITab(QWidget):
         self.dosingTimer = QTimer()
         self.dosingTimer.timeout.connect(self.dosing_process)
 
+        self.csvFile = None
+        self.csvIterator = 1
+
         self.defaultStyleSheet = QLineEdit().styleSheet()
 
         # Current dosing value, used to set the setpoint edit
@@ -130,34 +135,59 @@ class ControllerGUITab(QWidget):
             self.sampleTimestamps.append(timestamp)
 
     # Save samples to a csv file, named after the current time and controller number it is coming from
-    def save_to_csv(self):
-        now = datetime.now()
-        if self.controller is not None:
-            filename = now.strftime(f"controller{self.controller.channel}_%Y-%m-%d_%H-%M-%S.csv")
-        else:
-            filename = now.strftime("controller0_%Y-%m-%d_%H-%M-%S.csv")
-        file = open(filename, 'w')
-        if self.controller is not None:
-            file.write(
-                f"Gas: {self.controller.__gas}, Gas factor:{self.controller.__gasFactor}, Decimal point:{self.controller.__decimal_point}, Units:{self.controller.__measure_units}/{self.controller.__time_base}\n")
-        file.write("Measurement [Rate], Measurement [Total], Unix timestamp (in milliseconds)\n")
-        for i in range(0, self.sampleBufferSize - 1):
-            file.write(f'{self.samplesPV[i]},{self.samplesTotalizer[i]},{self.sampleTimestamps[i]}\n')
-        file.write('\n')
+    def save_to_csv_start(self):
+        filename = datetime.now().strftime(f"controller{self.controller.channel}_%Y-%m-%d_%H-%M-%S.csv")
 
+        self.csvFile = open(filename, 'w')
+        self.csvFile.write(
+            f"Gas:{self.controller.get_gas()}\tDecimal point:{self.controller.get_decimal_point()},\tUnits:{self.controller.get_measurement_units()}/{self.controller.get_time_base()}\n")
+        self.csvFile.write("{:<15} {:^18} {:>19}\n".format("Measurement", "Totalizer", "Time of measurement"))
+        for i in range(0, len(self.samplesPV) - 1):
+            self.csvFile.write("{:<15},{:^18},{:>19}\n".format(self.samplesPV[len(self.samplesPV) - 1],
+                                                               self.samplesTotalizer[len(self.samplesPV) - 1],
+                                                               self.sampleTimestamps[len(self.samplesPV) - 1].strftime(
+                                                                   "%Y/%m/%d,%H:%M:%S")))
+
+        self.saveCsvButton.clicked.disconnect()
+        self.saveCsvButton.clicked.connect(self.save_to_csv_stop)
+        self.saveCsvButton.setText("Stop saving to CSV")
+
+    def append_to_csv(self):
+        # check if file is bigger than ~8MB
+        if self.csvFile.tell() > 8192000:
+            name = re.sub(r"(|_[0-9]+).csv", f"_{self.csvIterator}.csv",
+                          self.csvFile.name.split("\\")[len(self.csvFile.name.split("\\")) - 1])
+            self.csvIterator += 1
+            self.append_sensor()
+            self.csvFile.close()
+            self.csvFile = open(name, 'w')
+        self.csvFile.write("{:<15},{:^18},{:>19}\n".format(self.samplesPV[len(self.samplesPV) - 1],
+                                                           self.samplesTotalizer[len(self.samplesPV) - 1],
+                                                           self.sampleTimestamps[len(self.samplesPV) - 1].strftime(
+                                                               "%Y/%m/%d,%H:%M:%S")))
+
+    def save_to_csv_stop(self):
+        self.append_sensor()
+
+        self.csvFile.close()
+        self.csvFile = None
+        self.saveCsvButton.clicked.disconnect()
+        self.saveCsvButton.clicked.connect(self.save_to_csv_start)
+        self.saveCsvButton.setText("Start saving to CSV")
+        self.csvIterator = 1
+
+    def append_sensor(self):
         # if available, append data from sensors
         if self.sensor1 is not None and len(self.sensor1.buffer) > 0:
-            file.write(f"Sensor 1 header: {self.sensor1.header}\n")
+            self.csvFile.write(f"Sensor 1 header: {self.sensor1.header}\n")
             for i in range(0, len(self.sensor1.buffer)):
-                file.write(str(self.sensor1.buffer[i]))
-        file.write('\n')
+                self.csvFile.write(str(self.sensor1.buffer[i]))
+        self.csvFile.write('\n')
 
         if self.sensor2 is not None and len(self.sensor2.buffer) > 0:
-            file.write(f"Sensor 2 header: {self.sensor2.header}\n")
+            self.csvFile.write(f"Sensor 2 header: {self.sensor2.header}\n")
             for i in range(0, len(self.sensor2.buffer)):
-                file.write(self.sensor2.buffer[i])
-
-        file.close()
+                self.csvFile.write(str(self.sensor2.buffer[i]))
 
     # Handler functions for UI elements
     # TODO: react to returned value from functions
@@ -372,6 +402,8 @@ class ControllerGUITab(QWidget):
         self.get_measurement()
         self.graph.plot(self.samplesPV, pen=pyqtgraph.mkPen((255, 127, 0), width=1.25), symbolBrush=(255, 127, 0),
                         symbolPen=pyqtgraph.mkPen((255, 127, 0)), symbol='o', symbolSize=5, name="symbol ='o'")
+        if self.csvFile is not None:
+            self.append_to_csv()
 
     def update_sensor1_group(self):
         if self.sensor1Group.isChecked():
@@ -633,11 +665,11 @@ class ControllerGUITab(QWidget):
 
         manualMeasureButton = QPushButton("Get measurement")
         manualMeasureButton.clicked.connect(self.update_plot)
-        saveCsvButton = QPushButton("Save to CSV")
-        saveCsvButton.clicked.connect(self.save_to_csv)
+        self.saveCsvButton = QPushButton("Start saving to CSV")
+        self.saveCsvButton.clicked.connect(self.save_to_csv_start)
 
         layout.addWidget(manualMeasureButton)
-        layout.addWidget(saveCsvButton)
+        layout.addWidget(self.saveCsvButton)
 
         runtimeLayout.addLayout(layout)
 
