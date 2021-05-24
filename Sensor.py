@@ -44,9 +44,9 @@ class Sensor:
     def getData(self):
         assert self.__serial.is_open
         self.__serial.write(f"{self.command}\n".encode())
-        response = self.__serial.readline().decode('utf-8')
+        response = self.__serial.readline()
         if len(response) > 0:
-            self.buffer.append(response)
+            self.buffer.append(response.decode('utf-8'))
 
     # function to change the amount of stored samples without losing previously gathered samples
     def change_buffer_size(self, value):
