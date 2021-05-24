@@ -194,7 +194,6 @@ class Controller:
 
     # This is an internal write functions to be used by the public functions
     # Returns whatever was written to the variable, None if some error occurred
-    # TODO: Return user-friendly values by parsing the output based on parameter code
     def __write_value(self, param, value, target=None):
         # The only difference for writing is the input or output port, which are addressed differently
         if param == Controller.PARAM_SP_FUNCTION or param == Controller.PARAM_SP_RATE or param == Controller.PARAM_SP_VOR or param == Controller.PARAM_SP_BATCH or param == Controller.PARAM_SP_BLEND or param == Controller.PARAM_SP_SOURCE or \

@@ -7,6 +7,7 @@ from MasterControllerConfigDialog import MasterControllerConfigDialog
 import traceback
 global parameters
 
+# TODO: Add global tab
 
 def callback(values):
     global parameters
@@ -28,7 +29,7 @@ if __name__ == "__main__":
     conDialog.exec_()
 
     brooks = rm.open_resource(parameters['resource'], write_termination='\r',
-                              read_termination='\r\n')  # , baud_rate = 9600, write_termination = '\r', read_termination = '\r\n')
+                              read_termination='\r\n')
     brooks.time_out = 200
 
     try:

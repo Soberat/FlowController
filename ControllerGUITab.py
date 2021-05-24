@@ -801,7 +801,6 @@ class ControllerGUITab(QWidget):
 
         # these edits have validators, but input still has to be capped
         # Also, the validator seems overly complex if we cap the value anyway
-        # TODO: Get values from device instead of assuming defaults
         layout = QHBoxLayout()
         self.rangeLowEdit = QLineEdit()
         self.rangeLowEdit.setMinimumWidth(30)

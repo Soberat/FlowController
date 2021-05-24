@@ -9,7 +9,6 @@ from PyQt5.QtWidgets import (
 )
 
 
-# TODO: maybe use QMainWindow
 # TODO: credit icon creator in about
 
 class MainWindow(QWidget):
