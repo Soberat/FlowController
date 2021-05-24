@@ -47,8 +47,8 @@ class Controller:
 
     # Setpoint sources
     SP_SOURCES = bidict({
-        "Keypad": 0,
-        "Serial": 1
+        "Keypad/Serial": 0,
+        "Serial only": 1
     })
 
     # "Targets", required for reading full_scale and signal_type values, that share codes between SP and PV
