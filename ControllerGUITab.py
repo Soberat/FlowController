@@ -434,7 +434,6 @@ class ControllerGUITab(QWidget):
                               databits=values['databits'],
                               parity=values['paritybits'],
                               stopbits=values['stopbits'],
-                              datalen=values['datalen'],
                               dataHeader=values['header'])
         self.sensor1.open()
         self.sensor1Timer = QTimer()
@@ -474,7 +473,6 @@ class ControllerGUITab(QWidget):
                               databits=values['databits'],
                               parity=values['paritybits'],
                               stopbits=values['stopbits'],
-                              datalen=values['datalen'],
                               dataHeader=values['header'])
         self.sensor2.open()
         self.sensor2Timer = QTimer()
