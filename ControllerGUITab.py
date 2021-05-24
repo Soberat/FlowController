@@ -645,7 +645,7 @@ class ControllerGUITab(QWidget):
 
         self.intervalEdit = QLineEdit()
         self.intervalEdit.setText("1")
-        self.intervalEdit.setValidator(QRegExpValidator(QRegExp("[0-9]*.[0-9]*")))
+        self.intervalEdit.setValidator(QRegExpValidator(QRegExp("[0-9]*\\.[0-9]*")))
         self.intervalEdit.editingFinished.connect(self.update_graph_timer)
 
         layout.addWidget(QLabel("Data update interval"))
@@ -657,7 +657,7 @@ class ControllerGUITab(QWidget):
         layout = QHBoxLayout()
 
         self.setpointEdit = QLineEdit()
-        self.setpointEdit.setValidator(QRegExpValidator(QRegExp("[0-9]*.[0-9]*")))
+        self.setpointEdit.setValidator(QRegExpValidator(QRegExp("[0-9]*\\.[0-9]*")))
         self.setpointEdit.editingFinished.connect(self.update_setpoint)
         self.setpointEdit.setText(str(self.controller.get_setpoint()))
 
