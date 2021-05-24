@@ -103,7 +103,7 @@ class ControllerGUITab(QWidget):
 
         self.graphTimer = QTimer()
         self.graphTimer.timeout.connect(self.update_plot)
-        self.graphTimer.start(60 * 1000)  # todo unhardcode
+        self.graphTimer.start(60*1000*float(self.intervalEdit.text()))
 
         self.dosingValue = None
         self.dosingTimer = QTimer()
