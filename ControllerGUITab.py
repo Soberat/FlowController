@@ -180,12 +180,14 @@ class ControllerGUITab(QWidget):
             self.csvFile.write(f"Sensor 1 header: {self.sensor1.header}\n")
             for i in range(0, len(self.sensor1.buffer)):
                 self.csvFile.write(str(self.sensor1.buffer[i]))
+        self.sensor1.buffer.clear()
         self.csvFile.write('\n')
 
         if self.sensor2 is not None and len(self.sensor2.buffer) > 0:
             self.csvFile.write(f"Sensor 2 header: {self.sensor2.header}\n")
             for i in range(0, len(self.sensor2.buffer)):
                 self.csvFile.write(str(self.sensor2.buffer[i]))
+        self.sensor1.buffer.clear()
 
     # Handler functions for UI elements
     # TODO: react to returned value from functions
