@@ -437,7 +437,7 @@ class ControllerGUITab(QWidget):
                               dataHeader=values['header'])
         self.sensor1.open()
         self.sensor1Timer = QTimer()
-        self.sensor1Timer.setInterval(1000)
+        self.sensor1Timer.setInterval(float(self.sensor1SampleIntervalEdit.text()) * 1000 * 60)
         self.sensor1Timer.timeout.connect(self.sensor1_get_data)
         self.sensor1Timer.start()
 
@@ -476,7 +476,7 @@ class ControllerGUITab(QWidget):
                               dataHeader=values['header'])
         self.sensor2.open()
         self.sensor2Timer = QTimer()
-        self.sensor2Timer.setInterval(1000)
+        self.sensor2Timer.setInterval(float(self.sensor2SampleIntervalEdit.text()) * 1000 * 60)
         self.sensor2Timer.timeout.connect(self.sensor2_get_data)
         self.sensor2Timer.start()
 
