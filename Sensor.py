@@ -20,24 +20,13 @@ class Sensor:
         self.buffer = deque(maxlen=bufferSize)
         self.command = command
 
-    # Open/close serial connection
-    def open(self):
-        if not self.__serial.is_open:
-            self.__serial.open()
-        else:
-            print(f"Tried to open port {self.__serial.port} when it was open")
-            return self.__serial.is_open
-
+    # Close serial connection
     def close(self):
         if self.__serial.is_open:
             self.__serial.close()
         else:
             print(f"Tried to close port {self.__serial.port} when it was closed")
         return self.__serial.is_open
-
-    def change_port(self, port):
-        assert not self.__serial.is_open
-        self.__serial.port = port
 
     # This function reads all available data and saves it to the sensor buffer
     # It assumes that data is passed as a newline-terminated string, and the interpretation is up to the user

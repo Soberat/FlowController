@@ -357,8 +357,6 @@ class ControllerGUITab(QWidget):
             self.dosingTimer.timeout.disconnect()
             self.dosingTimer.singleShot(spTime, self.end_dosing_process)
 
-        # self.update_setpoint()
-
         self.dosingTimer.setInterval(spTime)
         self.dosingTimer.start()
 
@@ -435,7 +433,6 @@ class ControllerGUITab(QWidget):
                               parity=values['paritybits'],
                               stopbits=values['stopbits'],
                               dataHeader=values['header'])
-        self.sensor1.open()
         self.sensor1Timer = QTimer()
         self.sensor1Timer.setInterval(float(self.sensor1SampleIntervalEdit.text()) * 1000 * 60)
         self.sensor1Timer.timeout.connect(self.sensor1_get_data)
@@ -474,7 +471,6 @@ class ControllerGUITab(QWidget):
                               parity=values['paritybits'],
                               stopbits=values['stopbits'],
                               dataHeader=values['header'])
-        self.sensor2.open()
         self.sensor2Timer = QTimer()
         self.sensor2Timer.setInterval(float(self.sensor2SampleIntervalEdit.text()) * 1000 * 60)
         self.sensor2Timer.timeout.connect(self.sensor2_get_data)
