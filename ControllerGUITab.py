@@ -455,6 +455,15 @@ class ControllerGUITab(QWidget):
             dg = QErrorMessage()
             dg.setWindowIcon(QIcon('icon.png'))
             dg.setWindowTitle("Sensor 1 Exception")
+
+            filename = datetime.now().strftime("sensor1_%Y-%m-%d_%H-%M-%S.csv")
+            dumpFile = open(filename, 'w')
+
+            dumpFile.write(f"Sensor 1 header: {self.sensor1.header}\n")
+            for i in range(0, len(self.sensor1.buffer)):
+                self.csvFile.write(str(self.sensor1.buffer[i]))
+            dumpFile.close()
+
             self.sensor1Group.setChecked(False)
             self.update_sensor1_group()
             dg.showMessage(f"Sensor 1 has encountered an exception: {se}")
@@ -493,6 +502,15 @@ class ControllerGUITab(QWidget):
             dg = QErrorMessage()
             dg.setWindowIcon(QIcon('icon.png'))
             dg.setWindowTitle("Sensor 2 Exception")
+
+            filename = datetime.now().strftime("sensor2_%Y-%m-%d_%H-%M-%S.csv")
+            dumpFile = open(filename, 'w')
+
+            dumpFile.write(f"Sensor 2 header: {self.sensor2.header}\n")
+            for i in range(0, len(self.sensor2.buffer)):
+                self.csvFile.write(str(self.sensor2.buffer[i]))
+            dumpFile.close()
+
             self.sensor2Group.setChecked(False)
             self.update_sensor2_group()
             dg.showMessage(f"Sensor 2 has encountered an exception: {se}")
