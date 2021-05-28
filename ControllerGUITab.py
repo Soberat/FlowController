@@ -326,7 +326,7 @@ class ControllerGUITab(QWidget):
             self.dosingValuesEdit.setStyleSheet(self.defaultStyleSheet)
             self.dosingControlButton.setEnabled(True)
 
-    def update_dosing_enable(self):
+    def update_dosing_state(self):
         if self.dosingControlButton.isChecked():
             self.dosingValuesEdit.setEnabled(False)
             self.dosingValuesEdit.setStyleSheet("color: grey")
@@ -905,7 +905,7 @@ class ControllerGUITab(QWidget):
 
         self.dosingControlButton = QPushButton("Start dosing")
         self.dosingControlButton.setCheckable(True)
-        self.dosingControlButton.clicked.connect(self.update_dosing_enable)
+        self.dosingControlButton.clicked.connect(self.update_dosing_state)
 
         dosingLayout.addWidget(self.dosingLabel, alignment=Qt.AlignLeft)
         layout = QHBoxLayout()
