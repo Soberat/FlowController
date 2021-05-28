@@ -1,7 +1,7 @@
 from PyQt5.QtGui import QIcon
 import pyvisa
 from ControllerGUITab import ControllerGUITab
-
+from GlobalTab import GlobalTab
 from PyQt5.QtWidgets import (
     QVBoxLayout,
     QWidget,
@@ -62,5 +62,7 @@ class MainWindow(QWidget):
                 print(f"Error while creating Tab 4: {vioe}")
         else:
             references.append(None)
+
+        tabs.addTab(GlobalTab(references), "Global controls")
         layout.addWidget(tabs)
 
