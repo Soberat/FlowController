@@ -51,6 +51,6 @@ if __name__ == "__main__":
         print(traceback.format_exc())
         sys.exit()
 
-    window = MainWindow(pyvisa=brooks, controllers=parameters['controllers'])
+    window = MainWindow(pyvisaConnection=brooks, controllers=parameters['controllers'])
     window.show()
     sys.exit(app.exec_())
