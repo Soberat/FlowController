@@ -135,6 +135,10 @@ class ControllerGUITab(QWidget):
 
     # Save samples to a csv file, named after the current time and controller number it is coming from
     def save_to_csv_start(self):
+        # If saving is invoked from global tab while it is already enabled, close the old file,
+        # so no sensor data will be lost and the will be closed properly
+        if self.csvFile is not None:
+            self.save_to_csv_stop()
         filename = datetime.now().strftime(f"controller{self.controller.channel}_%Y-%m-%d_%H-%M-%S.csv")
 
         self.csvFile = open(filename, 'w')
