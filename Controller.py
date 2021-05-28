@@ -163,6 +163,8 @@ class Controller:
         # PyVisa connection
         self.__connection: pyvisa = pyvisaConnection
 
+        self.decimalPoint = self.DECIMAL_POINTS[self.get_decimal_point()]
+
     def __read_value(self, param, target=None):
         if param == Controller.PARAM_SP_FUNCTION or param == Controller.PARAM_SP_RATE or param == Controller.PARAM_SP_VOR or param == Controller.PARAM_SP_BATCH or param == Controller.PARAM_SP_BLEND or param == Controller.PARAM_SP_SOURCE or \
                 (param == Controller.PARAM_SP_FULL_SCALE or param == Controller.PARAM_SP_SIGNAL_TYPE and target == Controller.TARGET_SP):
@@ -279,7 +281,7 @@ class Controller:
     # DS: "Analog interpolator representing the eng. units of the greater measured signal"
     def set_pv_full_scale(self, value):
         assert (-999.999 <= value <= 999.999)  # Possible setpoint values according to the datasheet (section C-5-4)
-        value = int(value * 1000)  # value is written to serial as XXXXXX without the decimal
+        value = int(value * 10**self.decimalPoint)  # Value is written to serial factoring in the decimal point
         return self.__write_value(Controller.PARAM_PV_FULL_SCALE, value, target=Controller.TARGET_PV)
 
     # Set the input signal type
@@ -291,7 +293,7 @@ class Controller:
     # DS: "Analog de-interpolator representing the eng. units of the greatest measured signal"
     def set_sp_full_scale(self, value):
         assert (-999.999 <= value <= 999.999)  # Possible setpoint values according to the datasheet (section C-5-4)
-        value = int(value * 1000)  # value is written to serial as XXXXXX without the decimal
+        value = int(value * 10**self.decimalPoint)  # Value is written to serial factoring in the decimal point
         return self.__write_value(Controller.PARAM_SP_FULL_SCALE, value, target=Controller.TARGET_SP)
 
     # Set the output signal type
@@ -309,6 +311,7 @@ class Controller:
         assert point in Controller.DECIMAL_POINTS.keys()
         value = Controller.DECIMAL_POINTS.get(point)
         response = self.__write_value(Controller.PARAM_PV_DECIMAL_POINT, value)
+        self.decimalPoint = Controller.DECIMAL_POINTS[point]
         return response
 
     def set_measurement_units(self, units):
@@ -326,7 +329,7 @@ class Controller:
     # Public function to set the head operation point (setpoint)
     def set_setpoint(self, value):
         assert (-999.999 <= value <= 999.999)  # Possible setpoint values according to the datasheet (section C-5-4)
-        value = int(value * 1000)  # value is written to serial as XXXXXX without the decimal
+        value = int(value * 10**self.decimalPoint)  # Value is written to serial factoring in the decimal point
         return self.__write_value(Controller.PARAM_SP_RATE, value)
 
     # Sets the setpoint function, rate/batch/blend.
@@ -339,9 +342,10 @@ class Controller:
     # Batch/blend ratios setting
     def set_batch(self, value):
         assert (-999.999 <= value <= 999.999)  # Possible setpoint values according to the datasheet (section C-5-4)
-        value = int(value * 1000)  # value is written to serial as XXXXXX without the decimal
+        value = int(value * 10**self.decimalPoint)  # Value is written to serial factoring in the decimal point
         return self.__write_value(Controller.PARAM_SP_BATCH, value)
 
+    # Documentation does not whether blending is also affected by blending, leaving unchanged
     def set_blend(self, value):
         assert (-999.999 <= value <= 999.999)  # Possible setpoint values according to the datasheet (section C-5-4)
         value = int(value * 1000)  # value is written to serial as XXXXXX without the decimal
