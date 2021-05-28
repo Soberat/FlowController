@@ -334,6 +334,8 @@ class ControllerGUITab(QWidget):
             self.dosingTimesEdit.setStyleSheet("color: grey")
             self.dosingControlButton.setText("Disable dosing")
             self.setpointEdit.setEnabled(False)
+            self.vorNormalButton.setChecked(True)
+            self.update_vor_normal()
             self.dosing_process()
         else:
             self.dosingValuesEdit.setEnabled(True)
