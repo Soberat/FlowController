@@ -405,6 +405,13 @@ class ControllerGUITab(QWidget):
         # reconnect the dosing_process function to the timer
         self.dosingTimer.timeout.connect(self.dosing_process)
 
+        # Set the setpoint to 0 and close valve at the end
+        self.controller.set_setpoint(0)
+        self.setpointEdit.setText("0")
+
+        self.vorClosedButton.setChecked(True)
+        self.update_vor_closed()
+
     def update_plot(self):
         self.graph.clear()
         self.get_measurement()
