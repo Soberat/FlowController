@@ -33,7 +33,6 @@ class GlobalTab(QWidget):
         self.controller3Checkbox = None
         self.controller4Checkbox = None
 
-
         self.saveCsvButton = None
         self.dosingControlButton = None
 

@@ -82,6 +82,7 @@ class ControllerGUITab(QWidget):
         self.dosingLabel = None
         self.dosingVorStateLabel = None
         self.dosingControlButton = None
+        self.dosingEnabled = False
 
         # Data buffers
         self.sampleBufferSize = 64
@@ -334,6 +335,7 @@ class ControllerGUITab(QWidget):
             self.dosingTimesEdit.setStyleSheet("color: grey")
             self.dosingControlButton.setText("Disable dosing")
             self.setpointEdit.setEnabled(False)
+            self.dosingEnabled = True
             self.dosing_process()
         else:
             self.dosingValuesEdit.setEnabled(True)
@@ -342,6 +344,7 @@ class ControllerGUITab(QWidget):
             self.dosingTimesEdit.setStyleSheet(self.defaultStyleSheet)
             self.dosingControlButton.setText("Enable dosing")
             self.setpointEdit.setEnabled(True)
+            self.dosingEnabled = False
             self.end_dosing_process()
 
     # This function sets the setpoint to those values that were set when "Enable dosing" was pressed
