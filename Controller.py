@@ -256,7 +256,10 @@ class Controller:
     # Function that generates a 'gather measurements' command and returns the data as a triple of values
     # current PV, total PV and timestamp
     def get_measurements(self):
-        command = f'AZ.{self.__inputPort}K'
+        if self.__address is None:
+            command = f'AZ.{self.__inputPort}K'
+        else:
+            command = f'AZ{self.__address}.{self.__outputPort}K'
         response = self.__connection.query(command).split(sep=',')
 
         if response[2] == Controller.TYPE_RESPONSE:
