@@ -776,6 +776,7 @@ class ControllerGUITab(QWidget):
 
         self.tempControllerGroup = QGroupBox("Temperature controller")
         self.tempControllerGroup.setCheckable(True)
+        self.tempControllerGroup.setEnabled(False) # Disabled functionality as it is untested
         self.tempControllerGroup.setChecked(False)
         self.tempControllerGroup.clicked.connect(self.update_temperature_group)
         tempControllerLayout = QVBoxLayout()
