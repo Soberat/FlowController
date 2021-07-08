@@ -1,6 +1,6 @@
 import sys
 import pyqtgraph
-from PyQt5.QtCore import Qt, QTimer, QRegExp
+from PyQt5.QtCore import Qt, QTimer, QRegExp, pyqtSignal
 from PyQt5.QtGui import QRegExpValidator, QIntValidator, QIcon
 from PyQt5.QtWidgets import (
     QCheckBox,
@@ -19,18 +19,21 @@ from datetime import datetime
 from numpy_ringbuffer import RingBuffer
 from serial import SerialException
 import re
-
 import resources
 
 class ControllerGUITab(QWidget):
     LEFT_COLUMN_MAX_WIDTH = 400
 
-    def __init__(self, pyvisa, channel):
+    # This signal tells the global tab if is not possible to start dosing for this tab
+    # False is sent out when the dosing vectors are incorrect or when the process is already started
+    dosingSignal = pyqtSignal(bool)
+
+    def __init__(self, controller: Controller):
         super().__init__()
         # Create the master layout
         outerLayout = QGridLayout()
         self.graph = None
-        self.controller = Controller(channel=channel, pyvisaConnection=pyvisa)
+        self.controller = controller
         self.temperatureController = None
         self.tempControllerGroup = None
         self.sensor1 = None
@@ -105,7 +108,7 @@ class ControllerGUITab(QWidget):
 
         self.graphTimer = QTimer()
         self.graphTimer.timeout.connect(self.update_plot)
-        self.graphTimer.start(60*1000*float(self.intervalEdit.text()))
+        self.graphTimer.start(int(60*1000*float(self.intervalEdit.text())))
 
         self.dosingValue = None
         self.dosingTimer = QTimer()
@@ -135,6 +138,7 @@ class ControllerGUITab(QWidget):
             self.sampleTimestamps.append(timestamp)
 
     # Save samples to a csv file, named after the current time and controller number it is coming from
+    # After this function saving is continued by update_plot function, which calls append_to_csv
     def save_to_csv_start(self):
         # If saving is invoked from global tab while it is already enabled, close the old file,
         # so no sensor data will be lost and the will be closed properly
@@ -155,6 +159,7 @@ class ControllerGUITab(QWidget):
         self.saveCsvButton.clicked.disconnect()
         self.saveCsvButton.clicked.connect(self.save_to_csv_stop)
         self.saveCsvButton.setText("Stop saving to CSV")
+        self.savingSignal.emit(True)
 
     def append_to_csv(self):
         # check if file is bigger than ~8MB
@@ -172,13 +177,13 @@ class ControllerGUITab(QWidget):
 
     def save_to_csv_stop(self):
         self.append_sensor()
-
         self.csvFile.close()
         self.csvFile = None
         self.saveCsvButton.clicked.disconnect()
         self.saveCsvButton.clicked.connect(self.save_to_csv_start)
         self.saveCsvButton.setText("Start saving to CSV")
         self.csvIterator = 1
+        self.savingSignal.emit(False)
 
     def append_sensor(self):
         # if available, append data from sensors
@@ -327,10 +332,12 @@ class ControllerGUITab(QWidget):
             self.dosingTimesEdit.setStyleSheet("color: red;")
             self.dosingValuesEdit.setStyleSheet("color: red;")
             self.dosingControlButton.setEnabled(False)
+            self.dosingSignal.emit(True)
         else:
             self.dosingTimesEdit.setStyleSheet(self.defaultStyleSheet)
             self.dosingValuesEdit.setStyleSheet(self.defaultStyleSheet)
             self.dosingControlButton.setEnabled(True)
+            self.dosingSignal.emit(False)
 
     def update_dosing_state(self):
         if self.dosingControlButton.isChecked():
@@ -341,6 +348,7 @@ class ControllerGUITab(QWidget):
             self.dosingControlButton.setText("Disable dosing")
             self.setpointEdit.setEnabled(False)
             self.dosingEnabled = True
+            self.dosingSignal.emit(True)
             self.dosing_process()
         else:
             self.dosingValuesEdit.setEnabled(True)
@@ -350,6 +358,7 @@ class ControllerGUITab(QWidget):
             self.dosingControlButton.setText("Enable dosing")
             self.setpointEdit.setEnabled(True)
             self.dosingEnabled = False
+            self.dosingSignal.emit(False)
             self.end_dosing_process()
 
     # This function sets the setpoint to those values that were set when "Enable dosing" was pressed
