@@ -119,4 +119,3 @@ dmypy.json
 .idea/modules.xml
 .idea/other.xml
 resources.py
-res/resources.qrc
