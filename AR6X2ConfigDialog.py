@@ -3,7 +3,7 @@ from PyQt5.QtCore import QRegExp, pyqtSignal, QTimer
 from PyQt5.QtGui import QRegExpValidator, QIcon
 from PyQt5.QtWidgets import QDialog, QFormLayout, QPushButton, QLineEdit, QComboBox
 from serial.tools.list_ports import comports
-
+import resources
 
 class AR6X2ConfigDialog(QDialog):
     accepted = pyqtSignal(dict)
@@ -32,7 +32,7 @@ class AR6X2ConfigDialog(QDialog):
         super().__init__(*args, **kwargs)
         # Prepare dialog window, disable whatsthis
         self.setFixedSize(200, 120)
-        self.setWindowIcon(QIcon('icon.png'))
+        self.setWindowIcon(QIcon(':/icon.png'))
         self.setWindowTitle("Configure AR6X2 device")
         self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint)
         self.devices = [device.name for device in set(comports())]

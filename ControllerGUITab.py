@@ -20,6 +20,7 @@ from numpy_ringbuffer import RingBuffer
 from serial import SerialException
 import re
 
+import resources
 
 class ControllerGUITab(QWidget):
     LEFT_COLUMN_MAX_WIDTH = 400
@@ -451,7 +452,7 @@ class ControllerGUITab(QWidget):
             self.sensor1.getData()
         except SerialException as se:
             dg = QErrorMessage()
-            dg.setWindowIcon(QIcon('icon.png'))
+            dg.setWindowIcon(QIcon(':/icon.png'))
             dg.setWindowTitle("Sensor 1 Exception")
             self.sensor1Group.setChecked(False)
             self.update_sensor1_group()
@@ -489,7 +490,7 @@ class ControllerGUITab(QWidget):
             self.sensor2.getData()
         except SerialException as se:
             dg = QErrorMessage()
-            dg.setWindowIcon(QIcon('icon.png'))
+            dg.setWindowIcon(QIcon(':/icon.png'))
             dg.setWindowTitle("Sensor 2 Exception")
             self.sensor2Group.setChecked(False)
             self.update_sensor2_group()

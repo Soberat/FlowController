@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import (
     QWidget,
     QTabWidget,
 )
+import resources
 
 
 # TODO: credit icon creator in about
@@ -16,7 +17,7 @@ class MainWindow(QWidget):
         super().__init__()
         if controllers is None:
             controllers = [True, True, True, False]
-        self.setWindowIcon(QIcon("icon.png"))
+        self.setWindowIcon(QIcon(":/icon.png"))
         self.setWindowTitle("FlowController by Mirosław Wiącek")
         self.setMinimumSize(900, 730)
 

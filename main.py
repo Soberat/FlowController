@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QApplication, QErrorMessage
 from MainWindow import MainWindow
 from MasterControllerConfigDialog import MasterControllerConfigDialog
 import traceback
+import resources
 global parameters
 
 # TODO: Add global tab
@@ -36,7 +37,7 @@ if __name__ == "__main__":
         query = brooks.query('AZI')
         if "Brooks Instrument,Model 0254" not in query:
             dg = QErrorMessage()
-            dg.setWindowIcon(QIcon('icon.png'))
+            dg.setWindowIcon(QIcon(':/icon.png'))
             dg.setWindowTitle("Unexpected AZI response")
             dg.showMessage("AZI response was unexpected. Possibly wrong resource! Check console for response")
             dg.exec_()
@@ -44,7 +45,7 @@ if __name__ == "__main__":
             sys.exit()
     except pyvisa.VisaIOError as vioe:
         dg = QErrorMessage()
-        dg.setWindowIcon(QIcon('icon.png'))
+        dg.setWindowIcon(QIcon(':/icon.png'))
         dg.setWindowTitle("Error in AZI response")
         dg.showMessage("There was an error while querying AZI! Check console for stack trace")
         dg.exec_()
