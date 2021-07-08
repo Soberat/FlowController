@@ -1,6 +1,6 @@
 from PyQt5.QtGui import QIcon
-import pyvisa
 from ControllerGUITab import ControllerGUITab
+from Brooks025X import Brooks025X
 from GlobalTab import GlobalTab
 from PyQt5.QtWidgets import (
     QVBoxLayout,
@@ -21,49 +21,41 @@ class MainWindow(QWidget):
         self.setWindowTitle("FlowController by Mirosław Wiącek")
         self.setMinimumSize(900, 730)
 
+        brooks = Brooks025X(pyvisaConnection, controllers)
+
         layout = QVBoxLayout()
         self.setLayout(layout)
-
         tabs = QTabWidget()
+        tabReferences = []
 
-        references = []
-        if controllers[0]:
-            try:
-                tab = ControllerGUITab(channel=1, pyvisa=pyvisaConnection)
-                tabs.addTab(tab, "Controller 1")
-                references.append(tab)
-            except pyvisa.errors.VisaIOError as vioe:
-                print(f"Error while creating Tab 1: {vioe}")
+        if brooks.controller1 is not None:
+            controller1Tab = ControllerGUITab(brooks.controller1)
+            tabs.addTab(controller1Tab, "Controller 1")
+            tabReferences.append(controller1Tab)
         else:
-            references.append(None)
-        if controllers[1]:
-            try:
-                tab = ControllerGUITab(channel=2, pyvisa=pyvisaConnection)
-                tabs.addTab(tab, "Controller 2")
-                references.append(tab)
-            except pyvisa.errors.VisaIOError as vioe:
-                print(f"Error while creating Tab 2: {vioe}")
-        else:
-            references.append(None)
-        if controllers[2]:
-            try:
-                tab = ControllerGUITab(channel=3, pyvisa=pyvisaConnection)
-                tabs.addTab(tab, "Controller 3")
-                references.append(tab)
-            except pyvisa.errors.VisaIOError as vioe:
-                print(f"Error while creating Tab 3: {vioe}")
-        else:
-            references.append(None)
-        if controllers[3]:
-            try:
-                tab = ControllerGUITab(channel=4, pyvisa=pyvisaConnection)
-                tabs.addTab(tab, "Controller 4")
-                references.append(tab)
-            except pyvisa.errors.VisaIOError as vioe:
-                print(f"Error while creating Tab 4: {vioe}")
-        else:
-            references.append(None)
+            tabReferences.append(None)
 
-        tabs.addTab(GlobalTab(references), "Global controls")
+        if brooks.controller2 is not None:
+            controller2Tab = ControllerGUITab(brooks.controller2)
+            tabs.addTab(controller2Tab, "Controller 2")
+            tabReferences.append(controller2Tab)
+        else:
+            tabReferences.append(None)
+
+        if brooks.controller3 is not None:
+            controller3Tab = ControllerGUITab(brooks.controller3)
+            tabs.addTab(controller3Tab, "Controller 3")
+            tabReferences.append(controller3Tab)
+        else:
+            tabReferences.append(None)
+
+        if brooks.controller4 is not None:
+            controller4Tab = ControllerGUITab(brooks.controller4)
+            tabs.addTab(controller4Tab, "Controller 4")
+            tabReferences.append(controller4Tab)
+        else:
+            tabReferences.append(None)
+
+        tabs.addTab(GlobalTab(brooks, tabReferences), "Global controls")
         layout.addWidget(tabs)
 
