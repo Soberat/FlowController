@@ -28,6 +28,9 @@ class ControllerGUITab(QWidget):
     # False is sent out when the dosing vectors are incorrect or when the process is already started
     dosingSignal = pyqtSignal(bool)
 
+    # This just signals if saving was enabled/disabled by the user in the tab, so the global tab can update itself
+    savingSignal = pyqtSignal(bool)
+
     def __init__(self, controller: Controller):
         super().__init__()
         # Create the master layout

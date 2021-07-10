@@ -1,3 +1,4 @@
+# build with pyinstaller --onefile main.py --icon=res/icon.ico -n FlowController
 import sys
 import pyvisa
 from PyQt5.QtGui import QIcon
@@ -8,7 +9,7 @@ import traceback
 import resources
 global parameters
 
-# TODO: Add global tab
+
 
 def callback(values):
     global parameters
