@@ -352,6 +352,9 @@ class ControllerGUITab(QWidget):
             self.setpointEdit.setEnabled(False)
             self.dosingEnabled = True
             self.dosingSignal.emit(True)
+            # Set VOR to normal for dosing
+            self.vorNormalButton.setChecked(True)
+            self.update_vor_normal()
             self.dosing_process()
         else:
             self.dosingValuesEdit.setEnabled(True)
@@ -425,6 +428,13 @@ class ControllerGUITab(QWidget):
         # reconnect the dosing_process function to the timer
         self.dosingTimer.timeout.connect(self.dosing_process)
 
+        # Set the setpoint to 0 and close valve at the end
+        self.controller.set_setpoint(0)
+        self.setpointEdit.setText("0")
+
+        self.vorClosedButton.setChecked(True)
+        self.update_vor_closed()
+
     def update_plot(self):
         self.graph.clear()
         self.get_measurement()
@@ -466,6 +476,15 @@ class ControllerGUITab(QWidget):
             dg = QErrorMessage()
             dg.setWindowIcon(QIcon(':/icon.png'))
             dg.setWindowTitle("Sensor 1 Exception")
+
+            filename = datetime.now().strftime("sensor1_%Y-%m-%d_%H-%M-%S.csv")
+            dumpFile = open(filename, 'w')
+
+            dumpFile.write(f"Sensor 1 header: {self.sensor1.header}\n")
+            for i in range(0, len(self.sensor1.buffer)):
+                self.csvFile.write(str(self.sensor1.buffer[i]))
+            dumpFile.close()
+
             self.sensor1Group.setChecked(False)
             self.update_sensor1_group()
             dg.showMessage(f"Sensor 1 has encountered an exception: {se}")
@@ -504,6 +523,15 @@ class ControllerGUITab(QWidget):
             dg = QErrorMessage()
             dg.setWindowIcon(QIcon(':/icon.png'))
             dg.setWindowTitle("Sensor 2 Exception")
+
+            filename = datetime.now().strftime("sensor2_%Y-%m-%d_%H-%M-%S.csv")
+            dumpFile = open(filename, 'w')
+
+            dumpFile.write(f"Sensor 2 header: {self.sensor2.header}\n")
+            for i in range(0, len(self.sensor2.buffer)):
+                self.csvFile.write(str(self.sensor2.buffer[i]))
+            dumpFile.close()
+
             self.sensor2Group.setChecked(False)
             self.update_sensor2_group()
             dg.showMessage(f"Sensor 2 has encountered an exception: {se}")
@@ -648,7 +676,7 @@ class ControllerGUITab(QWidget):
 
         self.bufferSizeEdit = QLineEdit()
         self.bufferSizeEdit.setText("64")
-        self.bufferSizeEdit.setValidator(QRegExpValidator(QRegExp("[0-9]*")))
+        self.bufferSizeEdit.setValidator(QIntValidator())
         self.bufferSizeEdit.editingFinished.connect(self.update_buffer_size)
 
         layout.addWidget(QLabel("Sample buffer size"))
@@ -661,7 +689,7 @@ class ControllerGUITab(QWidget):
 
         self.intervalEdit = QLineEdit()
         self.intervalEdit.setText("1")
-        self.intervalEdit.setValidator(QRegExpValidator(QRegExp("[0-9]*\\.[0-9]*")))
+        self.intervalEdit.setValidator(QRegExpValidator(QRegExp("[0-9]*(|\\.[0-9]*)")))
         self.intervalEdit.editingFinished.connect(self.update_graph_timer)
 
         layout.addWidget(QLabel("Data update interval"))
@@ -673,7 +701,7 @@ class ControllerGUITab(QWidget):
         layout = QHBoxLayout()
 
         self.setpointEdit = QLineEdit()
-        self.setpointEdit.setValidator(QRegExpValidator(QRegExp("[0-9]*\\.[0-9]*")))
+        self.setpointEdit.setValidator(QRegExpValidator(QRegExp("[0-9]*(|\\.[0-9]*)")))
         self.setpointEdit.editingFinished.connect(self.update_setpoint)
         self.setpointEdit.setText(str(self.controller.get_setpoint()))
 
@@ -721,7 +749,7 @@ class ControllerGUITab(QWidget):
         layout = QHBoxLayout()
 
         self.sensor1SampleIntervalEdit = QLineEdit()
-        self.sensor1SampleIntervalEdit.setValidator(QRegExpValidator(QRegExp("(-|)[0-9]{1,3}(|\\.[0-9]{1,3})")))
+        self.sensor1SampleIntervalEdit.setValidator(QRegExpValidator(QRegExp("[0-9]*(|\\.[0-9]*)")))
         self.sensor1SampleIntervalEdit.setFixedWidth(100)
         self.sensor1SampleIntervalEdit.editingFinished.connect(self.update_sensor1_timer)
         self.sensor1SampleIntervalEdit.setText("1")
@@ -737,7 +765,7 @@ class ControllerGUITab(QWidget):
         layout = QHBoxLayout()
 
         self.sensor1BufferSizeEdit = QLineEdit()
-        self.sensor1BufferSizeEdit.setValidator(QRegExpValidator(QRegExp("(-|)[0-9]{1,3}(|\\.[0-9]{1,3})")))
+        self.sensor1BufferSizeEdit.setValidator(QIntValidator())
         self.sensor1BufferSizeEdit.setFixedWidth(100)
         self.sensor1BufferSizeEdit.editingFinished.connect(self.update_sensor1_buffer)
         self.sensor1BufferSizeEdit.setText("64")
@@ -761,7 +789,7 @@ class ControllerGUITab(QWidget):
         layout = QHBoxLayout()
 
         self.sensor2SampleIntervalEdit = QLineEdit()
-        self.sensor2SampleIntervalEdit.setValidator(QIntValidator())
+        self.sensor2SampleIntervalEdit.setValidator(QRegExpValidator(QRegExp("[0-9]*(|\\.[0-9]*)")))
         self.sensor2SampleIntervalEdit.setFixedWidth(100)
         self.sensor2SampleIntervalEdit.editingFinished.connect(self.update_sensor2_timer)
         self.sensor2SampleIntervalEdit.setText("1")
