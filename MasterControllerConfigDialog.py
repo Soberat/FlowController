@@ -4,6 +4,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QDialog, QFormLayout, QPushButton, QLineEdit, QComboBox, QCheckBox
 import pyvisa
 import sys
+import resources
 
 
 class MasterControllerConfigDialog(QDialog):
@@ -42,7 +43,7 @@ class MasterControllerConfigDialog(QDialog):
 
         # Prepare dialog window, disable whatsthis
         self.setFixedSize(220, 200)
-        self.setWindowIcon(QIcon('icon.png'))
+        self.setWindowIcon(QIcon(':/icon.png'))
         self.setWindowTitle("Configure Brooks 0254 device")
         self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint)
         self.devices = [device for device in sorted(set(self.rm.list_resources()))]

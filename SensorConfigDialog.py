@@ -4,7 +4,7 @@ from PyQt5.QtCore import QRegExp, pyqtSignal, QTimer
 from PyQt5.QtGui import QRegExpValidator, QIcon, QIntValidator
 from PyQt5.QtWidgets import QDialog, QFormLayout, QPushButton, QLineEdit, QComboBox
 from serial.tools.list_ports import comports
-
+import resources
 
 class SensorConfigDialog(QDialog):
     accepted = pyqtSignal(dict)
@@ -60,7 +60,7 @@ class SensorConfigDialog(QDialog):
         super().__init__(*args, **kwargs)
         # Prepare dialog window, disable whatsthis
         self.setFixedSize(280, 285)
-        self.setWindowIcon(QIcon('icon.png'))
+        self.setWindowIcon(QIcon(':/icon.png'))
         self.setWindowTitle("Configure serial device")
         self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint)
         self.devices = [device.name for device in set(comports())]
