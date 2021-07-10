@@ -3,13 +3,14 @@ from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import (
     QCheckBox,
     QVBoxLayout,
-    QWidget, QHBoxLayout, QGridLayout, QGroupBox, QLabel, QPushButton
+    QWidget, QHBoxLayout, QGridLayout, QGroupBox, QLabel, QPushButton, QComboBox, QFormLayout
 )
 from Brooks025X import Brooks025X
 import resources
 
 
 # TODO: Add options a group for global device options
+# TODO: Large plot of all measurements
 
 class GlobalTab(QWidget):
     def __init__(self, brooksObject: Brooks025X, controllerTabs):
@@ -55,6 +56,10 @@ class GlobalTab(QWidget):
 
         self.savingInfoLabel = QLabel()
         self.dosingInfoLabel = QLabel()
+
+        self.audioBeepCheckbox = QCheckBox()
+        self.zeroSuppressCheckbox = QCheckBox()
+        self.powerSpClearCheckbox = QCheckBox()
 
         # Connect to all existing tabs' signals
         if self.tabs[0] is not None:
@@ -215,6 +220,16 @@ class GlobalTab(QWidget):
             self.tabs[3].dosingControlButton.setChecked(False)
             self.tabs[3].update_dosing_state()
 
+    # Checkbox handlers
+    def update_audio_beep(self):
+        self.brooks.set_audio_beep(self.audioBeepCheckbox.isChecked())
+
+    def update_zero_suppress(self):
+        self.brooks.set_zero_suppress(self.zeroSuppressCheckbox.isChecked())
+
+    def update_power_sp_clear(self):
+        self.brooks.set_power_sp_clear(self.powerSpClearCheckbox.isChecked())
+
     # Function to create the layout
     def create_left_column(self, controllerTabs):
         # Create a vertical layout for the left column
@@ -318,6 +333,24 @@ class GlobalTab(QWidget):
         dosingGroup.setFixedSize(405, 103)
 
         leftColumnLayout.addWidget(dosingGroup, alignment=Qt.AlignTop)
-        leftColumnLayout.setStretch(1, 10)
 
+        # Global device configuration group
+        deviceGroup = QGroupBox("Device configuration")
+        deviceLayout = QFormLayout()
+
+        self.audioBeepCheckbox.stateChanged.connect(self.update_audio_beep)
+        self.zeroSuppressCheckbox.stateChanged.connect(self.update_zero_suppress)
+        self.powerSpClearCheckbox.stateChanged.connect(self.update_power_sp_clear)
+        networkAddressLabel = QLabel(self.brooks.get_network_address())
+
+        deviceLayout.addRow(QLabel("Audio beep"), self.audioBeepCheckbox)
+        deviceLayout.addRow(QLabel("Zero suppress"), self.zeroSuppressCheckbox)
+        deviceLayout.addRow(QLabel("Power SP Clear"), self.powerSpClearCheckbox)
+        deviceLayout.addRow(QLabel("Network address"), networkAddressLabel)
+
+        deviceGroup.setLayout(deviceLayout)
+        deviceGroup.setFixedWidth(405)
+        leftColumnLayout.addWidget(deviceGroup, alignment=Qt.AlignTop)
+
+        leftColumnLayout.setStretch(2, 10)
         return leftColumnLayout
