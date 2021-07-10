@@ -5,8 +5,8 @@ import pyvisa
 
 class Brooks025X:
     BOOL_OPTIONS = bidict({
-        "On": 1,
-        "Off": 0
+        True: '1',
+        False: '0'
     })
 
     PARAM_ZERO_SUPPRESS = 0x20
@@ -47,11 +47,8 @@ class Brooks025X:
             except pyvisa.errors.VisaIOError as vioe:
                 print(f"Error while creating controller 4: {vioe}")
 
-    def set_audio_beep(self, value: str):
-        if value == "On":
-            value = 1
-        else:
-            value = 0
+    def set_audio_beep(self, value: bool):
+        value = self.BOOL_OPTIONS[value]
 
         # Create and send ascii encoded command via serial, wait for response
         if self.__address is None:
@@ -63,10 +60,7 @@ class Brooks025X:
         return response[2] == Controller.TYPE_RESPONSE
 
     def set_zero_suppress(self, value: bool):
-        if value == "On":
-            value = 1
-        else:
-            value = 0
+        value = self.BOOL_OPTIONS[value]
 
         # Create and send ascii encoded command via serial, wait for response
         if self.__address is None:
@@ -78,10 +72,7 @@ class Brooks025X:
         return response[2] == Controller.TYPE_RESPONSE
 
     def set_power_sp_clear(self, value: bool):
-        if value == "On":
-            value = 1
-        else:
-            value = 0
+        value = self.BOOL_OPTIONS[value]
 
         # Create and send ascii encoded command via serial, wait for response
         if self.__address is None:
@@ -90,10 +81,7 @@ class Brooks025X:
             command = f'AZ{self.__address}.9P{self.PARAM_POWER_SP_CLEAR}={value}'
         response = self.__connection.query(command).split(sep=',')
 
-        if response[2] == Controller.TYPE_RESPONSE:
-            return self.BOOL_OPTIONS.inverse[response[4]]
-        else:
-            return None
+        return response[2] == Controller.TYPE_RESPONSE
 
     def get_audio_beep(self):
         if self.__address is None:
