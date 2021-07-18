@@ -16,7 +16,8 @@ Created as part of Sensor Technology course at AGH UST, summer 2020/2021. Later 
 - Clean, responsive user interface
 
 ## Images and videos
-Coming soon!
+![](https://imgur.com/6BCZACi.png)
+More coming soon!
 
 ## How to get started 
 Coming soon!
