@@ -36,7 +36,7 @@ if __name__ == "__main__":
 
     try:
         query = brooks.query('AZI')
-        if "Brooks Instrument,Model 0254" not in query:
+        if "Brooks Instrument,Model 025" not in query:
             dg = QErrorMessage()
             dg.setWindowIcon(QIcon(':/icon.png'))
             dg.setWindowTitle("Unexpected AZI response")
