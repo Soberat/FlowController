@@ -21,6 +21,7 @@ from serial import SerialException
 import re
 import resources
 
+
 class ControllerGUITab(QWidget):
     LEFT_COLUMN_MAX_WIDTH = 400
 
@@ -194,14 +195,14 @@ class ControllerGUITab(QWidget):
             self.csvFile.write(f"Sensor 1 header: {self.sensor1.header}\n")
             for i in range(0, len(self.sensor1.buffer)):
                 self.csvFile.write(str(self.sensor1.buffer[i]))
-        self.sensor1.buffer.clear()
-        self.csvFile.write('\n')
+            self.sensor1.buffer.clear()
+            self.csvFile.write('\n')
 
         if self.sensor2 is not None and len(self.sensor2.buffer) > 0:
             self.csvFile.write(f"Sensor 2 header: {self.sensor2.header}\n")
             for i in range(0, len(self.sensor2.buffer)):
                 self.csvFile.write(str(self.sensor2.buffer[i]))
-        self.sensor1.buffer.clear()
+            self.sensor2.buffer.clear()
 
     # Handler functions for UI elements
     # TODO: react to returned value from functions
@@ -364,7 +365,6 @@ class ControllerGUITab(QWidget):
             self.dosingControlButton.setText("Enable dosing")
             self.setpointEdit.setEnabled(True)
             self.dosingEnabled = False
-            self.dosingSignal.emit(False)
             self.end_dosing_process()
 
     # This function sets the setpoint to those values that were set when "Enable dosing" was pressed
@@ -433,6 +433,7 @@ class ControllerGUITab(QWidget):
         self.setpointEdit.setText("0")
 
         self.vorClosedButton.setChecked(True)
+        self.dosingSignal.emit(False)
         self.update_vor_closed()
 
     def update_plot(self):

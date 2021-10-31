@@ -9,7 +9,7 @@ from Brooks025X import Brooks025X
 import resources
 
 
-# TODO: Add options a group for global device options
+# TODO: Add a group for global device options
 # TODO: Large plot of all measurements
 
 class GlobalTab(QWidget):
@@ -19,16 +19,16 @@ class GlobalTab(QWidget):
         self.brooks = brooksObject
         self.tabs = controllerTabs
 
-        self.saving1Checkbox = QCheckBox()
-        self.saving2Checkbox = QCheckBox()
-        self.saving3Checkbox = QCheckBox()
-        self.saving4Checkbox = QCheckBox()
+        self.saving1Checkbox = QCheckBox("Controller 1")
+        self.saving2Checkbox = QCheckBox("Controller 2")
+        self.saving3Checkbox = QCheckBox("Controller 3")
+        self.saving4Checkbox = QCheckBox("Controller 4")
         self.savingCheckboxes = [self.saving1Checkbox, self.saving2Checkbox, self.saving3Checkbox, self.saving4Checkbox]
 
-        self.dosing1Checkbox = QCheckBox()
-        self.dosing2Checkbox = QCheckBox()
-        self.dosing3Checkbox = QCheckBox()
-        self.dosing4Checkbox = QCheckBox()
+        self.dosing1Checkbox = QCheckBox("Controller 1")
+        self.dosing2Checkbox = QCheckBox("Controller 2")
+        self.dosing3Checkbox = QCheckBox("Controller 3")
+        self.dosing4Checkbox = QCheckBox("Controller 4")
         self.dosingCheckboxes = [self.dosing1Checkbox, self.dosing2Checkbox, self.dosing3Checkbox, self.dosing4Checkbox]
 
         self.saving1Enabled = False
@@ -119,7 +119,12 @@ class GlobalTab(QWidget):
     # If user turned off all ongoing saving processes, this function will revert the button back to the proper state
     def saving_signal_update(self):
         if not any([self.saving1Enabled, self.saving2Enabled, self.saving3Enabled, self.saving4Enabled]):
+            self.saving1Checkbox.setEnabled(self.tabs[0] is not None)
+            self.saving2Checkbox.setEnabled(self.tabs[1] is not None)
+            self.saving3Checkbox.setEnabled(self.tabs[2] is not None)
+            self.saving4Checkbox.setEnabled(self.tabs[3] is not None)
             self.saveCsvButton.setText("Start saving to CSVs")
+            self.saveCsvButton.clicked.disconnect()
             self.saveCsvButton.clicked.connect(self.start_saving_to_csv)
 
     # Callbacks for changed selection of controllers
@@ -140,6 +145,16 @@ class GlobalTab(QWidget):
         self.dosingInfoLabel.setVisible(not enabled)
         self.dosingErrorLabel.setVisible(not enabled)
 
+        if not any([self.dosing1Enabled, self.dosing2Enabled, self.dosing3Enabled, self.dosing4Enabled]):
+            self.dosing1Checkbox.setEnabled(self.tabs[0] is not None)
+            self.dosing2Checkbox.setEnabled(self.tabs[1] is not None)
+            self.dosing3Checkbox.setEnabled(self.tabs[2] is not None)
+            self.dosing4Checkbox.setEnabled(self.tabs[3] is not None)
+
+            self.dosingControlButton.setText("Start dosing processes")
+            self.dosingControlButton.clicked.disconnect()
+            self.dosingControlButton.clicked.connect(self.start_dosing)
+
         # Set an error message depending on the error
         if not any([box.isChecked() for box in self.dosingCheckboxes]):
             self.dosingInfoLabel.setText("No controller was selected!")
@@ -150,6 +165,7 @@ class GlobalTab(QWidget):
         for box in self.savingCheckboxes:
             box.setEnabled(False)
         self.saveCsvButton.setText("Stop saving to CSVs")
+        self.saveCsvButton.clicked.disconnect()
         self.saveCsvButton.clicked.connect(self.stop_saving_to_csv)
 
         if self.saving1Checkbox.isChecked():
@@ -168,6 +184,7 @@ class GlobalTab(QWidget):
         self.saving3Checkbox.setEnabled(self.tabs[2] is not None)
         self.saving4Checkbox.setEnabled(self.tabs[3] is not None)
         self.saveCsvButton.setText("Start saving to CSVs")
+        self.saveCsvButton.clicked.disconnect()
         self.saveCsvButton.clicked.connect(self.start_saving_to_csv)
 
         if self.saving1Checkbox.isChecked():
@@ -316,7 +333,7 @@ class GlobalTab(QWidget):
 
         layout = QHBoxLayout()
         self.dosingControlButton = QPushButton("Start dosing processes")
-        self.dosingControlButton.clicked.connect(self.dosing_processes_start)
+        self.dosingControlButton.clicked.connect(self.start_dosing)
         layout.addWidget(self.dosingControlButton, alignment=Qt.AlignTop)
         dosingLayout.addLayout(layout)
 

@@ -7,8 +7,8 @@ from MainWindow import MainWindow
 from MasterControllerConfigDialog import MasterControllerConfigDialog
 import traceback
 import resources
-global parameters
 
+global parameters
 
 
 def callback(values):
@@ -20,6 +20,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     try:
         import qdarkstyle
+
         app.setStyleSheet(qdarkstyle.load_stylesheet())
     except ImportError as e:
         pass

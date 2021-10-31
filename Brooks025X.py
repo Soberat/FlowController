@@ -22,6 +22,10 @@ class Brooks025X:
         self.__connection = pyvisaConnection
         self.__address = deviceAddress
         self.__controllers = controllers
+        self.controller1 = None
+        self.controller2 = None
+        self.controller3 = None
+        self.controller4 = None
 
         if controllers[0]:
             try:

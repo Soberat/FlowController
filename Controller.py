@@ -138,6 +138,9 @@ class Controller:
         "Air": 1.018,
         "Nitrogen": 1.0,
         "Unknown": 0.852,
+        "Unknown1": 0.988,
+        "Unknown2": 0.717,
+        "Unknown3": 0.749,
         "None": 0
     })
 
