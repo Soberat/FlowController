@@ -9,7 +9,6 @@ from Brooks025X import Brooks025X
 import resources
 
 
-# TODO: Add a group for global device options
 # TODO: Large plot of all measurements
 
 class GlobalTab(QWidget):
