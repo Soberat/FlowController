@@ -1,15 +1,431 @@
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtCore import Qt, QRegExp, pyqtSignal, QTimer
+from PyQt5.QtGui import QPixmap, QRegExpValidator, QIcon, QIntValidator
 from PyQt5.QtWidgets import (
-    QCheckBox,
-    QVBoxLayout,
-    QWidget, QHBoxLayout, QGridLayout, QGroupBox, QLabel, QPushButton, QComboBox, QFormLayout
+    QCheckBox, QVBoxLayout, QWidget, QHBoxLayout, QGridLayout, QGroupBox, QLabel,
+    QPushButton, QComboBox, QSpinBox, QDoubleSpinBox, QDialog, QFormLayout, QLineEdit
 )
 from Brooks025X import Brooks025X
+from datetime import datetime
+from PyQt5 import QtCore
+from sensirion_shdlc_driver import ShdlcConnection, ShdlcSerialPort
+from sensirion_shdlc_sensorbridge import SensorBridgeShdlcDevice, definitions
+from sensirion.SensirionSensor import SensirionSensor
+from sensirion.SHT85 import SHT85
+from sensirion.STC31 import STC31
+from serial.tools.list_ports import comports
 import resources
 
 
-# TODO: Large plot of all measurements
+class SSBDialog(QDialog):
+    accepted = pyqtSignal(dict)
+
+    # unlock OK only if all fields are set
+    def unlock_ok(self):
+        elements = [self.port.currentText(),
+                    self.baudrate.text(),
+                    self.slave_address.text()]
+        self.buttonOk.setEnabled(all([len(x) > 0 for x in elements]))
+
+    def ok_pressed(self):
+        values = {'port': self.port.currentText(),
+                  'baudrate': int(self.baudrate.text()),
+                  'address': int(self.slave_address.text())}
+        self.accepted.emit(values)
+        self.accept()
+
+    def cancel_pressed(self):
+        self.close()
+
+    def refresh_devices(self):
+        devices = [device.name for device in set(comports())]
+        if devices != self.devices:
+            self.devices = devices
+            self.port.clear()
+            self.port.addItems(devices)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Prepare dialog window, disable whatsthis
+        self.setWindowTitle("Configure serial device")
+        self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint)
+        self.devices = [device.name for device in set(comports())]
+
+        self.port = QComboBox()
+        self.port.addItems(self.devices)
+        self.port.currentTextChanged.connect(self.unlock_ok)
+
+        self.baudrate = QLineEdit("460800")
+        self.baudrate.setValidator(QIntValidator())
+        self.baudrate.textChanged.connect(self.unlock_ok)
+
+        self.slave_address = QLineEdit("0")
+        self.slave_address.setValidator(QIntValidator())
+        self.slave_address.textChanged.connect(self.unlock_ok)
+
+        self.buttonOk = QPushButton("Connect")
+        self.buttonOk.setEnabled(False)
+        self.buttonOk.clicked.connect(self.ok_pressed)
+
+        self.buttonCancel = QPushButton("Cancel")
+        self.buttonCancel.clicked.connect(self.cancel_pressed)
+
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.refresh_devices)
+        self.timer.start(1000)
+
+        form = QFormLayout(self)
+        form.addRow('Port', self.port)
+        form.addRow('Baud rate', self.baudrate)
+        form.addRow('Slave address', self.slave_address)
+        form.addRow('', self.buttonOk)
+        form.addRow('', self.buttonCancel)
+
+        self.unlock_ok()
+
+
+class SensirionSB(QWidget):
+    def __init__(self):
+        super().__init__()
+
+        self.ssbGroup = QGroupBox("Sensirion Sensorbridge control")
+        self.portLabel = QLabel("Serial port: not connected")
+        self.device: SensorBridgeShdlcDevice = None
+
+        self.sht85device: SHT85 = None
+
+        self.sht85PortDropdown = QComboBox()
+        self.sht85PortDropdown.addItems(SensirionSensor.PORTS.keys())
+        self.sht85PortDropdown.currentTextChanged.connect(self.sht85_port_changed)
+
+        self.sht85supplyVoltageDropdown = QComboBox()
+        self.sht85supplyVoltageDropdown.setMaximumWidth(200)
+        self.sht85supplyVoltageDropdown.addItems([str(voltage) for voltage in definitions.VOLTAGES.keys()])
+        self.sht85supplyVoltageDropdown.setCurrentIndex(7)  # default value: 3.3 V
+        self.sht85supplyVoltageDropdown.currentTextChanged.connect(lambda: self.sht85device.set_supply_voltage(self.sht85supplyVoltageDropdown.currentText()))
+
+        self.sht85frequencyDropdown = QComboBox()
+        self.sht85frequencyDropdown.setMaximumWidth(200)
+        self.sht85frequencyDropdown.addItems([str(frequency) for frequency in definitions.I2C_FREQUENCIES.keys()])
+        self.sht85frequencyDropdown.setCurrentIndex(3)  # default value: 400 kHz
+        self.sht85frequencyDropdown.currentTextChanged.connect(lambda: self.sht85device.set_i2c_frequency(self.sht85frequencyDropdown.currentText()))
+
+        self.sht85SupplyEnabled = False  # False - Off or unknown, True - On
+        self.sht85SupplyLabel = QLabel("Supply state: unknown")
+        self.sht85SupplyButton = QPushButton("Enable supply")
+        self.sht85SupplyButton.clicked.connect(self.supply_button_pushed)
+
+        self.sht85compensationEnabled = False
+        self.sht85compensationCheckbox = QCheckBox("Compensate SCT31 on measurement")
+        self.sht85compensationCheckbox.clicked.connect(self.compensate_changed)
+
+        self.sht85TemperatureLabel = QLabel("Temp: ? ℃")
+        self.sht85HumidityLabel = QLabel("Humidity: ? % RH")
+        self.sht85AnalogLabel = QLabel("Analog: ? V")
+
+        self.sht85BlinkButton = QPushButton("Blink")
+        self.sht85BlinkButton.clicked.connect(lambda: self.sht85device.blink())
+
+        self.stc31device: STC31 = None
+
+        self.stc31PortDropdown = QComboBox()
+        self.stc31PortDropdown.addItems(SensirionSensor.PORTS.keys())
+        self.stc31PortDropdown.setCurrentIndex(1)
+        self.stc31PortDropdown.currentTextChanged.connect(self.sht85_port_changed)
+
+        self.stc31supplyVoltageDropdown = QComboBox()
+        self.stc31supplyVoltageDropdown.setMaximumWidth(200)
+        self.stc31supplyVoltageDropdown.addItems([str(voltage) for voltage in definitions.VOLTAGES.keys()])
+        self.stc31supplyVoltageDropdown.setCurrentIndex(7)  # default value: 3.3 V
+        self.stc31supplyVoltageDropdown.currentTextChanged.connect(lambda: self.stc31device.set_supply_voltage(self.stc31supplyVoltageDropdown.currentText()))
+
+        self.stc31frequencyDropdown = QComboBox()
+        self.stc31frequencyDropdown.setMaximumWidth(200)
+        self.stc31frequencyDropdown.addItems([str(frequency) for frequency in definitions.I2C_FREQUENCIES.keys()])
+        self.stc31frequencyDropdown.setCurrentIndex(3)  # default value: 400 kHz
+        self.stc31frequencyDropdown.currentTextChanged.connect(lambda: self.stc31device.set_i2c_frequency(self.stc31frequencyDropdown.currentText()))
+
+        self.stc31SupplyEnabled = False  # False - Off or unknown, True - On
+        self.stc31SupplyLabel = QLabel("Supply state: unknown")
+        self.stc31SupplyButton = QPushButton("Enable supply")
+        self.stc31SupplyButton.clicked.connect(self.supply_button_pushed)
+
+        self.stc31BinaryGasDropdown = QComboBox()
+        self.stc31BinaryGasDropdown.addItems(STC31.BINARY_GAS.keys())
+        self.stc31BinaryGasDropdown.currentTextChanged.connect(lambda: self.stc31device.set_binary_gas(self.stc31BinaryGasDropdown.currentText()))
+
+        self.stc31RelativeHumidityEdit = QDoubleSpinBox()
+        self.stc31RelativeHumidityEdit.setRange(0.0, 100.0)
+        self.stc31RelativeHumidityEdit.setValue(0.0)
+        self.stc31RelativeHumidityEdit.setSuffix("  % RH")
+        self.stc31RelativeHumidityEdit.editingFinished.connect(lambda: self.stc31device.set_relative_humidity(self.stc31RelativeHumidityEdit.value()))
+
+        self.stc31TemperatureEdit = QDoubleSpinBox()
+        self.stc31TemperatureEdit.setRange(-163.84, 163.835)
+        self.stc31TemperatureEdit.setSuffix("  ℃?")
+        self.stc31TemperatureEdit.editingFinished.connect(lambda: self.stc31device.set_temperature(self.stc31TemperatureEdit.value()))
+
+        self.stc31PressureEdit = QSpinBox()
+        self.stc31PressureEdit.setRange(0, 65535)
+        self.stc31PressureEdit.setValue(1013)
+        self.stc31PressureEdit.setSuffix("  mbar?")
+        self.stc31PressureEdit.editingFinished.connect(lambda: self.stc31device.set_pressure(self.stc31PressureEdit.value()))
+
+        self.stc31ForcedRecalibrationEdit = QSpinBox()
+        self.stc31ForcedRecalibrationEdit.setRange(0, 65535)
+        self.stc31ForcedRecalibrationEdit.setValue(0)
+        self.stc31ForcedRecalibrationEdit.setSuffix(" % vol ?")
+        self.stc31ForcedRecalibrationEdit.editingFinished.connect(lambda: self.stc31device.forced_recalibration(self.stc31ForcedRecalibrationEdit.value()))
+
+        self.stc31GasConcentrationLabel = QLabel("Gas concentration: ? %")
+        self.stc31AnalogLabel = QLabel("Analog: ? V")
+
+        self.stc31AutoSelfCalibrationCheckbox = QCheckBox("Automatic self calibration")
+        self.stc31AutoSelfCalibrationCheckbox.setChecked(False)
+        self.stc31AutoSelfCalibrationCheckbox.clicked.connect(lambda: self.stc31device.automatic_self_calibration(self.stc31AutoSelfCalibrationCheckbox.isChecked()))
+
+        self.stc31SelfTestButton = QPushButton("Self test")
+        self.stc31SelfTestButton.clicked.connect(lambda: self.stc31device.self_test())
+
+        self.stc31SoftResetButton = QPushButton("Soft reset")
+        self.stc31SoftResetButton.clicked.connect(lambda: self.stc31device.soft_reset())
+
+        self.stc31BlinkButton = QPushButton("Blink")
+        self.stc31BlinkButton.clicked.connect(lambda: self.stc31device.blink())
+
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.on_timeout)
+
+        self.intervalEdit = QLineEdit("1")
+        self.intervalEdit.setValidator(QRegExpValidator(QRegExp("[0-9]*(|\\.[0-9]*)")))
+        self.intervalEdit.setMaximumWidth(150)
+        self.intervalEdit.editingFinished.connect(
+            lambda: self.timer.setInterval(int(60 * 1000 * float(self.intervalEdit.text()))))
+
+        self.csvFile = None
+        self.savingEnabled = False
+        self.savingButton = QPushButton("Start saving to file")
+        self.savingButton.clicked.connect(self.saving_button_clicked)
+
+        self.setLayout(self.create_left_column())
+
+    # Function to create the layout
+    def create_left_column(self):
+        # Create a vertical layout for the left column
+        leftColumnLayout = QVBoxLayout()
+
+        self.ssbGroup.setCheckable(True)
+        self.ssbGroup.setChecked(False)
+        self.ssbGroup.clicked.connect(self.update_ssb_group)
+        ssbLayout = QVBoxLayout()
+        self.ssbGroup.setLayout(ssbLayout)
+        self.ssbGroup.setFixedWidth(405)
+
+        ssbLayout.addWidget(self.portLabel)
+
+        shtGroup = QGroupBox("SHT85 control")
+        shtLayout = QVBoxLayout()
+
+        layout = QHBoxLayout()
+        layout.addWidget(QLabel("Sensorbridge port"))
+        layout.addWidget(self.sht85PortDropdown)
+        shtLayout.addLayout(layout)
+
+        layout = QHBoxLayout()
+        layout.addWidget(QLabel("Supply voltage"))
+        layout.addWidget(self.sht85supplyVoltageDropdown)
+        layout.addWidget(QLabel("   V"))
+        layout.setStretch(0, 10)
+        shtLayout.addLayout(layout)
+
+        layout = QHBoxLayout()
+        layout.addWidget(QLabel("I2C frequency"))
+        layout.addWidget(self.sht85frequencyDropdown)
+        layout.addWidget(QLabel(" Hz"))
+        layout.setStretch(0, 10)
+        shtLayout.addLayout(layout)
+
+        layout = QHBoxLayout()
+        layout.addWidget(self.sht85SupplyLabel)
+        layout.addWidget(self.sht85SupplyButton)
+        shtLayout.addLayout(layout)
+
+        shtLayout.addWidget(self.sht85compensationCheckbox)
+
+        shtLayout.addWidget(self.sht85TemperatureLabel)
+        shtLayout.addWidget(self.sht85HumidityLabel)
+        shtLayout.addWidget(self.sht85AnalogLabel)
+
+        shtLayout.addWidget(self.sht85BlinkButton)
+
+        shtGroup.setLayout(shtLayout)
+        ssbLayout.addWidget(shtGroup)
+
+        stcGroup = QGroupBox("STC31 control")
+        stcLayout = QVBoxLayout()
+
+        layout = QHBoxLayout()
+        layout.addWidget(QLabel("Sensorbridge port"))
+        layout.addWidget(self.stc31PortDropdown)
+        stcLayout.addLayout(layout)
+
+        layout = QHBoxLayout()
+        layout.addWidget(QLabel("Supply voltage"))
+        layout.addWidget(self.stc31supplyVoltageDropdown)
+        layout.addWidget(QLabel("   V"))
+        layout.setStretch(0, 10)
+        stcLayout.addLayout(layout)
+
+        layout = QHBoxLayout()
+        layout.addWidget(QLabel("I2C frequency"))
+        layout.addWidget(self.stc31frequencyDropdown)
+        layout.addWidget(QLabel(" Hz"))
+        layout.setStretch(0, 10)
+        stcLayout.addLayout(layout)
+
+        layout = QHBoxLayout()
+        layout.addWidget(self.stc31SupplyLabel)
+        layout.addWidget(self.stc31SupplyButton)
+        stcLayout.addLayout(layout)
+
+        layout = QHBoxLayout()
+        layout.addWidget(QLabel("Binary gas"))
+        layout.addWidget(self.stc31BinaryGasDropdown)
+        stcLayout.addLayout(layout)
+
+        layout = QHBoxLayout()
+        layout.addWidget(QLabel("Relative humidity"))
+        layout.addWidget(self.stc31RelativeHumidityEdit)
+        stcLayout.addLayout(layout)
+
+        layout = QHBoxLayout()
+        layout.addWidget(QLabel("Temperature"))
+        layout.addWidget(self.stc31TemperatureEdit)
+        stcLayout.addLayout(layout)
+
+        layout = QHBoxLayout()
+        layout.addWidget(QLabel("Pressure"))
+        layout.addWidget(self.stc31PressureEdit)
+        stcLayout.addLayout(layout)
+
+        layout = QHBoxLayout()
+        layout.addWidget(QLabel("Forced calibration"))
+        layout.addWidget(self.stc31ForcedRecalibrationEdit)
+        stcLayout.addLayout(layout)
+
+        stcLayout.addWidget(self.stc31AutoSelfCalibrationCheckbox)
+        stcLayout.addWidget(self.stc31GasConcentrationLabel)
+        stcLayout.addWidget(self.stc31AnalogLabel)
+        stcLayout.addWidget(self.stc31SelfTestButton)
+        stcLayout.addWidget(self.stc31SoftResetButton)
+        stcLayout.addWidget(self.stc31BlinkButton)
+
+        stcGroup.setLayout(stcLayout)
+        ssbLayout.addWidget(stcGroup)
+
+        layout = QHBoxLayout()
+        layout.addWidget(QLabel("Measurement interval"))
+        layout.addWidget(self.intervalEdit)
+        layout.addWidget(QLabel("minutes"))
+        layout.setStretch(0, 10)
+        ssbLayout.addLayout(layout)
+
+        ssbLayout.addWidget(self.savingButton)
+
+        leftColumnLayout.addWidget(self.ssbGroup, alignment=Qt.AlignTop)
+        leftColumnLayout.setStretch(2, 10)
+        return leftColumnLayout
+
+    def sht85_port_changed(self):
+        self.sht85device.bridgePort = self.sht85device.PORTS[self.sht85PortDropdown.currentText()]
+
+    def supply_button_pushed(self):
+        if not self.sht85SupplyEnabled:
+            self.sht85SupplyButton.setText("Disable supply")
+            self.sht85SupplyLabel.setText("Supply state: enabled")
+            self.sht85SupplyEnabled = True
+            self.sht85device.toggle_supply(True)
+        else:
+            self.sht85SupplyButton.setText("Enable supply")
+            self.sht85SupplyLabel.setText("Supply state: disabled")
+            self.sht85SupplyEnabled = False
+            self.sht85device.toggle_supply(False)
+
+    def compensate_changed(self):
+        if self.sht85compensationCheckbox.isChecked():
+            self.sht85compensationEnabled = True
+        else:
+            self.sht85compensationEnabled = False
+
+    def compensate_stc31(self, temperature, humidity):
+        self.stc31TemperatureEdit.setValue(temperature)
+        self.stc31RelativeHumidityEdit.setValue(humidity)
+        # manually trigger updates
+        self.stc31device.set_temperature(temperature)
+        self.stc31device.set_relative_humidity(humidity)
+
+    def on_timeout(self):
+        temperature, humidity = self.sht85device.get_measurements()
+        analog1 = self.sht85device.analog_measurement()
+        concentration = self.stc31device.measure_gas_concentration()
+        analog2 = self.stc31device.analog_measurement()
+
+        self.sht85TemperatureLabel.setText(f"Temp: {temperature} ℃")
+        self.sht85HumidityLabel.setText(f"Humidity: {humidity} %RH")
+        self.sht85AnalogLabel.setText(f"Analog: {analog1} V")
+        self.stc31GasConcentrationLabel.setText(f"Concentration: {concentration} %")
+        self.stc31AnalogLabel.setText(f"Analog: {analog2} V")
+
+        if self.savingEnabled:
+            self.append_to_csv(temperature, humidity, concentration, analog1, analog2)
+
+        if self.sht85compensationEnabled:
+            self.compensate_stc31(temperature, humidity)
+
+    def saving_button_clicked(self):
+        if not self.savingEnabled:
+            filename = datetime.now().strftime(f"sensorbridge_%Y-%m-%d_%H-%M-%S.csv")
+            self.csvFile = open(filename, 'w')
+            self.csvFile.write("{},{},{},{},{}\n".format("Temperature", "Humidity", "Concentration", "Analog 1", "Analog 2"))
+            self.savingEnabled = True
+            self.savingButton.setText("Disable saving to file")
+        else:
+            self.csvFile.close()
+            self.csvFile = None
+            self.savingEnabled = False
+            self.savingButton.setText("Start saving to file")
+
+    def append_to_csv(self, temperature, humidity, concentration, analog1, analog2):
+        self.csvFile.write("{},{},{},{},{}\n".format(temperature, humidity, concentration, analog1, analog2))
+
+    def update_devices(self, values):
+        self.portLabel.setText(f"Serial port: {values['port']}")
+        self.device = SensorBridgeShdlcDevice(
+            ShdlcConnection(ShdlcSerialPort(values['port'], baudrate=values['baudrate'])),
+            slave_address=values['address'])
+        self.sht85device = SHT85(self.device, SensirionSensor.PORTS[self.sht85PortDropdown.currentText()])
+        self.stc31device = STC31(self.device, SensirionSensor.PORTS[self.stc31PortDropdown.currentText()])
+
+    def update_ssb_group(self):
+        if self.ssbGroup.isChecked():
+            dg = SSBDialog()
+            dg.accepted.connect(self.update_devices)
+            # if unsuccessful, disable the group
+            if dg.exec_() == 0:
+                self.ssbGroup.setChecked(False)
+            else:
+                self.timer.start(int(60*1000*float(self.intervalEdit.text())))
+        else:
+            # Stop all timers, disconnect device to free up serial port
+            self.timer.stop()
+            self.device = None
+            self.sht85device = None
+            self.stc31device = None
+            self.portLabel.setText("Serial port: not connected")
+            if self.savingEnabled:
+                self.csvFile.close()
+                self.csvFile = None
+                self.savingEnabled = False
+
 
 class GlobalTab(QWidget):
     def __init__(self, brooksObject: Brooks025X, controllerTabs):
@@ -367,6 +783,7 @@ class GlobalTab(QWidget):
         deviceGroup.setLayout(deviceLayout)
         deviceGroup.setFixedWidth(405)
         leftColumnLayout.addWidget(deviceGroup, alignment=Qt.AlignTop)
+        leftColumnLayout.addWidget(SensirionSB())
 
         leftColumnLayout.setStretch(2, 10)
         return leftColumnLayout
