@@ -1,3 +1,5 @@
+import time
+
 from PyQt5.QtCore import Qt, QRegExp, pyqtSignal, QTimer
 from PyQt5.QtGui import QPixmap, QRegExpValidator, QIcon, QIntValidator
 from PyQt5.QtWidgets import (
@@ -8,7 +10,7 @@ from Brooks025X import Brooks025X
 from datetime import datetime
 from PyQt5 import QtCore
 from sensirion_shdlc_driver import ShdlcConnection, ShdlcSerialPort
-from sensirion_shdlc_sensorbridge import SensorBridgeShdlcDevice, definitions
+from sensirion_shdlc_sensorbridge import SensorBridgeShdlcDevice, definitions, SensorBridgePort
 from sensirion.SensirionSensor import SensirionSensor
 from sensirion.SHT85 import SHT85
 from sensirion.STC31 import STC31
