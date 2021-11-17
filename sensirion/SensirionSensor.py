@@ -3,8 +3,8 @@ import random
 
 from sensirion_shdlc_sensorbridge import SensorBridgeShdlcDevice, SensorBridgePort
 
-
 class SensirionSensor:
+
     # Wrapper dictionary, since QComboBoxes require list of strings as items
     PORTS = {
         'Port 1': SensorBridgePort.ONE,
@@ -34,8 +34,6 @@ class SensirionSensor:
         self.bridgePort = self.PORTS[port]
 
     def analog_measurement(self):
-        # TODO Unrandom
-        return random.Random().random()
         return self.__device.measure_voltage(self.bridgePort)
 
     def blink(self):
@@ -43,12 +41,6 @@ class SensirionSensor:
 
     def set_supply_voltage(self, voltage):
         self.__device.set_supply_voltage(self.bridgePort, float(voltage))
-
-    def toggle_supply(self, enabled: bool):
-        if enabled:
-            self.__device.switch_supply_on(self.bridgePort)
-        else:
-            self.__device.switch_supply_off(self.bridgePort)
 
     def set_i2c_frequency(self, frequency):
         self.__device.set_i2c_frequency(self.bridgePort, float(frequency))

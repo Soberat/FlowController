@@ -91,28 +91,22 @@ class SensirionSB(QWidget):
         self.portLabel = QLabel("Serial port: not connected")
         self.device: SensorBridgeShdlcDevice = None
 
+        self.portOnePowerEnabled = False
+        self.portOnePowerButton = QPushButton("Enable supply")
+        self.portOnePowerButton.clicked.connect(self.port_one_supply_clicked)
+        self.portOnePowerLabel = QLabel("Unknown state")
+
+        self.portTwoPowerEnabled = False
+        self.portTwoPowerButton = QPushButton("Enable supply")
+        self.portTwoPowerButton.clicked.connect(self.port_two_supply_clicked)
+        self.portTwoPowerLabel = QLabel("Unknown state")
+
         self.sht85device: SHT85 = None
 
         self.sht85PortDropdown = QComboBox()
         self.sht85PortDropdown.addItems(SensirionSensor.PORTS.keys())
+        self.sht85PortDropdown.setCurrentIndex(1)
         self.sht85PortDropdown.currentTextChanged.connect(self.sht85_port_changed)
-
-        self.sht85supplyVoltageDropdown = QComboBox()
-        self.sht85supplyVoltageDropdown.setMaximumWidth(200)
-        self.sht85supplyVoltageDropdown.addItems([str(voltage) for voltage in definitions.VOLTAGES.keys()])
-        self.sht85supplyVoltageDropdown.setCurrentIndex(7)  # default value: 3.3 V
-        self.sht85supplyVoltageDropdown.currentTextChanged.connect(lambda: self.sht85device.set_supply_voltage(self.sht85supplyVoltageDropdown.currentText()))
-
-        self.sht85frequencyDropdown = QComboBox()
-        self.sht85frequencyDropdown.setMaximumWidth(200)
-        self.sht85frequencyDropdown.addItems([str(frequency) for frequency in definitions.I2C_FREQUENCIES.keys()])
-        self.sht85frequencyDropdown.setCurrentIndex(3)  # default value: 400 kHz
-        self.sht85frequencyDropdown.currentTextChanged.connect(lambda: self.sht85device.set_i2c_frequency(self.sht85frequencyDropdown.currentText()))
-
-        self.sht85SupplyEnabled = False  # False - Off or unknown, True - On
-        self.sht85SupplyLabel = QLabel("Supply state: unknown")
-        self.sht85SupplyButton = QPushButton("Enable supply")
-        self.sht85SupplyButton.clicked.connect(self.supply_button_pushed)
 
         self.sht85compensationEnabled = False
         self.sht85compensationCheckbox = QCheckBox("Compensate SCT31 on measurement")
@@ -132,56 +126,45 @@ class SensirionSB(QWidget):
         self.stc31PortDropdown.setCurrentIndex(1)
         self.stc31PortDropdown.currentTextChanged.connect(self.sht85_port_changed)
 
-        self.stc31supplyVoltageDropdown = QComboBox()
-        self.stc31supplyVoltageDropdown.setMaximumWidth(200)
-        self.stc31supplyVoltageDropdown.addItems([str(voltage) for voltage in definitions.VOLTAGES.keys()])
-        self.stc31supplyVoltageDropdown.setCurrentIndex(7)  # default value: 3.3 V
-        self.stc31supplyVoltageDropdown.currentTextChanged.connect(lambda: self.stc31device.set_supply_voltage(self.stc31supplyVoltageDropdown.currentText()))
-
-        self.stc31frequencyDropdown = QComboBox()
-        self.stc31frequencyDropdown.setMaximumWidth(200)
-        self.stc31frequencyDropdown.addItems([str(frequency) for frequency in definitions.I2C_FREQUENCIES.keys()])
-        self.stc31frequencyDropdown.setCurrentIndex(3)  # default value: 400 kHz
-        self.stc31frequencyDropdown.currentTextChanged.connect(lambda: self.stc31device.set_i2c_frequency(self.stc31frequencyDropdown.currentText()))
-
-        self.stc31SupplyEnabled = False  # False - Off or unknown, True - On
-        self.stc31SupplyLabel = QLabel("Supply state: unknown")
-        self.stc31SupplyButton = QPushButton("Enable supply")
-        self.stc31SupplyButton.clicked.connect(self.supply_button_pushed)
-
         self.stc31BinaryGasDropdown = QComboBox()
         self.stc31BinaryGasDropdown.addItems(STC31.BINARY_GAS.keys())
-        self.stc31BinaryGasDropdown.currentTextChanged.connect(lambda: self.stc31device.set_binary_gas(self.stc31BinaryGasDropdown.currentText()))
+        self.stc31BinaryGasDropdown.currentTextChanged.connect(
+            lambda: self.stc31device.set_binary_gas(self.stc31BinaryGasDropdown.currentText()))
 
         self.stc31RelativeHumidityEdit = QDoubleSpinBox()
         self.stc31RelativeHumidityEdit.setRange(0.0, 100.0)
         self.stc31RelativeHumidityEdit.setValue(0.0)
         self.stc31RelativeHumidityEdit.setSuffix("  % RH")
-        self.stc31RelativeHumidityEdit.editingFinished.connect(lambda: self.stc31device.set_relative_humidity(self.stc31RelativeHumidityEdit.value()))
+        self.stc31RelativeHumidityEdit.editingFinished.connect(
+            lambda: self.stc31device.set_relative_humidity(self.stc31RelativeHumidityEdit.value()))
 
         self.stc31TemperatureEdit = QDoubleSpinBox()
         self.stc31TemperatureEdit.setRange(-163.84, 163.835)
-        self.stc31TemperatureEdit.setSuffix("  ℃?")
-        self.stc31TemperatureEdit.editingFinished.connect(lambda: self.stc31device.set_temperature(self.stc31TemperatureEdit.value()))
+        self.stc31TemperatureEdit.setSuffix("  ℃")
+        self.stc31TemperatureEdit.editingFinished.connect(
+            lambda: self.stc31device.set_temperature(self.stc31TemperatureEdit.value()))
 
         self.stc31PressureEdit = QSpinBox()
         self.stc31PressureEdit.setRange(0, 65535)
         self.stc31PressureEdit.setValue(1013)
-        self.stc31PressureEdit.setSuffix("  mbar?")
-        self.stc31PressureEdit.editingFinished.connect(lambda: self.stc31device.set_pressure(self.stc31PressureEdit.value()))
+        self.stc31PressureEdit.setSuffix("  mbar")
+        self.stc31PressureEdit.editingFinished.connect(
+            lambda: self.stc31device.set_pressure(self.stc31PressureEdit.value()))
 
         self.stc31ForcedRecalibrationEdit = QSpinBox()
         self.stc31ForcedRecalibrationEdit.setRange(0, 65535)
         self.stc31ForcedRecalibrationEdit.setValue(0)
-        self.stc31ForcedRecalibrationEdit.setSuffix(" % vol ?")
-        self.stc31ForcedRecalibrationEdit.editingFinished.connect(lambda: self.stc31device.forced_recalibration(self.stc31ForcedRecalibrationEdit.value()))
+        self.stc31ForcedRecalibrationEdit.setSuffix(" % vol")
+        self.stc31ForcedRecalibrationEdit.editingFinished.connect(
+            lambda: self.stc31device.forced_recalibration(self.stc31ForcedRecalibrationEdit.value()))
 
         self.stc31GasConcentrationLabel = QLabel("Gas concentration: ? %")
         self.stc31AnalogLabel = QLabel("Analog: ? V")
 
         self.stc31AutoSelfCalibrationCheckbox = QCheckBox("Automatic self calibration")
         self.stc31AutoSelfCalibrationCheckbox.setChecked(False)
-        self.stc31AutoSelfCalibrationCheckbox.clicked.connect(lambda: self.stc31device.automatic_self_calibration(self.stc31AutoSelfCalibrationCheckbox.isChecked()))
+        self.stc31AutoSelfCalibrationCheckbox.clicked.connect(
+            lambda: self.stc31device.automatic_self_calibration(self.stc31AutoSelfCalibrationCheckbox.isChecked()))
 
         self.stc31SelfTestButton = QPushButton("Self test")
         self.stc31SelfTestButton.clicked.connect(lambda: self.stc31device.self_test())
@@ -222,31 +205,29 @@ class SensirionSB(QWidget):
 
         ssbLayout.addWidget(self.portLabel)
 
+        powerGroup = QGroupBox("Power supply")
+        powerLayout = QHBoxLayout()
+
+        layout = QVBoxLayout()
+        layout.addWidget(QLabel("Port 1"), alignment=Qt.AlignCenter)
+        layout.addWidget(self.portOnePowerButton)
+        layout.addWidget(self.portOnePowerLabel, alignment=Qt.AlignCenter)
+        powerLayout.addLayout(layout)
+
+        layout = QVBoxLayout()
+        layout.addWidget(QLabel("Port 2"), alignment=Qt.AlignCenter)
+        layout.addWidget(self.portTwoPowerButton)
+        layout.addWidget(self.portTwoPowerLabel, alignment=Qt.AlignCenter)
+        powerLayout.addLayout(layout)
+
+        ssbLayout.addLayout(powerLayout)
+
         shtGroup = QGroupBox("SHT85 control")
         shtLayout = QVBoxLayout()
 
         layout = QHBoxLayout()
         layout.addWidget(QLabel("Sensorbridge port"))
         layout.addWidget(self.sht85PortDropdown)
-        shtLayout.addLayout(layout)
-
-        layout = QHBoxLayout()
-        layout.addWidget(QLabel("Supply voltage"))
-        layout.addWidget(self.sht85supplyVoltageDropdown)
-        layout.addWidget(QLabel("   V"))
-        layout.setStretch(0, 10)
-        shtLayout.addLayout(layout)
-
-        layout = QHBoxLayout()
-        layout.addWidget(QLabel("I2C frequency"))
-        layout.addWidget(self.sht85frequencyDropdown)
-        layout.addWidget(QLabel(" Hz"))
-        layout.setStretch(0, 10)
-        shtLayout.addLayout(layout)
-
-        layout = QHBoxLayout()
-        layout.addWidget(self.sht85SupplyLabel)
-        layout.addWidget(self.sht85SupplyButton)
         shtLayout.addLayout(layout)
 
         shtLayout.addWidget(self.sht85compensationCheckbox)
@@ -266,25 +247,6 @@ class SensirionSB(QWidget):
         layout = QHBoxLayout()
         layout.addWidget(QLabel("Sensorbridge port"))
         layout.addWidget(self.stc31PortDropdown)
-        stcLayout.addLayout(layout)
-
-        layout = QHBoxLayout()
-        layout.addWidget(QLabel("Supply voltage"))
-        layout.addWidget(self.stc31supplyVoltageDropdown)
-        layout.addWidget(QLabel("   V"))
-        layout.setStretch(0, 10)
-        stcLayout.addLayout(layout)
-
-        layout = QHBoxLayout()
-        layout.addWidget(QLabel("I2C frequency"))
-        layout.addWidget(self.stc31frequencyDropdown)
-        layout.addWidget(QLabel(" Hz"))
-        layout.setStretch(0, 10)
-        stcLayout.addLayout(layout)
-
-        layout = QHBoxLayout()
-        layout.addWidget(self.stc31SupplyLabel)
-        layout.addWidget(self.stc31SupplyButton)
         stcLayout.addLayout(layout)
 
         layout = QHBoxLayout()
@@ -330,6 +292,9 @@ class SensirionSB(QWidget):
         ssbLayout.addLayout(layout)
 
         ssbLayout.addWidget(self.savingButton)
+        button = QPushButton("I2C scan")
+        button.clicked.connect(lambda: print(self.device.scan_i2c(SensorBridgePort.TWO)))
+        ssbLayout.addWidget(button)
 
         leftColumnLayout.addWidget(self.ssbGroup, alignment=Qt.AlignTop)
         leftColumnLayout.setStretch(2, 10)
@@ -338,17 +303,35 @@ class SensirionSB(QWidget):
     def sht85_port_changed(self):
         self.sht85device.bridgePort = self.sht85device.PORTS[self.sht85PortDropdown.currentText()]
 
-    def supply_button_pushed(self):
-        if not self.sht85SupplyEnabled:
-            self.sht85SupplyButton.setText("Disable supply")
-            self.sht85SupplyLabel.setText("Supply state: enabled")
-            self.sht85SupplyEnabled = True
-            self.sht85device.toggle_supply(True)
+    def port_one_supply_clicked(self):
+        if not self.portTwoPowerEnabled:
+            self.portOnePowerButton.setText("Disable supply")
+            self.portOnePowerLabel.setText("Supply state: enabled")
+            self.portOnePowerEnabled = True
+            self.device.switch_supply_on(SensorBridgePort.ONE)
+            time.sleep(0.125)  # Give device time to power on
+            self.stc31device.disable_crc()
+            self.stc31device.set_binary_gas(self.stc31BinaryGasDropdown.currentText())
         else:
-            self.sht85SupplyButton.setText("Enable supply")
-            self.sht85SupplyLabel.setText("Supply state: disabled")
-            self.sht85SupplyEnabled = False
-            self.sht85device.toggle_supply(False)
+            self.portOnePowerButton.setText("Enable supply")
+            self.portOnePowerLabel.setText("Supply state: disabled")
+            self.portOnePowerEnabled = False
+            self.device.switch_supply_off(SensorBridgePort.ONE)
+
+    def port_two_supply_clicked(self):
+        if not self.portTwoPowerEnabled:
+            self.portTwoPowerButton.setText("Disable supply")
+            self.portTwoPowerLabel.setText("Supply state: enabled")
+            self.portTwoPowerEnabled = True
+            self.device.switch_supply_on(SensorBridgePort.TWO)
+            time.sleep(0.125)  # Give device time to power on
+            self.stc31device.disable_crc()
+            self.stc31device.set_binary_gas(self.stc31BinaryGasDropdown.currentText())
+        else:
+            self.portTwoPowerButton.setText("Enable supply")
+            self.portTwoPowerLabel.setText("Supply state: disabled")
+            self.portTwoPowerEnabled = False
+            self.device.switch_supply_off(SensorBridgePort.TWO)
 
     def compensate_changed(self):
         if self.sht85compensationCheckbox.isChecked():
@@ -364,28 +347,33 @@ class SensirionSB(QWidget):
         self.stc31device.set_relative_humidity(humidity)
 
     def on_timeout(self):
-        temperature, humidity = self.sht85device.get_measurements()
-        analog1 = self.sht85device.analog_measurement()
-        concentration = self.stc31device.measure_gas_concentration()
-        analog2 = self.stc31device.analog_measurement()
+        try:
+            temperature, humidity = self.sht85device.get_measurements()
+            analog1 = self.sht85device.analog_measurement()
+            self.sht85TemperatureLabel.setText(f"Temp: {temperature:.5f} ℃")
+            self.sht85HumidityLabel.setText(f"Humidity: {humidity:.5f} % RH")
+            self.sht85AnalogLabel.setText(f"Analog: {analog1:.5f} V")
 
-        self.sht85TemperatureLabel.setText(f"Temp: {temperature} ℃")
-        self.sht85HumidityLabel.setText(f"Humidity: {humidity} %RH")
-        self.sht85AnalogLabel.setText(f"Analog: {analog1} V")
-        self.stc31GasConcentrationLabel.setText(f"Concentration: {concentration} %")
-        self.stc31AnalogLabel.setText(f"Analog: {analog2} V")
+            if self.sht85compensationEnabled:
+                self.compensate_stc31(temperature, humidity)
+
+            concentration = self.stc31device.measure_gas_concentration()
+            analog2 = self.stc31device.analog_measurement()
+            self.stc31GasConcentrationLabel.setText(f"Concentration: {concentration:.5f} %")
+            self.stc31AnalogLabel.setText(f"Analog: {analog2:.5f} V")
+        except Exception:
+            return
 
         if self.savingEnabled:
             self.append_to_csv(temperature, humidity, concentration, analog1, analog2)
-
-        if self.sht85compensationEnabled:
-            self.compensate_stc31(temperature, humidity)
 
     def saving_button_clicked(self):
         if not self.savingEnabled:
             filename = datetime.now().strftime(f"sensorbridge_%Y-%m-%d_%H-%M-%S.csv")
             self.csvFile = open(filename, 'w')
-            self.csvFile.write("{},{},{},{},{}\n".format("Temperature", "Humidity", "Concentration", "Analog 1", "Analog 2"))
+            self.csvFile.write(
+                "{},{},{},{},{}\n".format("Temperature", "Humidity", "Concentration", "Analog 1", "Analog 2"))
+            self.csvFile.close()
             self.savingEnabled = True
             self.savingButton.setText("Disable saving to file")
         else:
@@ -395,7 +383,9 @@ class SensirionSB(QWidget):
             self.savingButton.setText("Start saving to file")
 
     def append_to_csv(self, temperature, humidity, concentration, analog1, analog2):
+        self.csvFile = open(self.csvFile.name, 'a')
         self.csvFile.write("{},{},{},{},{}\n".format(temperature, humidity, concentration, analog1, analog2))
+        self.csvFile.close()
 
     def update_devices(self, values):
         self.portLabel.setText(f"Serial port: {values['port']}")
@@ -413,7 +403,7 @@ class SensirionSB(QWidget):
             if dg.exec_() == 0:
                 self.ssbGroup.setChecked(False)
             else:
-                self.timer.start(int(60*1000*float(self.intervalEdit.text())))
+                self.timer.start(int(60 * 1000 * float(self.intervalEdit.text())))
         else:
             # Stop all timers, disconnect device to free up serial port
             self.timer.stop()
