@@ -374,7 +374,8 @@ class SensirionSB(QWidget):
             filename = datetime.now().strftime(f"sensorbridge_%Y-%m-%d_%H-%M-%S.csv")
             self.csvFile = open(filename, 'w')
             self.csvFile.write(
-                "{},{},{},{},{}\n".format("Temperature", "Humidity", "Concentration", "Analog 1", "Analog 2"))
+                "{},{},{},{},{},{}\n".format("Temperature", "Humidity", "Concentration", "Analog 1", "Analog 2",
+                                             "Timestamp"))
             self.csvFile.close()
             self.savingEnabled = True
             self.savingButton.setText("Disable saving to file")
@@ -386,7 +387,8 @@ class SensirionSB(QWidget):
 
     def append_to_csv(self, temperature, humidity, concentration, analog1, analog2):
         self.csvFile = open(self.csvFile.name, 'a')
-        self.csvFile.write("{},{},{},{},{}\n".format(temperature, humidity, concentration, analog1, analog2))
+        self.csvFile.write("{},{},{},{},{},{}\n".format(temperature, humidity, concentration, analog1, analog2,
+                                                        datetime.now().strftime("%Y/%m/%d-%H:%M:%S")))
         self.csvFile.close()
 
     def update_devices(self, values):
