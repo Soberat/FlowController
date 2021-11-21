@@ -295,7 +295,9 @@ class SensirionSB(QWidget):
 
         ssbLayout.addWidget(self.savingButton)
         button = QPushButton("I2C scan")
-        button.clicked.connect(lambda: print(self.device.scan_i2c(SensorBridgePort.TWO)))
+        i2cLabel = QLabel("I2C devices: unknown")
+        button.clicked.connect(lambda: i2cLabel.setText(
+            "I2C devices: " + ", ".join([hex(address) for address in self.device.scan_i2c(SensorBridgePort.TWO)])))
         ssbLayout.addWidget(button)
 
         leftColumnLayout.addWidget(self.ssbGroup, alignment=Qt.AlignTop)
