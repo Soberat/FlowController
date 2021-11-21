@@ -981,7 +981,6 @@ class ControllerGUITab(QWidget):
         self.graph.getPlotItem().showGrid(x=True, y=True, alpha=1)
         if "qdarkstyle" in sys.modules:
             self.graph.setBackground((25, 35, 45))
-        self.graph.plot([0, 1, 2, 3], [5, 5, 5, 5])
 
         rightGridLayout.addWidget(self.graph)
         rightGridLayout.addLayout(rightInnerGrid)
