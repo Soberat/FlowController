@@ -25,7 +25,6 @@ class STC31(SensirionSensor):
         "CO2 in air, 0-25%": 0x0003
     })
 
-    # Disable CRC for reads/writes. Reboot to re-enable
     def disable_crc(self):
         self._send_command(command=0x3768)
         
@@ -61,7 +60,7 @@ class STC31(SensirionSensor):
             self._send_command(command=0x3F6E)
 
     def self_test(self):
-        print(self._send_command(command=0x365B, rx_length=2))
+        return self._send_command(command=0x365B, rx_length=2)
 
     def soft_reset(self):
         self._send_command(command=0x0006)
