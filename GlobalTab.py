@@ -311,9 +311,8 @@ class SensirionSB(QWidget):
             self.portOnePowerLabel.setText("Supply state: enabled")
             self.portOnePowerEnabled = True
             self.device.switch_supply_on(SensorBridgePort.ONE)
-            time.sleep(0.125)  # Give device time to power on
-            self.stc31device.disable_crc()
-            self.stc31device.set_binary_gas(self.stc31BinaryGasDropdown.currentText())
+            QTimer().singleShot(200, self.stc31device.disable_crc)
+            QTimer().singleShot(300, lambda: self.stc31device.set_binary_gas(self.stc31BinaryGasDropdown.currentText()))
         else:
             self.portOnePowerButton.setText("Enable supply")
             self.portOnePowerLabel.setText("Supply state: disabled")
@@ -326,9 +325,8 @@ class SensirionSB(QWidget):
             self.portTwoPowerLabel.setText("Supply state: enabled")
             self.portTwoPowerEnabled = True
             self.device.switch_supply_on(SensorBridgePort.TWO)
-            time.sleep(0.125)  # Give device time to power on
-            self.stc31device.disable_crc()
-            self.stc31device.set_binary_gas(self.stc31BinaryGasDropdown.currentText())
+            QTimer().singleShot(200, self.stc31device.disable_crc)
+            QTimer().singleShot(300, lambda: self.stc31device.set_binary_gas(self.stc31BinaryGasDropdown.currentText()))
         else:
             self.portTwoPowerButton.setText("Enable supply")
             self.portTwoPowerLabel.setText("Supply state: disabled")
