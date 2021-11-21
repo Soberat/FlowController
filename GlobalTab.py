@@ -1,4 +1,4 @@
-import time
+import sys
 
 from PyQt5.QtCore import Qt, QRegExp, pyqtSignal, QTimer
 from PyQt5.QtGui import QPixmap, QRegExpValidator, QIcon, QIntValidator
@@ -6,6 +6,8 @@ from PyQt5.QtWidgets import (
     QCheckBox, QVBoxLayout, QWidget, QHBoxLayout, QGridLayout, QGroupBox, QLabel,
     QPushButton, QComboBox, QSpinBox, QDoubleSpinBox, QDialog, QFormLayout, QLineEdit
 )
+from numpy_ringbuffer import RingBuffer
+from pyqtgraph import mkPen, PlotWidget
 from Brooks025X import Brooks025X
 from datetime import datetime
 from PyQt5 import QtCore
@@ -85,7 +87,53 @@ class SSBDialog(QDialog):
         self.unlock_ok()
 
 
+class SensirionSBPlot(QWidget):
+    def __init__(self, plot_title, color, bufferSize):
+        super().__init__()
+        masterLayout = QVBoxLayout()
+        self.pen = mkPen(color, width=1.25)
+
+        layout = QVBoxLayout()
+        self.group = QGroupBox(plot_title)
+        self.plot = PlotWidget()
+        self.plot.getPlotItem().showGrid(x=True, y=True, alpha=1)
+        if "qdarkstyle" in sys.modules:
+            self.graph.setBackground((25, 35, 45))
+        self.buffer = RingBuffer(capacity=bufferSize, dtype=float)
+
+        self.group.setLayout(layout)
+        layout.addWidget(self.plot)
+        masterLayout.addWidget(self.group)
+
+        self.setLayout(masterLayout)
+
+    def change_capacity(self, value):
+        if value > len(self.buffer):
+            newBuf = RingBuffer(capacity=value, dtype=float)
+            newBuf.extend(self.buffer)
+            self.buffer = newBuf
+
+        elif value < len(self.buffer):
+            newBuf = RingBuffer(capacity=value, dtype=float)
+            newBuf.extend(self.buffer[:-value])
+            self.buffer = newBuf
+
+    def update_plot(self, sample):
+        self.plot.clear()
+        self.buffer.append(sample)
+        self.plot.plot(self.buffer, pen=self.pen, symbolPen=self.pen, symbol='o', symbolSize=5, name="symbol ='o'")
+
+
 class SensirionSB(QWidget):
+    # Each plot is individually notified of a new value,
+    # but if one measurement fails, no signal is sent.
+    # This is to prevent plot phase shift when 1 measurement was successful and another was not.
+    sht85TemperatureReady = pyqtSignal(float)
+    sht85HumidityReady = pyqtSignal(float)
+    sht85AnalogReady = pyqtSignal(float)
+    stc31ConcentrationReady = pyqtSignal(float)
+    stc31AnalogReady = pyqtSignal(float)
+
     def __init__(self):
         super().__init__()
 
@@ -169,7 +217,7 @@ class SensirionSB(QWidget):
             lambda: self.stc31device.automatic_self_calibration(self.stc31AutoSelfCalibrationCheckbox.isChecked()))
 
         self.stc31SelfTestButton = QPushButton("Self test")
-        self.stc31SelfTestButton.clicked.connect(lambda: self.stc31device.self_test())
+        self.stc31SelfTestButton.clicked.connect(self.stc31_self_test)
 
         self.stc31SoftResetButton = QPushButton("Soft reset")
         self.stc31SoftResetButton.clicked.connect(lambda: self.stc31device.soft_reset())
@@ -191,10 +239,45 @@ class SensirionSB(QWidget):
         self.savingButton = QPushButton("Start saving to file")
         self.savingButton.clicked.connect(self.saving_button_clicked)
 
-        self.setLayout(self.create_left_column())
+        self.bufferSizeEdit = QLineEdit()
+        self.bufferSizeEdit.setValidator(QIntValidator())
+        self.bufferSizeEdit.setText("128")
+        self.bufferSizeEdit.editingFinished.connect(self.update_buffer_sizes)
+
+        self.sht85TemperaturePlotWidget = SensirionSBPlot("SHT85 temperature", (255, 32, 0), 128)
+        self.sht85HumidityPlotWidget = SensirionSBPlot("SHT85 relative humidity", (0, 127, 255), 128)
+        self.sht85AnalogPlotWidget = SensirionSBPlot("SHT85 analog", (255, 127, 0), 128)
+        self.stc31ConcentrationPlotWidget = SensirionSBPlot("STC31 concentration", (200, 200, 200), 128)
+        self.stc31AnalogPlotWidget = SensirionSBPlot("STC31 analog", (255, 127, 0), 128)
+
+        self.sht85TemperatureReady.connect(self.sht85TemperaturePlotWidget.update_plot)
+        self.sht85HumidityReady.connect(self.sht85HumidityPlotWidget.update_plot)
+        self.sht85AnalogReady.connect(self.sht85AnalogPlotWidget.update_plot)
+        self.stc31ConcentrationReady.connect(self.stc31ConcentrationPlotWidget.update_plot)
+        self.stc31AnalogReady.connect(self.stc31AnalogPlotWidget.update_plot)
+
+        self.setLayout(self.create_layout())
+
+    def stc31_self_test(self):
+        result = int.from_bytes(self.stc31device.self_test(), 'big')
+        if result == 0x00:
+            self.stc31SelfTestButton.setText("Self test: OK")
+            QTimer().singleShot(5000, lambda: self.stc31SelfTestButton.setText("Self test"))
+        else:
+            self.stc31SelfTestButton.setText("Self test: FAIL (0x{:04x})".format(result))
+            QTimer().singleShot(5000, lambda: self.stc31SelfTestButton.setText("Self test"))
+
+    def update_buffer_sizes(self):
+        value = int(self.bufferSizeEdit.text())
+        self.sht85TemperaturePlotWidget.change_capacity(value)
+        self.sht85HumidityPlotWidget.change_capacity(value)
+        self.sht85AnalogPlotWidget.change_capacity(value)
+        self.stc31ConcentrationPlotWidget.change_capacity(value)
+        self.stc31AnalogPlotWidget.change_capacity(value)
 
     # Function to create the layout
-    def create_left_column(self):
+    def create_layout(self):
+        masterLayout = QHBoxLayout()
         # Create a vertical layout for the left column
         leftColumnLayout = QVBoxLayout()
 
@@ -222,7 +305,8 @@ class SensirionSB(QWidget):
         layout.addWidget(self.portTwoPowerLabel, alignment=Qt.AlignCenter)
         powerLayout.addLayout(layout)
 
-        ssbLayout.addLayout(powerLayout)
+        powerGroup.setLayout(powerLayout)
+        ssbLayout.addWidget(powerGroup)
 
         shtGroup = QGroupBox("SHT85 control")
         shtLayout = QVBoxLayout()
@@ -299,10 +383,31 @@ class SensirionSB(QWidget):
         button.clicked.connect(lambda: i2cLabel.setText(
             "I2C devices: " + ", ".join([hex(address) for address in self.device.scan_i2c(SensorBridgePort.TWO)])))
         ssbLayout.addWidget(button)
+        ssbLayout.addWidget(i2cLabel)
+
+        layout = QHBoxLayout()
+        layout.addWidget(QLabel("Buffer size"))
+        layout.addWidget(self.bufferSizeEdit)
+        layout.addWidget(QLabel("samples"))
+        layout.setStretch(0, 10)
+        ssbLayout.addLayout(layout)
 
         leftColumnLayout.addWidget(self.ssbGroup, alignment=Qt.AlignTop)
         leftColumnLayout.setStretch(2, 10)
-        return leftColumnLayout
+
+        masterLayout.addLayout(leftColumnLayout)
+
+        # Layout housing all the plot widgets
+        rightColumnLayout = QVBoxLayout()
+        rightColumnLayout.addWidget(self.sht85TemperaturePlotWidget)
+        rightColumnLayout.addWidget(self.sht85HumidityPlotWidget)
+        rightColumnLayout.addWidget(self.sht85AnalogPlotWidget)
+        rightColumnLayout.addWidget(self.stc31ConcentrationPlotWidget)
+        rightColumnLayout.addWidget(self.stc31AnalogPlotWidget)
+
+        masterLayout.addLayout(rightColumnLayout)
+
+        return masterLayout
 
     def sht85_port_changed(self):
         self.sht85device.bridgePort = self.sht85device.PORTS[self.sht85PortDropdown.currentText()]
@@ -338,8 +443,12 @@ class SensirionSB(QWidget):
     def compensate_changed(self):
         if self.sht85compensationCheckbox.isChecked():
             self.sht85compensationEnabled = True
+            self.stc31TemperatureEdit.setEnabled(False)
+            self.stc31RelativeHumidityEdit.setEnabled(False)
         else:
             self.sht85compensationEnabled = False
+            self.stc31TemperatureEdit.setEnabled(True)
+            self.stc31RelativeHumidityEdit.setEnabled(True)
 
     def compensate_stc31(self, temperature, humidity):
         self.stc31TemperatureEdit.setValue(temperature)
@@ -363,6 +472,12 @@ class SensirionSB(QWidget):
             analog2 = self.stc31device.analog_measurement()
             self.stc31GasConcentrationLabel.setText(f"Concentration: {concentration:.5f} %")
             self.stc31AnalogLabel.setText(f"Analog: {analog2:.5f} V")
+
+            self.sht85TemperatureReady.emit(temperature)
+            self.sht85HumidityReady.emit(humidity)
+            self.sht85AnalogReady.emit(analog1)
+            self.stc31ConcentrationReady.emit(concentration)
+            self.stc31AnalogReady.emit(analog2)
         except Exception:
             return
 
@@ -489,6 +604,7 @@ class GlobalTab(QWidget):
 
         masterLayout = QGridLayout()
         masterLayout.addLayout(self.create_left_column(self.tabs), 0, 0)
+        masterLayout.addLayout(self.create_middle_column(), 0, 1)
 
         self.setLayout(masterLayout)
 
@@ -777,7 +893,11 @@ class GlobalTab(QWidget):
         deviceGroup.setLayout(deviceLayout)
         deviceGroup.setFixedWidth(405)
         leftColumnLayout.addWidget(deviceGroup, alignment=Qt.AlignTop)
-        leftColumnLayout.addWidget(SensirionSB())
-
         leftColumnLayout.setStretch(2, 10)
         return leftColumnLayout
+
+    def create_middle_column(self):
+        middleColumnLayout = QVBoxLayout()
+        middleColumnLayout.addWidget(SensirionSB())
+
+        return middleColumnLayout
