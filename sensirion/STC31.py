@@ -49,7 +49,8 @@ class STC31(SensirionSensor):
 
     def forced_recalibration(self, referenceConcentration):
         assert 0 <= referenceConcentration <= 65535
-        self._send_command(command=0x3661, argument=referenceConcentration)
+        concentration = int(referenceConcentration*32768/100) + 16384
+        self._send_command(command=0x3661, argument=concentration)
 
     def automatic_self_calibration(self, enabled: bool):
         if enabled:
