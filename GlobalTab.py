@@ -539,10 +539,10 @@ class SensirionSB(QWidget):
 
 class CombinedPlot(QWidget):
 
-    PLOT_PENS = [mkPen((255, 32, 32), width=1.25),
-                 mkPen((32, 255, 32), width=1.25),
-                 mkPen((32, 32, 252), width=1.25),
-                 mkPen((255, 255, 64), width=1.25)]
+    PLOT_PENS = [mkPen((219, 148, 92), width=1.25),
+                 mkPen((103, 219, 104), width=1.25),
+                 mkPen((59, 198, 219), width=1.25),
+                 mkPen((219, 70, 143), width=1.25)]
                  
     def __init__(self):
         super().__init__()
