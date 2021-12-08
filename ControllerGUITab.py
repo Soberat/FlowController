@@ -49,7 +49,7 @@ class ControllerGUITab(QWidget):
         self.vorClosedButton = None
         self.vorOpenButton = None
 
-        self.gasDropdown = None
+        self.gasFactorEdit = None
         self.pvFullScaleEdit = None
         self.pvSigtypeDropdown = None
         self.spFullScaleEdit = None
@@ -231,8 +231,8 @@ class ControllerGUITab(QWidget):
             self.dosingVorStateLabel.setText("VOR is open")
             self.dosingVorStateLabel.setStyleSheet("color: red;")
 
-    def update_gas_type(self):
-        self.controller.set_gas(self.gasDropdown.currentText())
+    def update_gas_factor(self):
+        self.controller.set_gas_factor(float(self.gasFactorEdit.text()))
 
     def update_pv_full_scale(self):
         self.controller.set_pv_full_scale(float(self.pvFullScaleEdit.text()))
@@ -610,10 +610,10 @@ class ControllerGUITab(QWidget):
         processGroup = QGroupBox("Process configuration")
         processLayout = QFormLayout()
 
-        self.gasDropdown = QComboBox()
-        self.gasDropdown.addItems(Controller.GAS_TYPES.keys())
-        self.gasDropdown.currentTextChanged.connect(self.update_gas_type)
-        self.gasDropdown.setCurrentText(str(self.controller.get_gas()))
+        self.gasFactorEdit = QLineEdit()
+        self.gasFactorEdit.setValidator(QRegExpValidator(QRegExp("[0-9]{1,3}(|\\.[0-9]{1,3})")))
+        self.gasFactorEdit.editingFinished.connect(self.update_gas_factor)
+        self.gasFactorEdit.setText("{:.5f}".format(self.controller.get_gas()))
 
         self.pvFullScaleEdit = QLineEdit()
         self.pvFullScaleEdit.setValidator(QRegExpValidator(QRegExp("(-|)[0-9]{1,3}(|\\.[0-9]{1,3})")))
@@ -655,7 +655,7 @@ class ControllerGUITab(QWidget):
         self.timebaseDropdown.currentTextChanged.connect(self.update_time_base)
         self.timebaseDropdown.setCurrentText(str(self.controller.get_time_base()))
 
-        processLayout.addRow(QLabel("Gas"), self.gasDropdown)
+        processLayout.addRow(QLabel("Gas factor"), self.gasFactorEdit)
         processLayout.addRow(QLabel("PV Full Scale"), self.pvFullScaleEdit)
         processLayout.addRow(QLabel("PV Signal Type"), self.pvSigtypeDropdown)
         processLayout.addRow(QLabel("SP Full Scale"), self.spFullScaleEdit)

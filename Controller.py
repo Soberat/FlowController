@@ -132,18 +132,6 @@ class Controller:
         "g/l": 41
     })
 
-    # Gas factors for GF40 Mass Flow Controller
-    # To be extended later on
-    GAS_TYPES = bidict({
-        "Air": 1.018,
-        "Nitrogen": 1.0,
-        "Unknown": 0.852,
-        "Unknown1": 0.988,
-        "Unknown2": 0.717,
-        "Unknown3": 0.749,
-        "None": 0
-    })
-
     # Base time units
     RATE_TIME_BASE = bidict({
         "sec": 1,
@@ -237,10 +225,7 @@ class Controller:
         if param == Controller.PARAM_SP_VOR:
             return Controller.VOR_OPTIONS.inverse[int(value)]
         elif param == Controller.PARAM_PV_GAS_FACTOR:
-            try:
-                return Controller.GAS_TYPES.inverse[float(value)]
-            except KeyError:
-                raise ValueError("Unknown gas factor, add it to GAS_TYPES in Controller.py")
+            return float(value)
         elif param == Controller.PARAM_PV_SIGNAL_TYPE:
             return Controller.INPUT_PORT_TYPES.inverse[value[len(value)-2:len(value)-1]]    # second char to last is the value
         elif param == Controller.PARAM_SP_SIGNAL_TYPE:
@@ -278,9 +263,9 @@ class Controller:
         return self.__write_value(Controller.PARAM_SP_VOR, state)
 
     # From manual: "scale factor by which interpolated channel units are multiplied"
-    def set_gas(self, gas):
-        assert gas in Controller.GAS_TYPES.keys()
-        value = int(Controller.GAS_TYPES.get(gas)) * 1000  # value is written to serial as XXXXXX without the decimal
+    def set_gas_factor(self, value):
+        assert 0 <= value <= 999.999
+        value = int(value*1000)  # value is written to serial as XXXXXX without the decimal
         response = self.__write_value(Controller.PARAM_PV_GAS_FACTOR, value)
         return response
 
