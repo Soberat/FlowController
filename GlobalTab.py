@@ -601,13 +601,13 @@ class CombinedPlot(QWidget):
         value = int(self.bufferSizeEdit.text())
         if value > len(self.buffer1):
             newBuf1 = RingBuffer(capacity=value, dtype=np.float16)
-            newBuf1.extend(self.buffer)
+            newBuf1.extend(self.buffer1)
             newBuf2 = RingBuffer(capacity=value, dtype=np.float16)
-            newBuf2.extend(self.buffer)
+            newBuf2.extend(self.buffer2)
             newBuf3 = RingBuffer(capacity=value, dtype=np.float16)
-            newBuf3.extend(self.buffer)
+            newBuf3.extend(self.buffer3)
             newBuf4 = RingBuffer(capacity=value, dtype=np.float16)
-            newBuf4.extend(self.buffer)
+            newBuf4.extend(self.buffer4)
 
             self.buffer1 = newBuf1
             self.buffer2 = newBuf2
@@ -616,13 +616,13 @@ class CombinedPlot(QWidget):
 
         elif value < len(self.buffer1):
             newBuf1 = RingBuffer(capacity=value, dtype=np.float16)
-            newBuf1.extend(self.buffer[:-value])
+            newBuf1.extend(self.buffer1[:-value])
             newBuf2 = RingBuffer(capacity=value, dtype=np.float16)
-            newBuf2.extend(self.buffer[:-value])
+            newBuf2.extend(self.buffer2[:-value])
             newBuf3 = RingBuffer(capacity=value, dtype=np.float16)
-            newBuf3.extend(self.buffer[:-value])
+            newBuf3.extend(self.buffer3[:-value])
             newBuf4 = RingBuffer(capacity=value, dtype=np.float16)
-            newBuf4.extend(self.buffer[:-value])
+            newBuf4.extend(self.buffer4[:-value])
 
             self.buffer1 = newBuf1
             self.buffer2 = newBuf2
