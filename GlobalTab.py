@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import (
     QPushButton, QComboBox, QSpinBox, QDoubleSpinBox, QDialog, QFormLayout, QLineEdit
 )
 from numpy_ringbuffer import RingBuffer
+import numpy as np
 from pyqtgraph import mkPen, PlotWidget
 from Brooks025X import Brooks025X
 from datetime import datetime
@@ -536,6 +537,99 @@ class SensirionSB(QWidget):
                 self.savingEnabled = False
 
 
+class CombinedPlot(QWidget):
+
+    PLOT_PENS = [mkPen((255, 32, 32), width=1.25),
+                 mkPen((32, 255, 32), width=1.25),
+                 mkPen((32, 32, 252), width=1.25),
+                 mkPen((255, 255, 64), width=1.25)]
+                 
+    def __init__(self):
+        super().__init__()
+        capacity = 256
+    
+        self.buffer1 = RingBuffer(capacity=capacity, dtype=np.float32)
+        self.buffer2 = RingBuffer(capacity=capacity, dtype=np.float32)
+        self.buffer3 = RingBuffer(capacity=capacity, dtype=np.float32)
+        self.buffer4 = RingBuffer(capacity=capacity, dtype=np.float32)
+        
+        self.plot = PlotWidget()
+        self.plot.getPlotItem().showGrid(x=True, y=True, alpha=1)
+        self.plot.addLegend()
+        if "qdarkstyle" in sys.modules:
+            self.plot.setBackground((25, 35, 45))
+            
+        self.bufferSizeEdit = QLineEdit()
+        self.bufferSizeEdit.setText(str(capacity))
+        self.bufferSizeEdit.setValidator(QRegExpValidator(QRegExp("[0-9]*")))
+        self.bufferSizeEdit.editingFinished.connect(self.change_capacity)
+        
+        self.layout = QVBoxLayout()
+        
+        group = QGroupBox("Combined controller plot")
+        
+        layout = QVBoxLayout()
+        layout.addWidget(self.plot)
+        
+        innerLayout = QHBoxLayout()
+        innerLayout.addWidget(QLabel("Buffer size"))
+        innerLayout.addWidget(self.bufferSizeEdit)
+        layout.addLayout(innerLayout)
+        
+        group.setLayout(layout)
+        self.layout.addWidget(group)
+        self.setLayout(self.layout)
+        
+    def update_plot(self, controllerN: int, sample: np.float16):
+        self.plot.clear()
+        
+        if controllerN == 1:
+            self.buffer1.append(sample)
+        elif controllerN == 2:
+            self.buffer2.append(sample)
+        elif controllerN == 3:
+            self.buffer3.append(sample)
+        elif controllerN == 4:
+            self.buffer4.append(sample)
+        
+        self.plot.plot(self.buffer1, pen=self.PLOT_PENS[0], symbolPen=self.PLOT_PENS[0], symbol='o', symbolSize=5, name="Controller 1")
+        self.plot.plot(self.buffer2, pen=self.PLOT_PENS[1], symbolPen=self.PLOT_PENS[1], symbol='o', symbolSize=5, name="Controller 2")
+        self.plot.plot(self.buffer3, pen=self.PLOT_PENS[2], symbolPen=self.PLOT_PENS[2], symbol='o', symbolSize=5, name="Controller 3")
+        self.plot.plot(self.buffer4, pen=self.PLOT_PENS[3], symbolPen=self.PLOT_PENS[3], symbol='o', symbolSize=5, name="Controller 4")
+        
+    def change_capacity(self):
+        value = int(self.bufferSizeEdit.text())
+        if value > len(self.buffer):
+            newBuf1 = RingBuffer(capacity=value, dtype=np.float16)
+            newBuf1.extend(self.buffer)
+            newBuf2 = RingBuffer(capacity=value, dtype=np.float16)
+            newBuf2.extend(self.buffer)
+            newBuf3 = RingBuffer(capacity=value, dtype=np.float16)
+            newBuf3.extend(self.buffer)
+            newBuf4 = RingBuffer(capacity=value, dtype=np.float16)
+            newBuf4.extend(self.buffer)
+
+            self.buffer1 = newBuf1
+            self.buffer2 = newBuf2
+            self.buffer3 = newBuf3
+            self.buffer4 = newBuf4
+
+        elif value < len(self.buffer):
+            newBuf1 = RingBuffer(capacity=value, dtype=np.float16)
+            newBuf1.extend(self.buffer[:-value])
+            newBuf2 = RingBuffer(capacity=value, dtype=np.float16)
+            newBuf2.extend(self.buffer[:-value])
+            newBuf3 = RingBuffer(capacity=value, dtype=np.float16)
+            newBuf3.extend(self.buffer[:-value])
+            newBuf4 = RingBuffer(capacity=value, dtype=np.float16)
+            newBuf4.extend(self.buffer[:-value])
+
+            self.buffer1 = newBuf1
+            self.buffer2 = newBuf2
+            self.buffer3 = newBuf3
+            self.buffer4 = newBuf4
+
+
 class GlobalTab(QWidget):
     def __init__(self, brooksObject: Brooks025X, controllerTabs):
         super().__init__()
@@ -584,24 +678,30 @@ class GlobalTab(QWidget):
         self.audioBeepCheckbox = QCheckBox()
         self.zeroSuppressCheckbox = QCheckBox()
         self.powerSpClearCheckbox = QCheckBox()
+        
+        self.combinedPlotWidget = CombinedPlot()
 
         # Connect to all existing tabs' signals
         if self.tabs[0] is not None:
             self.tabs[0].dosingSignal.connect(self.update_dosing1)
             self.tabs[0].savingSignal.connect(self.update_saving1)
+            self.tabs[0].sampleReady.connect(self.combinedPlotWidget.update_plot)
 
         if self.tabs[1] is not None:
             self.tabs[1].dosingSignal.connect(self.update_dosing2)
             self.tabs[1].savingSignal.connect(self.update_saving2)
-
+            self.tabs[1].sampleReady.connect(self.combinedPlotWidget.update_plot)
+            
         if self.tabs[2] is not None:
             self.tabs[2].dosingSignal.connect(self.update_dosing3)
             self.tabs[2].savingSignal.connect(self.update_saving3)
-
+            self.tabs[2].sampleReady.connect(self.combinedPlotWidget.update_plot)
+            
         if self.tabs[3] is not None:
             self.tabs[3].dosingSignal.connect(self.update_dosing4)
             self.tabs[3].savingSignal.connect(self.update_saving4)
-
+            self.tabs[3].sampleReady.connect(self.combinedPlotWidget.update_plot)
+            
         masterLayout = QGridLayout()
         masterLayout.addLayout(self.create_left_column(self.tabs), 0, 0)
         masterLayout.addLayout(self.create_middle_column(), 0, 1)
@@ -893,7 +993,7 @@ class GlobalTab(QWidget):
         deviceGroup.setLayout(deviceLayout)
         deviceGroup.setFixedWidth(405)
         leftColumnLayout.addWidget(deviceGroup, alignment=Qt.AlignTop)
-        leftColumnLayout.setStretch(2, 10)
+        leftColumnLayout.addWidget(self.combinedPlotWidget)
         return leftColumnLayout
 
     def create_middle_column(self):

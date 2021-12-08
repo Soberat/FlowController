@@ -31,6 +31,9 @@ class ControllerGUITab(QWidget):
 
     # This just signals if saving was enabled/disabled by the user in the tab, so the global tab can update itself
     savingSignal = pyqtSignal(bool)
+    
+    # Signal when a sample is ready for the combined plot
+    sampleReady = pyqtSignal(int, np.float16)
 
     def __init__(self, controller: Controller):
         super().__init__()
@@ -140,6 +143,7 @@ class ControllerGUITab(QWidget):
             self.samplesTotalizer.append(total)
             self.samplesPV.append(current)
             self.sampleTimestamps.append(timestamp)
+            self.sampleReady.emit(self.controller.channel, current)
 
     # Save samples to a csv file, named after the current time and controller number it is coming from
     # After this function saving is continued by update_plot function, which calls append_to_csv
@@ -152,7 +156,7 @@ class ControllerGUITab(QWidget):
 
         self.csvFile = open(filename, 'w')
         self.csvFile.write(
-            f"Gas:{self.controller.get_gas()}\tDecimal point:{self.controller.get_decimal_point()},\tUnits:{self.controller.get_measurement_units()}/{self.controller.get_time_base()}\n")
+            f"Gas factor:{self.controller.get_gas()}\tDecimal point:{self.controller.get_decimal_point()},\tUnits:{self.controller.get_measurement_units()}/{self.controller.get_time_base()}\n")
         self.csvFile.write("{:<15} {:^18} {:>19}\n".format("Measurement", "Totalizer", "Time of measurement"))
         for i in range(0, len(self.samplesPV) - 1):
             self.csvFile.write("{:<15},{:^18},{:>19}\n".format(self.samplesPV[len(self.samplesPV) - 1],
