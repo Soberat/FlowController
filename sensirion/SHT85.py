@@ -1,7 +1,5 @@
-import random
-
-from sensirion_shdlc_sensorbridge import SensorBridgeShdlcDevice, SensorBridgePort
-from SensirionSensor import SensirionSensor
+from sensirion_shdlc_sensorbridge import SensorBridgeShdlcDevice
+from sensirion.SensirionSensor import SensirionSensor
 
 
 class SHT85(SensirionSensor):

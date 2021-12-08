@@ -1,8 +1,6 @@
-import random
-
 from bidict import bidict
-from sensirion_shdlc_sensorbridge import SensorBridgeShdlcDevice, device_errors
-from SensirionSensor import SensirionSensor
+from sensirion_shdlc_sensorbridge import SensorBridgeShdlcDevice
+from sensirion.SensirionSensor import SensirionSensor
 import time
 
 
