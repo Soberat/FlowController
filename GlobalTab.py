@@ -98,7 +98,7 @@ class SensirionSBPlot(QWidget):
         self.plot = PlotWidget()
         self.plot.getPlotItem().showGrid(x=True, y=True, alpha=1)
         if "qdarkstyle" in sys.modules:
-            self.graph.setBackground((25, 35, 45))
+            self.plot.setBackground((25, 35, 45))
         self.buffer = RingBuffer(capacity=bufferSize, dtype=float)
 
         self.group.setLayout(layout)
