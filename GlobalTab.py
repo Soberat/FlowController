@@ -599,7 +599,7 @@ class CombinedPlot(QWidget):
         
     def change_capacity(self):
         value = int(self.bufferSizeEdit.text())
-        if value > len(self.buffer):
+        if value > len(self.buffer1):
             newBuf1 = RingBuffer(capacity=value, dtype=np.float16)
             newBuf1.extend(self.buffer)
             newBuf2 = RingBuffer(capacity=value, dtype=np.float16)
@@ -614,7 +614,7 @@ class CombinedPlot(QWidget):
             self.buffer3 = newBuf3
             self.buffer4 = newBuf4
 
-        elif value < len(self.buffer):
+        elif value < len(self.buffer1):
             newBuf1 = RingBuffer(capacity=value, dtype=np.float16)
             newBuf1.extend(self.buffer[:-value])
             newBuf2 = RingBuffer(capacity=value, dtype=np.float16)
