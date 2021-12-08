@@ -381,7 +381,7 @@ class SensirionSB(QWidget):
         button = QPushButton("I2C scan")
         i2cLabel = QLabel("I2C devices: unknown")
         button.clicked.connect(lambda: i2cLabel.setText(
-            "I2C devices: " + ", ".join([hex(address) for address in self.device.scan_i2c(SensorBridgePort.TWO)])))
+            "I2C devices: " + ", ".join([hex(address) for address in self.device.scan_i2c(SensorBridgePort.ONE)] + [hex(address) for address in self.device.scan_i2c(SensorBridgePort.TWO)])))
         ssbLayout.addWidget(button)
         ssbLayout.addWidget(i2cLabel)
 
