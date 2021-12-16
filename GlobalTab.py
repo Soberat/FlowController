@@ -160,7 +160,7 @@ class SensirionSB(QWidget):
         self.sht85PortDropdown.currentTextChanged.connect(self.sht85_port_changed)
 
         self.sht85compensationEnabled = False
-        self.sht85compensationCheckbox = QCheckBox("Compensate SCT31 on measurement")
+        self.sht85compensationCheckbox = QCheckBox("Compensate STC31 on measurement")
         self.sht85compensationCheckbox.clicked.connect(self.compensate_changed)
 
         self.sht85TemperatureLabel = QLabel("Temp: ? ℃")
