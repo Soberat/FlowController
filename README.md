@@ -1,4 +1,6 @@
 # FlowController
+<img src="https://imgur.com/PPXVbj0.jpg" width="200" height="200">
+
 Python program with GUI for controlling up to 4 Mass Flow Controller heads via a Brooks 0254 (and probably the single head version, Brooks 0251)
 
 Created as part of Sensor Technology course at AGH UST, summer 2020/2021. Later continued as part of my engineering thesis at AGH UST.
