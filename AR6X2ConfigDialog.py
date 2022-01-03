@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QDialog, QFormLayout, QPushButton, QLineEdit, QCombo
 from serial.tools.list_ports import comports
 import resources
 
+
 class AR6X2ConfigDialog(QDialog):
     accepted = pyqtSignal(dict)
 

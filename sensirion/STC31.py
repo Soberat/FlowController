@@ -4,9 +4,6 @@ from sensirion.SensirionSensor import SensirionSensor
 import time
 
 
-# TODO: Check length of returned values, as they are not stated in the datasheet
-# TODO: Write tests with known params to test connectivity
-
 class STC31(SensirionSensor):
 
     def __init__(self, bridge: SensorBridgeShdlcDevice, bridgePort: int):

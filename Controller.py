@@ -3,7 +3,7 @@ import pyvisa
 from datetime import datetime
 from bidict import bidict
 
-# Class representing a single Brooks GF40 Mass Flow Controller,
+# Class representing a single Brooks Mass Flow Controller,
 # Handling communication via a 0254 controller according to the datasheets
 
 
@@ -190,8 +190,7 @@ class Controller:
     def __write_value(self, param, value, target=None):
         # The only difference for writing is the input or output port, which are addressed differently
         if param == Controller.PARAM_SP_FUNCTION or param == Controller.PARAM_SP_RATE or param == Controller.PARAM_SP_VOR or param == Controller.PARAM_SP_BATCH or param == Controller.PARAM_SP_BLEND or param == Controller.PARAM_SP_SOURCE or \
-                (
-                        param == Controller.PARAM_SP_FULL_SCALE or param == Controller.PARAM_SP_SIGNAL_TYPE and target == Controller.TARGET_SP):
+                (param == Controller.PARAM_SP_FULL_SCALE or param == Controller.PARAM_SP_SIGNAL_TYPE and target == Controller.TARGET_SP):
             # Create and send ascii encoded command via serial, wait for response
             if self.__address is None:
                 command = f'AZ.{self.__outputPort}P{param}={value}'
@@ -204,8 +203,7 @@ class Controller:
             else:
                 return None
         elif param == Controller.PARAM_PV_MEASURE_UNITS or param == Controller.PARAM_PV_TIME_BASE or param == Controller.PARAM_PV_DECIMAL_POINT or param == Controller.PARAM_PV_GAS_FACTOR or \
-                (
-                        param == Controller.PARAM_PV_SIGNAL_TYPE or param == Controller.PARAM_PV_FULL_SCALE and target == Controller.TARGET_PV):
+                (param == Controller.PARAM_PV_SIGNAL_TYPE or param == Controller.PARAM_PV_FULL_SCALE and target == Controller.TARGET_PV):
             if self.__address is None:
                 command = f'AZ.{self.__inputPort}P{param}={value}'
             else:

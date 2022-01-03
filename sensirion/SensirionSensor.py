@@ -1,7 +1,7 @@
 # Class defining the properties of all Sensirion sensors connected via Sensor Bridge
-import random
 
 from sensirion_shdlc_sensorbridge import SensorBridgeShdlcDevice, SensorBridgePort
+
 
 class SensirionSensor:
 
@@ -28,10 +28,6 @@ class SensirionSensor:
         rx_data = self.__device.transceive_i2c(self.bridgePort, address=self.i2c_address, tx_data=tx_array,
                                                rx_length=rx_length, timeout_us=100e3)
         return rx_data
-
-    def change_port(self, port: str):
-        assert port in self.PORTS.keys()
-        self.bridgePort = self.PORTS[port]
 
     def analog_measurement(self):
         return self.__device.measure_voltage(self.bridgePort)

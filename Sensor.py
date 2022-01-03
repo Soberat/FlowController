@@ -30,7 +30,7 @@ class Sensor:
 
     # This function reads all available data and saves it to the sensor buffer
     # It assumes that data is passed as a newline-terminated string, and the interpretation is up to the user
-    def getData(self):
+    def get_data(self):
         assert self.__serial.is_open
         self.__serial.write(f"{self.command}\n".encode())
         response = self.__serial.readline()

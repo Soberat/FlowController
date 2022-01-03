@@ -38,7 +38,7 @@ class ControllerGUITab(QWidget):
     def __init__(self, controller: Controller):
         super().__init__()
         # Create the master layout
-        outerLayout = QGridLayout()
+        outerLayout = QHBoxLayout()
         self.graph = None
         self.controller = controller
         self.temperatureController = None
@@ -102,8 +102,8 @@ class ControllerGUITab(QWidget):
         self.sampleTimestamps = RingBuffer(capacity=self.sampleBufferSize, dtype=datetime)
 
         # Nest the inner layouts into the outer layout
-        outerLayout.addLayout(self.create_left_column(), 0, 0)
-        outerLayout.addLayout(self.create_right_column(), 0, 1)
+        outerLayout.addLayout(self.create_left_column())
+        outerLayout.addLayout(self.create_right_column())
         # Set the window's main layout
         self.setLayout(outerLayout)
 
@@ -563,9 +563,7 @@ class ControllerGUITab(QWidget):
 
         # Valve override group
         vorGroup = QGroupBox("Valve override")
-        vorLayout = QVBoxLayout()
-
-        layout = QHBoxLayout()
+        vorLayout = QHBoxLayout()
 
         self.vorNormalButton = QPushButton("Normal")
         self.vorNormalButton.setMinimumWidth(50)
@@ -601,11 +599,10 @@ class ControllerGUITab(QWidget):
         else:
             raise ValueError(f"Unexpected vor state: {vorState}")
 
-        layout.addWidget(self.vorNormalButton)
-        layout.addWidget(self.vorClosedButton)
-        layout.addWidget(self.vorOpenButton)
+        vorLayout.addWidget(self.vorNormalButton)
+        vorLayout.addWidget(self.vorClosedButton)
+        vorLayout.addWidget(self.vorOpenButton)
 
-        vorLayout.addLayout(layout)
         vorGroup.setLayout(vorLayout)
         vorGroup.setMaximumWidth(ControllerGUITab.LEFT_COLUMN_MAX_WIDTH)
         leftColumnLayout.addWidget(vorGroup, alignment=Qt.AlignTop)
@@ -740,8 +737,7 @@ class ControllerGUITab(QWidget):
 
     def create_right_column(self):
         # Create layouts and elements for the right column, including graph and sensor/temperature control/dosing groups
-        rightColumnLayout = QGridLayout()
-        rightGridLayout = QVBoxLayout()
+        rightColumnLayout = QVBoxLayout()
         rightInnerGrid = QGridLayout()
 
         # Creation of sensor 1 and sub-elements
@@ -850,7 +846,6 @@ class ControllerGUITab(QWidget):
         tempControllerLayout.addLayout(layout)
 
         # these edits have validators, but input still has to be capped
-        # Also, the validator seems overly complex if we cap the value anyway
         layout = QHBoxLayout()
         self.rangeLowEdit = QLineEdit()
         self.rangeLowEdit.setMinimumWidth(30)
@@ -986,10 +981,8 @@ class ControllerGUITab(QWidget):
         if "qdarkstyle" in sys.modules:
             self.graph.setBackground((25, 35, 45))
 
-        rightGridLayout.addWidget(self.graph)
-        rightGridLayout.addLayout(rightInnerGrid)
-        # Add some checkboxes to the layout
-        rightColumnLayout.addLayout(rightGridLayout, 0, 1)
+        rightColumnLayout.addWidget(self.graph)
+        rightColumnLayout.addLayout(rightInnerGrid)
 
         return rightColumnLayout
 

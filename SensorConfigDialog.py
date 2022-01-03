@@ -1,10 +1,11 @@
 import serial
 from PyQt5 import QtCore
 from PyQt5.QtCore import QRegExp, pyqtSignal, QTimer
-from PyQt5.QtGui import QRegExpValidator, QIcon, QIntValidator
+from PyQt5.QtGui import QRegExpValidator, QIcon
 from PyQt5.QtWidgets import QDialog, QFormLayout, QPushButton, QLineEdit, QComboBox
 from serial.tools.list_ports import comports
 import resources
+
 
 class SensorConfigDialog(QDialog):
     accepted = pyqtSignal(dict)
@@ -23,8 +24,7 @@ class SensorConfigDialog(QDialog):
     data = {'8': serial.EIGHTBITS,
             '7': serial.SEVENBITS,
             '6': serial.SIXBITS,
-            '5': serial.FIVEBITS
-            }
+            '5': serial.FIVEBITS}
 
     # unlock OK only if all fields are set
     def unlock_ok(self):
@@ -84,7 +84,6 @@ class SensorConfigDialog(QDialog):
         self.stopbits = QComboBox()
         self.stopbits.addItems(self.stop.keys())
         self.stopbits.currentTextChanged.connect(self.unlock_ok)
-
 
         self.header = QLineEdit()
         self.header.setText("Sensor")

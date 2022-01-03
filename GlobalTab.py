@@ -1,7 +1,6 @@
 import sys
-
 from PyQt5.QtCore import Qt, QRegExp, pyqtSignal, QTimer
-from PyQt5.QtGui import QPixmap, QRegExpValidator, QIcon, QIntValidator
+from PyQt5.QtGui import QPixmap, QRegExpValidator, QIntValidator
 from PyQt5.QtWidgets import (
     QCheckBox, QVBoxLayout, QWidget, QHBoxLayout, QGridLayout, QGroupBox, QLabel,
     QPushButton, QComboBox, QSpinBox, QDoubleSpinBox, QDialog, QFormLayout, QLineEdit
@@ -13,7 +12,7 @@ from Brooks025X import Brooks025X
 from datetime import datetime
 from PyQt5 import QtCore
 from sensirion_shdlc_driver import ShdlcConnection, ShdlcSerialPort
-from sensirion_shdlc_sensorbridge import SensorBridgeShdlcDevice, definitions, SensorBridgePort
+from sensirion_shdlc_sensorbridge import SensorBridgeShdlcDevice, SensorBridgePort
 from sensirion.SensirionSensor import SensirionSensor
 from sensirion.SHT85 import SHT85
 from sensirion.STC31 import STC31
@@ -175,7 +174,7 @@ class SensirionSB(QWidget):
         self.stc31PortDropdown = QComboBox()
         self.stc31PortDropdown.addItems(SensirionSensor.PORTS.keys())
         self.stc31PortDropdown.setCurrentIndex(1)
-        self.stc31PortDropdown.currentTextChanged.connect(self.sht85_port_changed)
+        self.stc31PortDropdown.currentTextChanged.connect(self.stc31_port_changed)
 
         self.stc31BinaryGasDropdown = QComboBox()
         self.stc31BinaryGasDropdown.addItems(STC31.BINARY_GAS.keys())
@@ -412,6 +411,9 @@ class SensirionSB(QWidget):
 
     def sht85_port_changed(self):
         self.sht85device.bridgePort = self.sht85device.PORTS[self.sht85PortDropdown.currentText()]
+
+    def stc31_port_changed(self):
+        self.stc31device.bridgePort = self.stc31device.PORTS[self.stc31PortDropdown.currentText()]
 
     def port_one_supply_clicked(self):
         if not self.portTwoPowerEnabled:

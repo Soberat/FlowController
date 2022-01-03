@@ -10,8 +10,6 @@ from PyQt5.QtWidgets import (
 import resources
 
 
-# TODO: credit icon creator in about
-
 class MainWindow(QWidget):
     def __init__(self, pyvisaConnection, controllers=None):
         super().__init__()
