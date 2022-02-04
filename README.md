@@ -31,7 +31,7 @@ Then, launch the application using:
 
 > python ./main.py
 
-Choose the VISA response your Brooks 0250 series device is available on, and choose the controllers you want to control:
+Choose the VISA resource your Brooks 0250 series device is available on, and choose the controllers you want to control:
 
 ![](https://imgur.com/HabmBeW.jpg)
 
